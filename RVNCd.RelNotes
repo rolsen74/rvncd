@@ -1,0 +1,369 @@
+
+RVNCd v1.1 ( 16-Jul-2023 )
+
+- First Release
+
+
+RVNCd v1.2 ( 21-Jul-2023 )
+
+- Added STARTSERVER, STOPSERVER, RESTARTSERVER, SERVERSTATUS, QUIT 
+  commands to ARexx port.
+
+- Added DelayFrequency option to Server group config. So you can control
+  how much cpu time the reading gfx memory uses.
+
+- Added AutoStart option to Server group. If you want to auto launch the
+  server at startup.
+
+- Added SendClipBoard option, controls if Server sends CB to client.
+
+- Added ReadClipBoard option, controls if we are ignoring Client CB message.
+
+- Log config Enable, now controls to enable or disable file loggin.
+
+- Log ProgramStartStop and ServerStartStop have been split into its
+  own config settings, so you better can control what to log.
+
+- Log UserConnect, now controls if you want to add a entry to logfile
+  when a user connects.
+
+- Fixed a bug that could result in a crash in gfx read on shutdown.
+
+- Changed shutdown signals of subprocesses so we can avoid error
+  messages on user CTRL+C.
+
+
+RVNCd v1.3 ( 24-Jul-2023 )
+
+- Fixed a possible crash in Server shutdown code. Where a 
+  ReleaseCopyOfSocket() KeyID got passed to CloseSocket().
+
+- Reworked buffer handling, where sending a single tile at a time per
+  client UpdateRequest packet. Now its send all changed tile per request.
+  This makes UpdateSync a lot faster.
+
+- The Server now support the client request of updated Tiles or the hole
+  screen.
+
+
+RVNCd v1.4 ( 26-Jul-2023 )
+
+- Changes dir to progdir: on program start. So Loading of Config file and 
+  Adding to Log file now defaults to progdir:
+
+- Disk functions changed from c library to direct DOS calls.
+
+- Added Numeric Keypad support.
+
+- Added Session info that will be printed on user disconnect.
+
+
+RVNCd v1.5 ( 29-jul-2023 )
+
+- You can now set a password (max 8 chars) with the Password option in the
+  config file.
+
+- Work on Mouse Pointer Image is still ongoing .. its still not finished
+  it may work.. but I ran out of time for now. Uncomment it in config
+  to test it out.
+
+
+RVNCd v1.6 ( 29-jul-2023 )
+
+- Fixed Pointer rendering on 16 bit screens.
+
+- Added pointer mask, if Alpha channel is 25 or less it will be set to
+  transparent.
+
+
+RVNCd v1.7 ( 30-Aug-2023 )
+
+- Some clients do not like the server sending BufferUpdates if they have not
+  asked for them. The Pointer image update, is send as a BufferUpdate
+  so joining gfx updates and pointer updates into one send buffer fixed the
+  cursor error.
+
+- Added the very first GUI elements. its still very much alpha.. work in
+  progress.
+
+- Added a GUI Key Logger window .. open it from the menus. will proberly
+  change that later but for now thats how to do it.
+
+- ARexx's ServerStatus command now have 5 return values ..
+  Stopped / Starting / Running / Shutting down / Unknown
+
+- Added build in Amiga Mouse pointer. Will be shown if client supports it.
+  Image can be replace from setting in config file.
+
+- Extended the config parser. You can now create Server config groups with
+  [ServerCfg:x] where x is a group id (must be positive).
+  Whitelist ip's can now have a config id number like 
+  "IP = 192.168.1.211 [2]". This is optional.
+  ServerCfg groups still have no options, its work in progress.
+
+
+RVNCd v1.8 ( 31-Aug-2023 )
+
+- Reworked starting and stopping of subprocesses. It should be more robust 
+  now. I Hope its will make it more stable running, when users connect and
+  disconnect.
+
+- Now i'm setting the Main process name on startup, so its easier to find 
+  if started from shell.
+
+- Added gui to show Pixel Format used with client. WIP.
+
+
+RVNCd v1.9 ( 04-Sep-2023 )
+
+- Lots of gui work. Internal config change.
+
+
+RVNCd v1.10 ( 09-Sep-2023 )
+
+- More gui work. Finished Client Info window. Finished the Program page.
+
+- Added Menu to Save 'Default' config file.
+
+
+RVNCd v1.11 ( 15-Sep-2023 )
+
+- Fixed reading autostart checkmark button. Reading INTEGER_Number instead
+  of GA_Selected tag from Gadget resulted it in it always being Zero.
+
+- Fixed KeyLogger crash. If the KeyLogger window havent been opened,
+  the first key press would try to add a message to an uninitalized list.
+
+- Finished Config SaveAS menu.
+
+- Save Default and SaveAS menu .. remembers the file+path so it becomes the
+  active config file, so Save uses this path.
+
+- Added LOADCONFIG <file> ARexx command.
+
+- Added SAVECONFIG ARexx command.
+
+- Added SAVEASCONFIG <file> ARexx command.
+
+- Added SAVEDEFAULTCONFIG ARexx command.
+
+
+RVNCd v1.12 ( 17-Sep-2023 )
+
+- Added Iconify function to all windows.
+
+
+RVNCd v1.13 ( 18-Sep-2023 )
+
+- Moved some stack buffers on to temp allocated memory. This fixed a gui 
+  crash. If we are lucky it also fixes the random crash on exit.
+
+- Fixed client gadget width, so its now wide enough to display the text.
+
+- Removed all code for OpenGUI option, as its nolonger used.
+
+- Fixed error warnings in ARexx code. Were disabled when changing log system.
+
+- Added a timer that will update the Client window if open.
+
+- More gui work .. now you can move entries in the White/Black list. still WIP.
+
+
+RVNCd v1.14 ( 24-Sep-2023 )
+
+- Changed: In case of failing to open ARexx class, it simply disables ARexx
+  prints a warning and continues.
+
+- Changed memory allocating system to only use either c lib or Exec no more
+  mixed allocation. Controled by a switch in the makefile.
+
+- Added 3 new shell commands .. nogui, nobroker and noarexx.
+
+- The Server process have been split into two processes so accept() is now
+  handled all the time, and not only when waiting for a user. For this to
+  work a lot of code shuffling had to be done, so that proberly broke 
+  something. You can see the effect that new users get rejected while you
+  are connected.
+
+ - Added more error messages if something goes wrong.
+
+
+RVNCd v1.15 ( 24-Sep-2023 )
+
+- Added error messages if gui fails to open.
+
+- Renamed the new shell command nobroker to nocxbroker.
+
+- Fixed: The CxBroker will not have Hide/Show buttons if DisableGUI or
+  --nogui flags have been set.
+
+
+RVNCd v1.16 ( 25-Sep-2023 )
+
+- Reenabled delay at startup, where client can send PixelFormat.
+
+- Reenabled first update is a fullscreen
+
+
+RVNCd v1.17 ( 21-Oct-2023 )
+
+- When reading from the Net, moved buffers of the Stack and onto a 
+  preallocated one that is 4k alligned. I hope this fixes mobaxterm 32bit
+  color problem.
+
+
+RVNCd v1.18 ( 29-Oct-2023 )
+
+- Sending messages now also have a 4k aligned buffer.
+
+- A little gui work trying to make universal function to handle windows.
+
+
+RVNCd v1.19 ( 04-Nov-2023 )
+
+- Added a memory mugwall, can be activated with --mugwall via shell only.
+
+- When registering Application i'm telling it not to load and save prefs.
+
+- When Sending RectHeader and RichCursor's data, its moved into the SendBuffer.
+  That should the last of the buffers.. they are now all in either the Read
+  or the Send buffer. This should avoid any problem with buffers on the stack
+  where the Roadshow cache flushes or invalidate some of my other data.
+  Those buffers are 4k page aligned plus continues.
+
+- Refactored the Tile Rendering functions.
+
+- Refactored grapping of screen data. Plus it also have its own buffer that
+  is page alligned and continues.
+
+- This version have lots of debug .. during start and stopping.
+
+- Improved the 'user disconnect' detection code.
+
+- When client requested an update and there were no gfx change, no message was 
+  send. This resulted in client waiting for an update and server waited for another
+  request. Server now wait for something to change and then sends the answer.
+
+- Changed each process shutdown function to print an message for each 5s that
+  it waits for the completion of shutdown.
+
+- All internal Delay(1) have been changed to Delay(2) so now each process
+  sleeps a little longer its now 2/50 sec (50 ticks are 1 sec). Too much
+  wasted cpu time.. when the system needed to swap task becoarse of a short
+  Delay(1), simply too much overhead.. so now we are trying Delay(2).
+
+- The listening port is now set into REUSE mode. If you try to use a port that
+  another server also uses, there can be confilicts. so make sure to use a 
+  unique port number. But other than that we should have got rid of the Port 
+  in use problem when restarting.
+
+- Config file now have a new option UserDisconnect in the Log Section.
+
+- Changed the config option 'GfxRead_TileSize' back too the correct name 
+  'TileSize'. I must have done a global search and replace at some point.
+
+- Changed the make script to not include a config file.. You can open the gui
+  and save one if you need it for now (via menus)...  once we finish this 
+  program I can add default one.
+
+- When Pixel Format was changed, the gui was not always updated.
+
+- Main window title now includes version number and release date
+
+- Split Debug window pages into own Windows.
+
+- Made a user Accecpt/Reject counter. Not sure its worth keeping. 
+
+
+RVNCd v1.20 ( 04-Nov-2023 )
+
+- Fixed sending of Raw Tiles
+
+
+RVNCd v1.21 ( 05-Nov-2023 )
+
+- RealVNC changes the Encoding priority.. we now obay that.
+
+
+RVNCd v1.22 ( 05-Nov-2023 )
+
+- GUI: Password string did only handle 7+NUL chars.. its now 8.
+
+- GUI: Reworked the string support code, and now you have too press
+  return before the string gets updated.
+
+- All send() funciton now also check for Client Disconnect.
+
+- Reading of Client commands now have a simple validation check.
+
+
+RVNCd v1.23 ( 06-Nov-2023 )
+
+- The NetSend process, now try to sync with GfxRead process in starting
+  and stopping.
+
+- Fixed Config in load/saving the status of all Windows.
+
+- Removed lots a Serial debug
+
+
+RVNCd v1.24 ( 06-Nov-2023 )
+
+- Encodings are now sorted. Encoding on top and Features at the bottom,
+  not all servers send a correctly sorted list.
+
+- Windows now remember size and pos when closed.
+
+- Trying to open an already open window, will now result in Window beeing
+  push to front and activated.
+
+- The server now have Program duplication check at startup.. if it finds its
+  already running, it will signal the first program and then quit it self.
+
+
+RVNCd v1.25 ( 07-Nov-2023 )
+
+- Updated the sorting function. Now its sort after, Enabled, EncType and Pos.
+
+- Updated the Pixel Format window.
+
+
+RVNCd v1.26 ( 13-Feb-2024 )
+
+- The Quit menu item now have a Q shortcut.
+
+- The About menu item now have a ? shortcut.
+
+- If you try to quit and there are users connected, a requester will be opened.
+
+- Finished the About Window.
+
+- We have not gotten a crash in a long time, so i'm now compiling the program
+  without -gstabs and stripping before release.
+
+- Windows can be closed with the ESC key now, execpt the main window.
+
+
+RVNCd v1.27 ( 16-Feb-2024 )
+
+- Fixed: Server settings was only copyed when first User connected and not at 
+  Server startup.
+
+- Added: If you change Server settings while you are online. It will show a
+  message.
+
+- Changed: The 'Program: Starting up ..' string now include the program
+  version number.
+
+- Fixed: When user closed a window, the internal status was not updated,
+  so saving config would not reflect the correct setting.
+
+- Added: Implemented Actions for Program start/stop, Server start/stop and
+  User Connect/Disconnect. For now only executing a dos command is supported.
+
+- Added: Implemented ARexx HELP command.
+
+- Fixed: The program DubCheck that made sure only one instance of RVNCd was 
+  running, was broken as it would find it self if run from WB.
+
+- Added: A simple Stats page, were you can see the number of connection.
