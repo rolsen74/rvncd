@@ -367,3 +367,22 @@ RVNCd v1.27 ( 16-Feb-2024 )
   running, was broken as it would find it self if run from WB.
 
 - Added: A simple Stats page, were you can see the number of connection.
+
+
+RVNCd v1.28 ( 03-Mar-2024 )
+
+- Changed: The Server now only send GfxTiles that is asked for by the client.
+  This also mean the Faster BufferSync=Off is no longer possible.
+
+- Fixed: The Server no longer send RichCursor if there are no UpdateRequest.
+  This fixes RealVNC logon problem.
+
+- Fixed: The 'Settings updated, restart required' message now disapear when
+  you stop the server.
+
+
+RVNCd v1.29 ( 03-Mar-2024 )
+
+- Removed: Before there was a up to 3 sec delay at Client connect, waiting
+  for client sending accepted Encoding and requesting buffer. That should
+  not be needed anymore.
