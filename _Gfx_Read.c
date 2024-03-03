@@ -95,10 +95,28 @@ IExec->DebugPrintF( "X: %4d, Y: %4d, W: %3d, H: %3d, %d, Pos: %d\n",
 	pos );
 	#endif
 
+
+
+	int sx = ti[tile].X;
+	int sy = ti[tile].Y;
+
+	if ( cfg->GfxRead_Screen_ViewMode == VIEWMODE_View )
+	{
+		if ( cfg->GfxRead_Screen_Adr->ViewPort.DxOffset < 0 )
+		{
+			sx -= cfg->GfxRead_Screen_Adr->ViewPort.DxOffset;
+		}
+
+		if ( cfg->GfxRead_Screen_Adr->ViewPort.DyOffset < 0 )
+		{
+			sy -= cfg->GfxRead_Screen_Adr->ViewPort.DyOffset;
+		}
+	}
+
 	IGraphics->ReadPixelArray( 
 		& scr->RastPort,
-		ti[tile].X,		// srcx
-		ti[tile].Y,		// srcy
+		sx,				// srcx
+		sy,				// srcy
 		buf1,			// Chunky
 		0,				// dstx
 		0,				// dsty
@@ -332,15 +350,15 @@ int c;
 			h = ts;
 			c = FALSE;
 
-			if ( x + ts > cfg->GfxRead_Screen_Width )
+			if ( x + ts > cfg->GfxRead_Screen_PageWidth )
 			{
-				w = ts - ( x + ts - cfg->GfxRead_Screen_Width );
+				w = ts - ( x + ts - cfg->GfxRead_Screen_PageWidth );
 				c = TRUE;
 			}
 
-			if ( y + ts > cfg->GfxRead_Screen_Height )
+			if ( y + ts > cfg->GfxRead_Screen_PageHeight )
 			{
-				h = ts - ( y + ts - cfg->GfxRead_Screen_Height );
+				h = ts - ( y + ts - cfg->GfxRead_Screen_PageHeight );
 				c = TRUE;
 			}
 
@@ -460,8 +478,10 @@ int err;
 //printf( "Set Screen NULL\n" );
 
 		cfg->GfxRead_Screen_Adr			= NULL;
-		cfg->GfxRead_Screen_Width		= 0;
-		cfg->GfxRead_Screen_Height		= 0;
+		cfg->GfxRead_Screen_PageWidth	= 0;
+		cfg->GfxRead_Screen_PageHeight	= 0;
+		cfg->GfxRead_Screen_ViewWidth	= 0;
+		cfg->GfxRead_Screen_ViewHeight	= 0;
 		cfg->GfxRead_Screen_Format		= 0;
 		cfg->GfxRead_Screen_TileWidth	= 0;
 		cfg->GfxRead_Screen_TileHeight	= 0;
@@ -511,16 +531,29 @@ int err;
 	}
 	else
 	{
-//IExec->DebugPrintF( "Set Screen %p\n", scr );
-//printf( "Set Screen %p\n", scr );
-
 		cfg->GfxRead_Screen_Adr			= scr;
-		cfg->GfxRead_Screen_Width		= scr->Width;
-		cfg->GfxRead_Screen_Height		= scr->Height;
+		cfg->GfxRead_Screen_PageWidth	= scr->Width;
+		cfg->GfxRead_Screen_PageHeight	= scr->Height;
 		cfg->GfxRead_Screen_Format		= IGraphics->GetBitMapAttr( scr->RastPort.BitMap, BMA_PIXELFORMAT );
-		cfg->GfxRead_Screen_TileWidth	= ( scr->Width  + cfg->GfxRead_Screen_TileSize - 1 ) / cfg->GfxRead_Screen_TileSize;
-		cfg->GfxRead_Screen_TileHeight	= ( scr->Height + cfg->GfxRead_Screen_TileSize - 1 ) / cfg->GfxRead_Screen_TileSize;
-		cfg->GfxRead_Screen_Tiles		= cfg->GfxRead_Screen_TileWidth * cfg->GfxRead_Screen_TileHeight;
+		cfg->GfxRead_Screen_ModeID		= IGraphics->BestModeID( BIDTAG_ViewPort, & scr->ViewPort, TAG_END );
+		cfg->GfxRead_Screen_ViewWidth	= IP96->p96GetModeIDAttr( cfg->GfxRead_Screen_ModeID, P96IDA_WIDTH );
+		cfg->GfxRead_Screen_ViewHeight	= IP96->p96GetModeIDAttr( cfg->GfxRead_Screen_ModeID, P96IDA_HEIGHT );
+		cfg->GfxRead_Screen_ViewMode	= cfg->cfg_Active_Settings.ScreenViewMode;
+
+		if (( cfg->GfxRead_Screen_ViewMode == VIEWMODE_View ) && ( cfg->GfxRead_Screen_ModeID ))
+		{
+			cfg->GfxRead_Screen_TileWidth	= ( cfg->GfxRead_Screen_ViewWidth  + cfg->GfxRead_Screen_TileSize - 1 ) / cfg->GfxRead_Screen_TileSize;
+			cfg->GfxRead_Screen_TileHeight	= ( cfg->GfxRead_Screen_ViewHeight + cfg->GfxRead_Screen_TileSize - 1 ) / cfg->GfxRead_Screen_TileSize;
+			cfg->GfxRead_Screen_Tiles		= ( cfg->GfxRead_Screen_TileWidth  * cfg->GfxRead_Screen_TileHeight );
+		}
+		else
+		{
+			// if we don't have the ModeID, force Page mode
+			cfg->GfxRead_Screen_ViewMode	= VIEWMODE_Page;
+			cfg->GfxRead_Screen_TileWidth	= ( cfg->GfxRead_Screen_PageWidth  + cfg->GfxRead_Screen_TileSize - 1 ) / cfg->GfxRead_Screen_TileSize;
+			cfg->GfxRead_Screen_TileHeight	= ( cfg->GfxRead_Screen_PageHeight + cfg->GfxRead_Screen_TileSize - 1 ) / cfg->GfxRead_Screen_TileSize;
+			cfg->GfxRead_Screen_Tiles		= ( cfg->GfxRead_Screen_TileWidth  * cfg->GfxRead_Screen_TileHeight );
+		}
 
 		if ( myRandomizeTiles( cfg ))
 		{
@@ -614,8 +647,8 @@ int h;
 	h = ( scr ) ? scr->Height : 0;
 
 	if (( cfg->GfxRead_Screen_Adr == scr )
-	&&	( cfg->GfxRead_Screen_Width	== w )
-	&&	( cfg->GfxRead_Screen_Height == h ))
+	&&	( cfg->GfxRead_Screen_PageWidth	== w )
+	&&	( cfg->GfxRead_Screen_PageHeight == h ))
 	{
 		goto bailout;
 	}

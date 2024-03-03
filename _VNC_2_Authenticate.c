@@ -68,8 +68,6 @@ int rc;
 			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
 		}
 
-		printf( "doAuth 11\n" );
-
 		if ( cfg->cfg_LogUserDisconnect )
 		{
 			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
@@ -108,8 +106,6 @@ int rc;
 			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
 		}
 
-		printf( "doAuth 22\n" );
-
 		if ( cfg->cfg_LogUserDisconnect )
 		{
 			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
@@ -140,8 +136,6 @@ int rc;
 		{
 			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
 		}
-
-		printf( "doAuth 33\n" );
 
 		cfg->cfg_ServerRunning = FALSE;
 
@@ -207,8 +201,6 @@ int rc;
 			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
 		}
 
-		printf( "doAuth 44\n" );
-
 		if ( cfg->cfg_LogUserDisconnect )
 		{
 			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
@@ -261,8 +253,6 @@ int rc;
 		{
 			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
 		}
-
-		printf( "doAuth 55\n" );
 
 		if ( cfg->cfg_LogUserDisconnect )
 		{

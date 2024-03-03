@@ -337,8 +337,8 @@ int retval;
 
 	// --
 
-	cfg->cfg_ServerGotSetPixelFormat = FALSE;
-	cfg->cfg_ServerGotBufferUpdateRequest = 0;
+//	cfg->cfg_ServerGotSetPixelFormat = FALSE;
+//	cfg->cfg_ServerGotBufferUpdateRequest = 0;
 	cfg->NetRead_ClientSocket = -1;
 	cfg->NetRead_Idle = TRUE;
 

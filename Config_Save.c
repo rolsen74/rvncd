@@ -95,7 +95,6 @@ static const struct myLabel myServer[] =
 { "Name",					LT_Config_str, offsetof( struct Config, cfg_Disk_Settings.Name ), NULL },
 { "Password",				LT_Config_str, offsetof( struct Config, cfg_Disk_Settings.Password ), NULL },
 { "EncZLIB",				LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.ZLib ), NULL },
-{ "UpdateSync",				LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.BufferSync ), NULL },
 { "DisableBlanker",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.DisableBlanker ), NULL },
 { "SendClipboard",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.SendClipboard ), NULL },
 { "ReadClipboard",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.ReadClipboard ), NULL },

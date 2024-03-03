@@ -52,6 +52,8 @@ int cur;
 int cnt;
 int rc;
 
+//	printf( "Got : VNC_SetEncoding\n" );
+
 	ISocket = cfg->NetRead_ISocket;
 
 	error = TRUE;
@@ -128,21 +130,21 @@ int rc;
 			goto bailout;
 		}
 
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
+		if ( rc == 0 )
 		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
+			if ( ! cfg->cfg_NetReason )
+			{
+				cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
+			}
 
-		cfg->cfg_ServerRunning = FALSE;
+			cfg->cfg_ServerRunning = FALSE;
 
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
+			if ( cfg->cfg_LogUserDisconnect )
+			{
+				Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
+			}
+			goto bailout;
 		}
-		goto bailout;
-	}
 
 		cfg->SessionStatus.si_Read_Bytes += rc;
 	}
@@ -185,6 +187,7 @@ int rc;
 			else if ( enc[cnt] == 0xFFFFFF21 )	{ printf( " - NewFBSize" ); }
 			printf( "\n" );
 		}
+// #define rfbEncodingExtDesktopSize     0xFFFFFECC
 
 		if ( enc[cnt] == 0 ) // Raw
 		{
@@ -280,7 +283,7 @@ int rc;
 
 	#if 0
 
-// -- Pauls client
+// -- Pauls client 1
 
 Encoding: 00000007 - Tight
 Encoding: fffffecb
@@ -301,6 +304,51 @@ Encoding: 00000005 - Hextile
 Encoding: 00000002 - RRE
 Encoding: 00000001 - CopyRect
 Encoding: 00000000 - Raw
+
+// -- Pauls client 2
+
+ Encoding: 00000007 - Tight
+ Encoding: 00000010 - ZRLE
+ Encoding: 00000009 - ZLibHex
+ Encoding: ffff0009
+ Encoding: 00000001 - CopyRect
+ Encoding: 00000005 - Hextile
+ Encoding: 00000006 - ZLib
+ Encoding: 00000004 - CoRRE
+ Encoding: 00000002 - RRE
+ Encoding: 00000000 - Raw
+ Encoding: ffffff03
+ Encoding: ffffffe5
+ Encoding: ffffff10
+ Encoding: ffffff11 - RichCursor
+ Encoding: ffffff18 - MousePos
+ Encoding: fffe0000
+ Encoding: ffffff21 - NewFBSize
+ Encoding: fffffecc
+ Encoding: ffffff20
+ Encoding: fffe0001
+ Encoding: fffe0002
+ Encoding: fffe0003
+ Encoding: fffffecb
+ Encoding: fffffefe
+ Encoding: c0a1e5ce
+
+// -- Pauls client 3?
+
+ Encoding: 00000007 - Tight
+ Encoding: 00000010 - ZRLE
+ Encoding: 00000006 - ZLib
+ Encoding: 00000008 - Ultra
+ Encoding: 00000005 - Hextile
+ Encoding: 00000004 - CoRRE
+ Encoding: 00000002 - RRE
+ Encoding: 00000000 - Raw
+ Encoding: 00000001 - CopyRect
+ Encoding: ffffff10
+ Encoding: ffffff11 - RichCursor
+ Encoding: ffffff18 - MousePos
+ Encoding: ffffff20
+ Encoding: ffffff21 - NewFBSize
 
 // -- RealVNC
 
@@ -419,7 +467,7 @@ bailout:
 		myFree( enc );
 	}
 
-// // Log_PrintF( "myRead_Mouse (%d)\n", error );
+// Log_PrintF( "myRead_Mouse (%d)\n", error );
 
 	return( error );
 }

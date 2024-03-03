@@ -15,11 +15,6 @@
 
 // --
 
-static int			myNewFill(			struct Config *cfg, int tile );
-static inline int	myNewFull(			struct Config *cfg );
-
-// --
-
 #pragma pack(1)
 
 struct BufferMessage
@@ -34,10 +29,11 @@ struct BufferMessage
 
 // --
 
-static int myNewFill( struct Config *cfg, int tile )
+static int myNewFill( struct Config *cfg, struct UpdateNode *un, int tile )
 {
 int datalen;
 int cnt;
+int t;
 
 	datalen = -1;
 
@@ -48,11 +44,13 @@ int cnt;
 			continue;
 		}
 
-		switch( cfg->NetSend_Encodings2[ cnt ].Type )
+		t = cfg->NetSend_Encodings2[ cnt ].Type;
+
+		switch( t )
 		{
 			case ENCODE_Raw:
 			{
-				datalen = myEnc_Raw( cfg, tile );
+				datalen = myEnc_Raw( cfg, un, tile );
 				break;
 			}
 
@@ -60,7 +58,7 @@ int cnt;
 			{
 				if ( cfg->cfg_Active_Settings.ZLib )
 				{
-					datalen = myEnc_ZLib( cfg, tile );
+					datalen = myEnc_ZLib( cfg, un, tile );
 				}
 				break;
 			}
@@ -69,10 +67,10 @@ int cnt;
 			{
 				if ( ! cfg->cfg_NetReason )
 				{
-					cfg->cfg_NetReason = myASPrintF( "Internal: Unsupported Tile Encoding (%d)", cfg->NetSend_Encodings2[ cnt ].Type );
+					cfg->cfg_NetReason = myASPrintF( "Internal: Unsupported Tile Encoding (%d)", t );
 				}
 
-				printf( "Unknown Encoding (%d)\n", cfg->NetSend_Encodings2[ cnt ].Type );
+				printf( "Unknown Encoding (%d)\n", t );
 				break;
 			}
 		}
@@ -89,27 +87,73 @@ int cnt;
 
 // --
 
-static inline int myNewFull( struct Config *cfg )
+static int myNewTile( struct Config *cfg, struct UpdateNode *un, int tiles )
 {
 struct SocketIFace *ISocket;
+struct TileInfo *ti;
 int stat;
-int cnt;
+int pos;
 int len;
 int rc;
-
-// IExec->DebugPrintF( "myNewFull\n" );
-
-	stat = UPDATESTAT_Error;
+int x1;
+int y1;
+int x2;
+int y2;
 
 	ISocket = cfg->NetSend_ISocket;
 
-	// --
+	stat = UPDATESTAT_Error;
 
-	for( cnt=0 ; cnt<cfg->GfxRead_Screen_Tiles ; cnt++ )
+	pos = ( un->un_Incremental ) ? cfg->NetSend_ScreenCurrentTile : 0 ;
+
+	x1 = un->un_XPos;
+	y1 = un->un_YPos;
+	x2 = un->un_XPos + un->un_Width;
+	y2 = un->un_YPos + un->un_Height;
+
+	while( tiles )
 	{
-		len = myNewFill( cfg, cnt );
+		if ( --pos < 0 )
+		{
+			pos = cfg->GfxRead_Screen_Tiles - 1;
+		}
 
-// printf( "Send Tile Len: %d\n", len );
+		ti = & cfg->GfxRead_Screen_TileInfoBuffer[pos];
+
+		if ( ti->X > x2 )
+		{
+			continue;
+		}
+
+		if ( ti->X + ti->W < x1 )
+		{
+			continue;
+		}
+
+		if ( ti->Y > y2 )
+		{
+			continue;
+		}
+
+		if ( ti->Y + ti->H < y1 )
+		{
+			continue;
+		}
+
+		// --
+
+		if (( un->un_Incremental ) && ( cfg->GfxRead_Screen_TileArrayBuffer[pos] >= 0 ))
+		{
+			// Count up untell it flips over to Negative
+			cfg->GfxRead_Screen_TileArrayBuffer[pos]++;
+			continue;
+		}
+
+		cfg->GfxRead_Screen_TileArrayBuffer[pos] = rand() % 20;
+
+		// --
+
+		len = myNewFill( cfg, un, pos );
 
 		if ( len < 0 )
 		{
@@ -122,36 +166,7 @@ int rc;
 			goto bailout;
 		}
 
-		if ( len <= cfg->NetSend_SendBufferSize )
-		{
-			rc = ISocket->send( cfg->NetSend_ClientSocket, cfg->NetSend_SendBuffer, len, 0 );
-
-			if ( rc == -1 )
-			{
-				if ( ! cfg->cfg_NetReason )
-				{
-					cfg->cfg_NetReason = myASPrintF( "Failed to send data (%d)", ISocket->Errno() );
-				}
-
-				Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
-				goto bailout;
-			}
-
-			if ( rc == 0 )
-			{
-				if ( ! cfg->cfg_NetReason )
-				{
-					cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-				}
-
-				if ( cfg->cfg_LogUserDisconnect )
-				{
-					Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-				}
-				goto bailout;
-			}
-		}
-		else
+		if ( len > cfg->NetSend_SendBufferSize )
 		{
 			if ( ! cfg->cfg_NetReason )
 			{
@@ -163,133 +178,36 @@ int rc;
 			goto bailout;
 		}
 
-//		IExec->ReleaseSemaphore( & cfg->GfxRead_Screen_Sema );
+		rc = ISocket->send( cfg->NetSend_ClientSocket, cfg->NetSend_SendBuffer, len, 0 );
 
-//		rc = ISocket->send( cfg->NetSend_ClientSocket, cfg->NetSend_SendBuffer, len, 0 );
+		if ( rc == -1 )
+		{
+			if ( ! cfg->cfg_NetReason )
+			{
+				cfg->cfg_NetReason = myASPrintF( "Failed to send data (%d)", ISocket->Errno() );
+			}
 
-//		IExec->ObtainSemaphore( & cfg->GfxRead_Screen_Sema );
+			Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
+			goto bailout;
+		}
+
+		if ( rc == 0 )
+		{
+			if ( ! cfg->cfg_NetReason )
+			{
+				cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
+			}
+
+			if ( cfg->cfg_LogUserDisconnect )
+			{
+				Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
+			}
+			goto bailout;
+		}
 
 		cfg->SessionStatus.si_Send_Bytes += rc;
-		cfg->GfxRead_Screen_TileArrayBuffer[cnt] = rand() % 20;
-	}
 
-	// --
-
-	stat = UPDATESTAT_Okay;
-
-bailout:
-
-// IExec->DebugPrintF( "myNewFull 2\n" );
-
-	return( stat );
-}
-
-// --
-
-static inline int myNewTile( struct Config *cfg, int tiles )
-{
-struct SocketIFace *ISocket;
-int number;
-int tile;
-int stat;
-int pos;
-int len;
-int rc;
-
-// IExec->DebugPrintF( "myNewTile\n" );
-
-	ISocket = cfg->NetSend_ISocket;
-
-	stat = UPDATESTAT_Error;
-
-	// --
-
-	pos = cfg->NetSend_ScreenCurrentTile;
-
-	number = 0;
-
-	while( number < tiles )
-	{
-		if ( --pos < 0 )
-		{
-			pos = cfg->GfxRead_Screen_Tiles - 1;
-		}
-
-		tile = cfg->GfxRead_Screen_TileRandomBuffer[pos];
-
-		if ( cfg->GfxRead_Screen_TileArrayBuffer[tile] < 0 )
-		{
-			len = myNewFill( cfg, tile );
-
-			if ( len < 0 )
-			{
-				if ( ! cfg->cfg_NetReason )
-				{
-					cfg->cfg_NetReason = myASPrintF( "Internal: myNewFill failed" );
-				}
-
-				Log_PrintF( cfg, LOGTYPE_Error, "Buffer error" );
-				goto bailout;
-			}
-
-			if ( len <= cfg->NetSend_SendBufferSize )
-			{
-				rc = ISocket->send( cfg->NetSend_ClientSocket, cfg->NetSend_SendBuffer, len, 0 );
-
-				if ( rc == -1 )
-				{
-					if ( ! cfg->cfg_NetReason )
-					{
-						cfg->cfg_NetReason = myASPrintF( "Failed to send data (%d)", ISocket->Errno() );
-					}
-
-					Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
-					goto bailout;
-				}
-
-				if ( rc == 0 )
-				{
-					if ( ! cfg->cfg_NetReason )
-					{
-						cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-					}
-
-					if ( cfg->cfg_LogUserDisconnect )
-					{
-						Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-					}
-					goto bailout;
-				}
-			}
-			else
-			{
-				if ( ! cfg->cfg_NetReason )
-				{
-					cfg->cfg_NetReason = myASPrintF( "Internal: myNewFill failed" );
-				}
-
-				rc = -1;
-				Log_PrintF( cfg, LOGTYPE_Error, "Buffer overflow" );
-				goto bailout;
-			}
-
-//			IExec->ReleaseSemaphore( & cfg->GfxRead_Screen_Sema );
-
-//			rc = ISocket->send( cfg->NetSend_ClientSocket, cfg->NetSend_SendBuffer, len, 0 );
-
-//			IExec->ObtainSemaphore( & cfg->GfxRead_Screen_Sema );
-
-
-			cfg->SessionStatus.si_Send_Bytes += rc;
-			cfg->GfxRead_Screen_TileArrayBuffer[tile] = rand() % 20;
-
-			number++;
-		}
-		else
-		{
-			// Count up untell it flips over to Negative
-			cfg->GfxRead_Screen_TileArrayBuffer[tile]++;
-		}
+		tiles--;
 	}
 
 	cfg->NetSend_ScreenCurrentTile = pos;
@@ -300,24 +218,66 @@ int rc;
 
 bailout:
 
-// IExec->DebugPrintF( "myNewTile 2\n" );
-
 	return( stat );
 }
 
-static inline int Count_myNewTile( struct Config *cfg )
+// --
+
+static int myCountTiles( struct Config *cfg, struct UpdateNode *un )
 {
+struct TileInfo *ti;
 int tiles;
-int cnt;
+int pos;
+int x1;
+int y1;
+int x2;
+int y2;
 
 	tiles = 0;
 
-	for( cnt=0 ; cnt<cfg->GfxRead_Screen_Tiles ; cnt++ )
+	x1 = un->un_XPos;
+	y1 = un->un_YPos;
+	x2 = un->un_XPos + un->un_Width;
+	y2 = un->un_YPos + un->un_Height;
+
+#if 0
+if (( cfg->GfxRead_Screen_PageWidth  != un->un_Width  )
+||  ( cfg->GfxRead_Screen_PageHeight != un->un_Height ))
+{
+	printf( "Request Update : %dx%d %dx%d\n", un->un_XPos, un->un_YPos, un->un_Width, un->un_Height );
+}
+#endif
+
+	for( pos=0 ; pos < cfg->GfxRead_Screen_Tiles ; pos++ )
 	{
-		if ( cfg->GfxRead_Screen_TileArrayBuffer[cnt] < 0 )
+		ti = & cfg->GfxRead_Screen_TileInfoBuffer[pos];
+
+		if ( ti->X > x2 )
 		{
-			tiles++;
+			continue;
 		}
+
+		if ( ti->X + ti->W < x1 )
+		{
+			continue;
+		}
+
+		if ( ti->Y > y2 )
+		{
+			continue;
+		}
+
+		if ( ti->Y + ti->H < y1 )
+		{
+			continue;
+		}
+
+		if (( un->un_Incremental ) && ( cfg->GfxRead_Screen_TileArrayBuffer[pos] >= 0 ))
+		{
+			continue;
+		}
+
+		tiles++;
 	}
 
 	return( tiles );
@@ -325,38 +285,41 @@ int cnt;
 
 // --
 
-int NewBufferUpdate( struct Config *cfg, int Full )
+int NewBufferUpdate( struct Config *cfg )
 {
 struct BufferMessage *header;
 struct SocketIFace *ISocket;
+struct UpdateNode *un;
 int doCursor;
+int total;
 int tiles;
 int stat;
-int cnt;
 int rc;
 
-// IExec->DebugPrintF( "NewBufferUpdate %ld\n", Full );
+	// --
 
-//	IExec->ObtainSemaphore( & cfg->GfxRead_Screen_Sema );
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
 
-	if ( cfg->GfxRead_Screen_Adr == NULL )
+	un = (APTR) IExec->GetHead( & cfg->Server_UpdateList );
+
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+
+	// Sending RichCursor Updates, without a BufferUpdateReq
+	// could fail if Client changed Screen format
+	if ( un == NULL )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Screen NULL Pointer" );
-		}
-
-printf( "GfxRead_Screen_Adr NULL Pointer\n" );
-		// Return okay?
-		stat = UPDATESTAT_Error;
+		stat = UPDATESTAT_NoChange;		// Do a Delay(2)
 		goto bailout;
 	}
 
-	doCursor = FALSE;
+	doCursor = 0;
+	total = 0;
+	tiles = 0;
 
-	// -- Calculate Rects
+	// --
 
-	cnt = 0;
+	tiles = myCountTiles( cfg, un );
+	total += tiles;
 
 	if (( cfg->cfg_Active_Settings.RichCursor )
 	&&	( cfg->cfg_ServerSupportsCursor )
@@ -364,27 +327,16 @@ printf( "GfxRead_Screen_Adr NULL Pointer\n" );
 	&&	( cfg->cfg_UpdateCursor ))
 	{
 		doCursor = TRUE;
-		cnt++;
+		total++;
 	}
 
-	if ( Full )
+	if ( total == 0 )
 	{
-		tiles = cfg->GfxRead_Screen_Tiles;
-	}
-	else
-	{
-		tiles = Count_myNewTile( cfg );
-	}
-
-	cnt += tiles;
-
-	if ( cnt == 0 )
-	{
-		stat = UPDATESTAT_NoChange;
+		stat = UPDATESTAT_NoChange;		// Do a Delay(2)
 		goto bailout;
 	}
 
-//	IExec->DebugPrintF( "Send Tiles %4d, Full %d, Cursor: %d, Fmt: %08x\n", tiles, Full, doCursor, cfg->GfxRead_Enocde_ActivePixel.pm_BitsPerPixel  );
+	// --
 
 	// -- Send Header
 
@@ -392,11 +344,9 @@ printf( "GfxRead_Screen_Adr NULL Pointer\n" );
 
 	header->bm_Type	= 0; // Framebuffer Update
 	header->bm_Pad	= 0;
-	header->bm_Rects = cnt;
+	header->bm_Rects = total;
 
 	ISocket = cfg->NetSend_ISocket;
-
-// printf( "Send Header Len: %d\n", sizeof( header ) );
 
 	rc = ISocket->send( cfg->NetSend_ClientSocket, header, sizeof( header ), 0 );
 
@@ -429,38 +379,51 @@ printf( "GfxRead_Screen_Adr NULL Pointer\n" );
 
 	cfg->SessionStatus.si_Send_Bytes += rc;
 
-	// -- Send Rects
+	// -- Update Graphics Tiles
+
+	if ( tiles )
+	{
+		stat = myNewTile( cfg, un, tiles );
+
+		if ( stat != UPDATESTAT_Okay )
+		{
+			goto bailout;
+		}
+	}
+
+	// -- Update Cursor Tile
 
 	if ( doCursor )
 	{
 		cfg->cfg_UpdateCursor = FALSE;
 
-		NewBuffer_Cursor( cfg );
+		stat = NewBuffer_Cursor( cfg );
+
+		if ( stat != UPDATESTAT_Okay )
+		{
+			goto bailout;
+		}
 	}
 
-	if ( Full )
+	// -- Move UpdateNode to Free List
+
+	if ( un )
 	{
-// IExec->DebugPrintF( "NewBufferUpdate Full\n" );
-		stat = myNewFull( cfg );
-	}
-	else if ( tiles )
-	{
-		stat = myNewTile( cfg, tiles );
-	}
-	else
-	{
-		stat = UPDATESTAT_Okay;
+		IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+
+		IExec->Remove( & un->un_Node );
+
+		IExec->AddTail( & cfg->Server_UpdateFree, & un->un_Node );
+
+		IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
 	}
 
-//	ssss = 0;
+	// -- All Done
+
+	stat = UPDATESTAT_Okay;			// No wait
+//	stat = UPDATESTAT_NoChange;		// Do a Delay(2)
 
 bailout:
 
-//	IExec->ReleaseSemaphore( & cfg->GfxRead_Screen_Sema );
-
-// IExec->DebugPrintF( "NewBufferUpdate 2\n" );
-
 	return( stat );
 }
-
-// --

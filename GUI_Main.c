@@ -30,7 +30,6 @@ enum GUI_ID
 
 	GID_Support_RichCursor,
 	GID_Support_ZLib,
-	GID_Buffer_Sync,
 	GID_Disable_Blanker,
 	GID_Send_Clipboard,
 	GID_Read_Clipboard,
@@ -862,16 +861,6 @@ Object *o;
 				LAYOUT_AddChild,			IIntuition->NewObject( LayoutClass, NULL,
 					LAYOUT_Orientation,		LAYOUT_ORIENT_VERT,
 					LAYOUT_BevelStyle,		BVS_GROUP,
-	//				LAYOUT_Label,			"Server",
-
-					LAYOUT_AddChild,		GUIObjects[ GID_Buffer_Sync ] = IIntuition->NewObject( CheckBoxClass, NULL,
-						GA_ID,				GID_Buffer_Sync,
-						GA_RelVerify,		TRUE,
-						GA_Selected,		( cfg->cfg_Disk_Settings.BufferSync ) ? 1 : 0,
-					End,
-					CHILD_Label,			IIntuition->NewObject( LabelClass, NULL,
-						LABEL_Text,			"Buffer Sync",
-					End,
 
 					LAYOUT_AddChild,		GUIObjects[ GID_Disable_Blanker ] = IIntuition->NewObject( CheckBoxClass, NULL,
 						GA_ID,				GID_Disable_Blanker,
@@ -943,7 +932,6 @@ Object *o;
  Name = "Rene's VNC Server"
  EncZLIB = 1
  GfxRead_TileSize = 64
- UpdateSync = 1
  ScanMethod = 0
  DisableBlanker = 1
  DelayFrequency = 150
@@ -1798,25 +1786,6 @@ uint32 val;
 
 // --
 
-static void GUIFunc_Buffer_Sync( struct Config *cfg )
-{
-uint32 val;
-	
-	val = 0;
-
-	IIntuition->GetAttrs( GUIObjects[ GID_Buffer_Sync ],
-		GA_Selected, & val,
-		TAG_END
-	);
-
-	cfg->cfg_Disk_Settings.BufferSync = ( val ) ? 1 : 0 ;
-
-	// --
-	Main_CheckSettings( cfg );
-}
-
-// --
-
 static void GUIFunc_Disable_Blanker( struct Config *cfg )
 {
 uint32 val;
@@ -1942,6 +1911,10 @@ int stat;
 	);
 
 	// --
+
+	Main_CheckSettings( cfg );
+
+// --
 
 bailout:
 
@@ -2111,11 +2084,6 @@ static void myGUI_RefreshSettings( struct Config *cfg )
 
 	mySetTags( cfg, GUIObjects[ GID_Password ],
 		STRINGA_TextVal, cfg->cfg_Disk_Settings.Password,
-		TAG_END
-	);
-
-	mySetTags( cfg, GUIObjects[ GID_Buffer_Sync ],
-		GA_Selected, ( cfg->cfg_Disk_Settings.BufferSync ) ? 1 : 0,
 		TAG_END
 	);
 
@@ -3331,12 +3299,6 @@ BOOL theend;
 						break;
 					}
 
-					case GID_Buffer_Sync:
-					{
-						GUIFunc_Buffer_Sync( cfg );
-						break;
-					}
-
 					case GID_Disable_Blanker:
 					{
 						GUIFunc_Disable_Blanker( cfg );
@@ -3674,7 +3636,7 @@ int retval;
 					TDR_ImageType, TDRIMAGE_QUESTION,
 					TDR_TitleString, "RVNCd",
 					TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
-					TDR_GadgetString, "No|Yes",
+					TDR_GadgetString, "_No|_Yes",
 					TDR_Arg1, cfg->UserCount,
 					TAG_END ) == 0 )
 				{
@@ -4013,4 +3975,3 @@ void myGUI_RefreshStats( struct Config *cfg, struct CommandRefresh *msg UNUSED )
 };
 
 // --
-

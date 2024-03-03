@@ -592,12 +592,12 @@ static void myGUI_PixelRefresh( struct Config *cfg )
 	);
 
 	mySetTags( cfg, GUIObjects[ GID_ScreenWidth ],
-		BUTTON_Integer, cfg->GfxRead_Screen_Width,
+		BUTTON_Integer, cfg->GfxRead_Screen_PageWidth,
 		TAG_END
 	);
 
 	mySetTags( cfg, GUIObjects[ GID_ScreenHeight ],
-		BUTTON_Integer, cfg->GfxRead_Screen_Height,
+		BUTTON_Integer, cfg->GfxRead_Screen_PageHeight,
 		TAG_END
 	);
 

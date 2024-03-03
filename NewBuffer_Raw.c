@@ -30,13 +30,17 @@ struct BufferRect
 
 // --
 
-int myEnc_Raw( struct Config *cfg, int tile )
+int myEnc_Raw( struct Config *cfg, struct UpdateNode *un, int tile )
 {
 struct BufferRect *rect;
 struct TileInfo *ti;
 uint8 *data;
 int datalen;
 int len;
+int x;
+int y;
+int w;
+int h;
 
 	len = -1;
 
@@ -47,14 +51,32 @@ int len;
 
 // IExec->DebugPrintF( "myEnc_Raw - %p - %dx%d %dx%d\n", data, ti->X, ti->Y, ti->W, ti->H );
 
-	rect->br_XPos		= ti->X;
-	rect->br_YPos		= ti->Y;
-	rect->br_Width		= ti->W;
-	rect->br_Height		= ti->H;
-	rect->br_Encoding	= 0; // Raw
+	x = ti->X;
+	y = ti->Y;
+	w = ti->W;
+	h = ti->H;
 
-	if ( cfg->GfxRead_Encode_RenderTile )
+	if ( un->un_XPos > x )
 	{
+		x = un->un_XPos;
+		w -= ( un->un_XPos - x );
+	}
+
+	if ( un->un_YPos > y )
+	{
+		y = un->un_YPos;
+		h -= ( un->un_YPos - y );
+	}
+
+	if (( cfg->GfxRead_Encode_RenderTile )
+	&&	( x >= 0 ) && ( y >= 0 ) && ( w > 0 ) && ( h > 0 ))
+	{
+		rect->br_XPos		= x;
+		rect->br_YPos		= y;
+		rect->br_Width		= w;
+		rect->br_Height		= h;
+		rect->br_Encoding	= 0; // Raw
+
 		IExec->ObtainSemaphore( & cfg->GfxRead_Screen_Sema );
 
 		datalen = cfg->GfxRead_Encode_RenderTile( cfg, & data[ sizeof( struct BufferRect ) ], tile );

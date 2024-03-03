@@ -15,47 +15,11 @@
 
 // --
 
-static inline int myUpdateSync( struct Config *cfg )
-{
-int stat;
-int full;
-
-	if ( ! cfg->cfg_ServerGotBufferUpdateRequest )
-	{
-		stat = UPDATESTAT_NoChange; 
-	}
-	else
-	{
-		full = cfg->cfg_ServerDoFullUpdate;
-		cfg->cfg_ServerDoFullUpdate = 0;
-
-		stat = NewBufferUpdate( cfg, full );
-	}
-
-	return( stat );
-}
-
-// --
-
-static inline int myUpdateFast( struct Config *cfg )
-{
-int stat;
-int full;
-
-	full = cfg->cfg_ServerDoFullUpdate;
-	cfg->cfg_ServerDoFullUpdate = 0;
-
-	stat = NewBufferUpdate( cfg, full );
-
-	return( stat );
-}
-
-// --
-
 static void myProcess_Main( struct Config *cfg )
 {
+struct UpdateNode *un;
 uint32 mask;
-int delay;
+//int delay;
 int stat;
 
 	// -- Exchange VNC Info
@@ -116,6 +80,7 @@ int stat;
 
 	// -- Giving client a chance to get SetPixelFormat and Encodings before continuing..
 
+	#if 0
 	// Max 3 sec
 	delay = 150/2; 
 	
@@ -132,14 +97,15 @@ int stat;
 			IDOS->Delay( 2 ); 
 		}
 	}
+	#endif
 
 //	Log_PrintF( cfg, LOGTYPE_Info, "Got PixelFormat %ld", cfg->cfg_ServerGotSetPixelFormat );
 //	Log_PrintF( cfg, LOGTYPE_Info, "Got UpdateReq %ld", cfg->cfg_ServerGotBufferUpdateRequest );
 
 	// --
 
-	cfg->cfg_UpdateCursor = TRUE;
-	cfg->cfg_ServerDoFullUpdate = TRUE;
+//	cfg->cfg_UpdateCursor = TRUE;
+//	cfg->cfg_ServerDoFullUpdate = TRUE;
 
 	// Clear ClipBoard signal
 	IExec->SetSignal( 0, cfg->NetSend_ClipBoardSignal );
@@ -153,18 +119,7 @@ int stat;
 
 	while( cfg->cfg_ServerRunning )
 	{
-//		IExec->ObtainSemaphore( & TestSema );
-
-		if ( cfg->cfg_Active_Settings.BufferSync )
-		{
-			stat = myUpdateSync( cfg );
-		}
-		else
-		{
-			stat = myUpdateFast( cfg );
-		}
-
-//		IExec->ReleaseSemaphore( & TestSema );
+		stat = NewBufferUpdate( cfg );
 
 		/**/ if ( stat == UPDATESTAT_Error ) // Error
 		{
@@ -176,17 +131,7 @@ int stat;
 		}
 		else if ( stat == UPDATESTAT_NoChange ) // No Change
 		{
-// IExec->DebugPrintF( "NoChange\n" );
 			IDOS->Delay( 2 );
-		}
-		else // ( stat == UPDATESTAT_Change ) // Gfx Update Send
-		{
-			IExec->Forbid();
-			if ( cfg->cfg_ServerGotBufferUpdateRequest > 0 )
-			{
-				cfg->cfg_ServerGotBufferUpdateRequest--;
-			}
-			IExec->Permit();
 		}
 
 		// --
@@ -206,6 +151,26 @@ int stat;
 	}
 
 bailout:
+
+	// --
+
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+
+	while( TRUE )
+	{
+		un = (APTR) IExec->RemHead( & cfg->Server_UpdateList );
+
+		if ( un == NULL )
+		{
+			break;
+		}
+
+		IExec->AddTail( & cfg->Server_UpdateFree, & un->un_Node );
+	}
+
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+
+	// --
 
 	myPrintSessionInfo( cfg );
 

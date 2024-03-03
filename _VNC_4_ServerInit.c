@@ -79,8 +79,17 @@ int rc;
 
 	memset( sim, 0, size );
 
-	sim->sim_Width			= cfg->GfxRead_Screen_Width;
-	sim->sim_Height			= cfg->GfxRead_Screen_Height;
+	if ( cfg->GfxRead_Screen_ViewMode == VIEWMODE_View )
+	{
+		sim->sim_Width		= cfg->GfxRead_Screen_ViewWidth;
+		sim->sim_Height		= cfg->GfxRead_Screen_ViewHeight;
+	}
+	else
+	{
+		sim->sim_Width		= cfg->GfxRead_Screen_PageWidth;
+		sim->sim_Height		= cfg->GfxRead_Screen_PageHeight;
+	}
+
 	sim->sim_BitsPerPixel	= cfg->GfxRead_Enocde_ActivePixel.pm_BitsPerPixel;
 	sim->sim_Depth			= cfg->GfxRead_Enocde_ActivePixel.pm_Depth;
 	sim->sim_BigEndian		= cfg->GfxRead_Enocde_ActivePixel.pm_BigEndian;

@@ -37,6 +37,7 @@
 #include <proto/label.h>
 #include <proto/layout.h>
 #include <proto/listbrowser.h>
+#include <proto/Picasso96API.h>
 #include <proto/scroller.h>
 #include <proto/string.h>
 #include <proto/timer.h>
@@ -199,6 +200,12 @@ enum
 	ENCODE_LAST
 };
 
+enum
+{
+	VIEWMODE_View,
+	VIEWMODE_Page,
+};
+
 // --
 
 struct Config;
@@ -262,6 +269,16 @@ struct UpdateRequestMessage
 };
 
 #pragma pack(0)
+
+struct UpdateNode
+{
+	struct Node		un_Node;
+	int				un_Incremental;
+	int				un_XPos;
+	int				un_YPos;
+	int				un_Width;
+	int				un_Height;
+};
 
 // --
 
@@ -432,10 +449,10 @@ struct Settings
 	// --
 	uint8			ZLib;								// Save
 	uint8			RichCursor;							// Save
-	uint8			BufferSync;							// Save
 	uint8			DisableBlanker;						// Save
 	uint8			SendClipboard;						// Save
 	uint8			ReadClipboard;						// Save
+	uint8			ScreenViewMode;
 	char			Name[MAX_SERVERNAME+1];				// Save
 	char			Password[MAX_SERVERPASSWORD+1];		// Save
 };
@@ -518,11 +535,11 @@ struct Config
 	uint8					cfg_ServerStatus;					// 0 = off, 1 = starting, 2 = running, 3 = shutting down
 	uint8					cfg_ServerShutdown;
 	uint8					cfg_ServerRunning;
-	uint8					cfg_ServerGotSetPixelFormat;
-	uint8					cfg_ServerGotBufferUpdateRequest;
+//	uint8					cfg_ServerGotSetPixelFormat;
+//	uint8					cfg_ServerGotBufferUpdateRequest;
 	uint8					cfg_ServerGotSetEncoding;
 	uint8					cfg_ServerZLibAvailable;
-	uint8					cfg_ServerDoFullUpdate;
+//	uint8					cfg_ServerDoFullUpdate;
 	uint8					cfg_ServerNumLock;
 	uint8					cfg_ServerPrintSession;
 	uint8					cfg_ServerSupportsCursor;
@@ -554,10 +571,14 @@ struct Config
 	int						GfxRead_Screen_TileSize;			// Tile Pixel size .. ie 64x64
 	int						GfxRead_Enocde_ActivePixelSet;
 	// -- Gfx Read Task -- Screen Info with Sema Lock
-	struct SignalSemaphore	GfxRead_Screen_Sema;
 	struct Screen *			GfxRead_Screen_Adr;
-	int						GfxRead_Screen_Width;				// Pixel Width 
-	int						GfxRead_Screen_Height;				// Pixel Height
+	struct SignalSemaphore	GfxRead_Screen_Sema;
+	int						GfxRead_Screen_ModeID;
+	int						GfxRead_Screen_ViewMode;
+	int						GfxRead_Screen_PageWidth;			// Pixel Width 
+	int						GfxRead_Screen_PageHeight;			// Pixel Height
+	int						GfxRead_Screen_ViewWidth;			// Visual Pixel Width 
+	int						GfxRead_Screen_ViewHeight;			// Visual Pixel Height
 	int						GfxRead_Screen_Format;				// Pixel Format
 	int						GfxRead_Screen_Tiles;				// Total number of Tiles
 	int						GfxRead_Screen_TileWidth;			// Tile : Number of Columns
@@ -619,6 +640,9 @@ struct Config
 	int						NetRead_Qualifier;
 
 	// -- Server
+	struct SignalSemaphore	Server_UpdateSema;
+	struct List				Server_UpdateList;
+	struct List				Server_UpdateFree;
 	struct Task *			Server_Task;
 	struct Task *			Server_Exit;
 	struct Library *		Server_SocketBase;
@@ -796,11 +820,11 @@ int TileRender_Generic_16LE(	struct Config *cfg, APTR buf, int tile );
 int TileRender_Generic_32BE(	struct Config *cfg, APTR buf, int tile );
 int TileRender_Generic_32LE(	struct Config *cfg, APTR buf, int tile );
 
-void NewBuffer_Cursor( struct Config *cfg );
-int NewBufferUpdate( struct Config *cfg, int Full );
+int NewBuffer_Cursor(			struct Config *cfg );
+int NewBufferUpdate(			struct Config *cfg );
 
-int myEnc_Raw( struct Config *cfg, int tile );
-int myEnc_ZLib( struct Config *cfg, int tilenr );
+int myEnc_Raw(					struct Config *cfg, struct UpdateNode *un, int tile );
+int myEnc_ZLib(					struct Config *cfg, struct UpdateNode *un, int tile );
 
 void myInitSessionInfo( struct Config *cfg, int a, int b, int c, int d );
 void myPrintSessionInfo( struct Config *cfg );
@@ -844,6 +868,7 @@ extern char ActionBuffer_ServerStart[MAX_ACTIONBUFFER];		// Save
 extern char ActionBuffer_UserConnect[MAX_ACTIONBUFFER];		// Save
 extern char ActionBuffer_ServerStop[MAX_ACTIONBUFFER];		// Save
 extern struct CommandEncoding *ActiveEncoding;
+extern struct SignalSemaphore UpdateSema;
 extern struct SignalSemaphore ActionSema;
 extern struct SignalSemaphore TestSema;
 extern struct SignalSemaphore UserSema;
@@ -860,6 +885,8 @@ extern struct MsgPort *WinAppPort;
 extern struct Task *ProgramTask;
 extern struct List KeyLoggerList;
 extern struct List LogStringList;
+extern struct List UpdateList;
+extern struct List UpdateFree;
 extern Class *ListBrowserClass;
 extern Class *ClickTabClass;
 extern Class *IntegerClass;

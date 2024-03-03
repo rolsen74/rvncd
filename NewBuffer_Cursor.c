@@ -166,7 +166,7 @@ int b;
 
 // --
 
-void NewBuffer_Cursor( struct Config *cfg )
+int NewBuffer_Cursor( struct Config *cfg )
 {
 struct SocketIFace *ISocket;
 struct BufferRect *rect;
@@ -176,6 +176,7 @@ uint8 *gfx;
 int masksize;
 int gfxsize;
 int size;
+int stat;
 int rc;
 int pw;
 int ph;
@@ -193,6 +194,8 @@ int bw;
 
 	// --
 
+	stat = UPDATESTAT_Error;
+
 	pw = cfg->cfg_PointerWidth;		// Cursor Pixel Width
 	ph = cfg->cfg_PointerHeight;	// Cursor Pixel Height
 	bw = ( pw + 7 ) / 8;			// Byte Width
@@ -200,11 +203,11 @@ int bw;
 	gfxsize  = pw * ph * ( cfg->GfxRead_Enocde_ActivePixel.pm_BitsPerPixel / 8 );
 	masksize = bw * ph;
 
+	size = sizeof( struct BufferRect ) + gfxsize + masksize;
+
 	// --
 
 	buffer = cfg->NetSend_SendBuffer;
-
-	size = sizeof( struct BufferRect ) + gfxsize + masksize;
 
 	memset( buffer, 0, size );
 
@@ -272,9 +275,11 @@ int bw;
 
 	// --
 
+	stat = UPDATESTAT_Okay;			// No wait
+
 bailout:
 
-	return;
+	return( stat );
 }
 
 // --

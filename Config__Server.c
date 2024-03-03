@@ -20,6 +20,38 @@
 
 // --
 
+static int myViewMode( struct Config *cfg UNUSED, char *buf, int pos UNUSED, int argpos, int arglen, uint32 nr UNUSED )
+{
+int val;
+int error;
+
+	error = TRUE;
+
+	if ( arglen <= 0 )
+	{
+		printf( "Config: [Server] ViewMode missing argument\n" );
+		goto bailout;
+	}
+
+	val = atoi( & buf[argpos] );
+
+	cfg->cfg_Disk_Settings.ScreenViewMode = val;
+
+	if ( DoVerbose )
+	{
+		printf( "[Server] ViewMode: %d\n", val );
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+// --
+
+
 static int myPointer( struct Config *cfg UNUSED, char *buf, int pos UNUSED, int argpos, int arglen, uint32 nr UNUSED )
 {
 char *str;
@@ -300,37 +332,6 @@ bailout:
 
 // --
 
-static int myUpdateSync( struct Config *cfg UNUSED, char *buf, int pos UNUSED, int argpos, int arglen, uint32 nr UNUSED )
-{
-int val;
-int error;
-
-	error = TRUE;
-
-	if ( arglen <= 0 )
-	{
-		printf( "Config: [Server] UpdateSync missing argument\n" );
-		goto bailout;
-	}
-
-	val = atoi( & buf[argpos] );
-
-	cfg->cfg_Disk_Settings.BufferSync = ( val ) ? TRUE : FALSE;
-
-	if ( DoVerbose )
-	{
-		printf( "[Server] UpdateSync: %s\n", ( val ) ? "On" : "Off" );
-	}
-
-	error = FALSE;
-
-bailout:
-
-	return( error );
-}
-
-// --
-
 static int myDisableBlanker( struct Config *cfg UNUSED, char *buf, int pos UNUSED, int argpos, int arglen, uint32 nr UNUSED )
 {
 int val;
@@ -527,9 +528,9 @@ struct ParseCommand ParseServerCmds[] =
 {  7, "EncZLIB", myEncZLIB },
 {  8, "Password", myPassword },
 {  8, "TileSize", myTileSize },
+{  8, "ViewMode", myViewMode },
 //{  8, "EncCursor", myEncCursor },
 {  9, "AutoStart", myAutoStart },
-{ 10, "UpdateSync", myUpdateSync },
 { 10, "ScanMethod", myScanMethod },
 { 11, "PointerFile", myPointer },
 { 13, "SendClipboard", mySendClipboard },

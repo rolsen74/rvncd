@@ -476,6 +476,8 @@ bailout:
 
 static void myProcess_Free( struct Config *cfg )
 {
+APTR un;
+
 	// --
 
 	if ( cfg->cfg_LogServerStop )
@@ -492,6 +494,37 @@ static void myProcess_Free( struct Config *cfg )
 	Send_Free_Pointer( cfg );
 
 	myClose_Net( cfg );
+
+	// --
+
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+
+	while( TRUE )
+	{
+		un = (APTR) IExec->RemHead( & cfg->Server_UpdateList );
+
+		if ( un == NULL )
+		{
+			break;
+		}
+
+		myFree( un );
+	}
+
+	while( TRUE )
+	{
+		un = (APTR) IExec->RemHead( & cfg->Server_UpdateFree );
+
+		if ( un == NULL )
+		{
+			break;
+		}
+
+		myFree( un );
+	}
+
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+
 }
 
 // --

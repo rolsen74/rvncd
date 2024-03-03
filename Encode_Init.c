@@ -267,7 +267,7 @@ int pos;
 
 	// --
 
-	cfg->cfg_ServerDoFullUpdate = TRUE;
+//	cfg->cfg_ServerDoFullUpdate = TRUE;
 
 	if ( User )
 	{

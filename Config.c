@@ -78,13 +78,13 @@ APTR node;
 	cfg->cfg_Disk_Settings.Port = 5900;
 	cfg->cfg_Disk_Settings.ZLib = TRUE;
 	cfg->cfg_Disk_Settings.RichCursor = TRUE;
-	cfg->cfg_Disk_Settings.BufferSync = TRUE;
 	cfg->cfg_Disk_Settings.SendClipboard = TRUE;
 	cfg->cfg_Disk_Settings.ReadClipboard = TRUE;
 	cfg->cfg_Disk_Settings.DisableBlanker = TRUE;
 	sprintf( cfg->cfg_Disk_Settings.Name, "Amiga VNC Server" );
 	cfg->cfg_Disk_Settings.Password[0] = 0;
 	cfg->cfg_Disk_Settings2.AutoStart = TRUE;
+	cfg->cfg_Disk_Settings.ScreenViewMode = VIEWMODE_Page;
 
 	// --
 
@@ -142,9 +142,12 @@ struct Config *cfg;
 
 	IExec->InitSemaphore( & cfg->GfxRead_Screen_Sema );
 	IExec->InitSemaphore( & cfg->cfg_LogPrintFSema );
+	IExec->InitSemaphore( & cfg->Server_UpdateSema );
+	IExec->NewList( & cfg->cfg_ServerCfg_Groups );
+	IExec->NewList( & cfg->Server_UpdateList );
+	IExec->NewList( & cfg->Server_UpdateFree );
 	IExec->NewList( & cfg->WhiteList );
 	IExec->NewList( & cfg->BlackList );
-	IExec->NewList( & cfg->cfg_ServerCfg_Groups );
 
 	Config_Reset( cfg );
 

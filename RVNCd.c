@@ -52,6 +52,9 @@ struct IntuitionIFace * 	IIntuition			= NULL;
 struct Library *			KeymapBase			= NULL;
 struct KeymapIFace *		IKeymap				= NULL;
 
+struct Library *			P96Base				= NULL;
+struct P96IFace *			IP96				= NULL;
+
 struct ZLibBase *			ZBase				= NULL;
 struct ZIFace *				IZ					= NULL;
 
@@ -141,6 +144,7 @@ char	ActionBuffer_UserDisconnect[MAX_ACTIONBUFFER];
 
 struct SignalSemaphore		TestSema;
 struct SignalSemaphore		ActionSema;
+
 
 static const USED char *	MyVersion			= VERSTAG;
 
@@ -341,7 +345,7 @@ int cnt;
 					TDR_ImageType, TDRIMAGE_QUESTION,
 					TDR_TitleString, "RVNCd",
 					TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
-					TDR_GadgetString, "No|Yes",
+					TDR_GadgetString, "_No|_Yes",
 					TDR_Arg1, cfg->UserCount,
 					TAG_END ) == 0 )
 				{
@@ -610,6 +614,15 @@ int error;
 	if ( IKeymap == NULL )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Error obtaining keymap library (v53)" );
+		goto bailout;
+	}
+
+	P96Base = (APTR) IExec->OpenLibrary( "Picasso96API.library", 53 );
+	IP96 = (APTR) IExec->GetInterface( (APTR) P96Base, "main", 1, NULL );
+
+	if ( IP96 == NULL )
+	{
+		Log_PrintF( cfg, LOGTYPE_Error, "Error obtaining Picasso96 library (v53)" );
 		goto bailout;
 	}
 
@@ -1087,6 +1100,18 @@ APTR node;
 
 	#endif
 
+	if ( IP96 )
+	{
+		IExec->DropInterface( (APTR) IP96 );
+		IP96 = NULL;
+	}
+
+	if ( P96Base )
+	{
+		IExec->CloseLibrary( (APTR) P96Base );
+		P96Base = NULL;
+	}
+
 	if ( IKeymap )
 	{
 		IExec->DropInterface( (APTR) IKeymap );
@@ -1417,7 +1442,7 @@ int cnt;
 								TDR_ImageType, TDRIMAGE_QUESTION,
 								TDR_TitleString, "RVNCd",
 								TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
-								TDR_GadgetString, "No|Yes",
+								TDR_GadgetString, "_No|_Yes",
 								TDR_Arg1, cfg->UserCount,
 								TAG_END ) == 0 )
 							{

@@ -58,6 +58,8 @@ int error;
 int size;
 int rc;
 
+//	printf( "Got : VNC_SetPixelFormat\n" );
+
 	ISocket = cfg->NetRead_ISocket;
 
 	error = TRUE;
@@ -149,7 +151,7 @@ int rc;
 
 		mySetEncoding_Message( cfg, buf, TRUE );
 
-		cfg->cfg_UpdateCursor = TRUE;
+//		cfg->cfg_UpdateCursor = TRUE;
 	}
 	else
 	{
@@ -159,7 +161,7 @@ int rc;
 		}
 	}
 
-	cfg->cfg_ServerGotSetPixelFormat = TRUE;
+//	cfg->cfg_ServerGotSetPixelFormat = TRUE;
 
 	error = FALSE;
 

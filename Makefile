@@ -7,7 +7,7 @@
 
 CRT			:= newlib
 VERSION		:= 1
-REVISION	:= 27
+REVISION	:= 29
 
 ###########################################################################
 
@@ -107,7 +107,7 @@ else ifeq ($(detected_os),AmigaOS)
 
 LS			:= list
 RM			:= delete
-#CFLAGS		+= -gstabs
+CFLAGS		+= -gstabs
 TARGET		:= RVNCd
 CC			:= gcc
 STRIP		:= strip

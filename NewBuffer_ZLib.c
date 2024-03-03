@@ -34,7 +34,7 @@ struct BufferRect
 
 // --
 
-int myEnc_ZLib( struct Config *cfg, int tilenr )
+int myEnc_ZLib( struct Config *cfg, struct UpdateNode *un, int tilenr )
 {
 struct BufferRect *rect;
 struct TileInfo *ti;

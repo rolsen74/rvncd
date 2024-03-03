@@ -120,6 +120,19 @@ int v2;
 		Pointer.iepp_Position.X	= mm->mm_X;	// - xadjust;
 		Pointer.iepp_Position.Y	= mm->mm_Y;	// - yadjust;
 
+		if ( cfg->GfxRead_Screen_ViewMode == VIEWMODE_View )
+		{
+			if ( cfg->GfxRead_Screen_Adr->ViewPort.DxOffset < 0 )
+			{
+				Pointer.iepp_Position.X -= cfg->GfxRead_Screen_Adr->ViewPort.DxOffset;
+			}
+
+			if ( cfg->GfxRead_Screen_Adr->ViewPort.DyOffset < 0 )
+			{
+				Pointer.iepp_Position.Y -= cfg->GfxRead_Screen_Adr->ViewPort.DyOffset;
+			}
+		}
+
 		memset( & Event, 0, sizeof( Event ));
 
 		Event.ie_Class			= IECLASS_NEWPOINTERPOS;

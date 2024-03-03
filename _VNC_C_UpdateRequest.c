@@ -42,9 +42,12 @@ int VNC_UpdateRequest( struct Config *cfg )
 {
 struct UpdateRequestMessage *buf;
 struct SocketIFace *ISocket;
+struct UpdateNode *un;
 int error;
 int size;
 int rc;
+
+//	printf( "Got : VNC_UpdateRequest\n" );
 
 	ISocket = cfg->NetRead_ISocket;
 
@@ -91,17 +94,45 @@ int rc;
 
 	// --
 
-	if ( ! buf->urm_Incremental )
-	{
-		cfg->cfg_ServerDoFullUpdate = TRUE;
-	}
+//	if ( ! buf->urm_Incremental )
+//	{
+//		cfg->cfg_ServerDoFullUpdate = TRUE;
+//	}
 
 	// Set after Full Update
-	IExec->Forbid();
-	cfg->cfg_ServerGotBufferUpdateRequest++;
-	IExec->Permit();
+//	IExec->Forbid();
+//	cfg->cfg_ServerGotBufferUpdateRequest = TRUE;
+//	IExec->Permit();
 
 	// --
+
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+
+	un = (APTR) IExec->RemHead( & cfg->Server_UpdateFree );
+
+	if ( un == NULL )
+	{
+		un = myCalloc( sizeof( struct UpdateNode ) );
+
+		if ( un == NULL )
+		{
+			printf( "Yikes Calloc failed\n" );
+		}
+	}
+
+	if ( un )
+	{
+		un->un_Incremental = buf->urm_Incremental;
+		un->un_XPos		= buf->urm_XPos;
+		un->un_YPos		= buf->urm_YPos;
+		un->un_Width	= buf->urm_Width;
+		un->un_Height	= buf->urm_Height;
+
+		IExec->AddTail( & cfg->Server_UpdateList, & un->un_Node );
+	}
+
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+
 
 	#if 0
 	// Log_PrintF( "\nVNC_UpdateRequest\n" );
