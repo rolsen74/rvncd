@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -273,6 +268,39 @@ Object *o;
 
 // --
 
+void myGUI_BusyPixelWindow( struct Config *cfg, int val )
+{
+	if ( val )
+	{
+		/**/ cfg->cfg_WinData[WIN_PixelFormat].Busy++;
+
+		if ( cfg->cfg_WinData[WIN_PixelFormat].Busy == 1 )
+		{
+			mySetTags( cfg, GUIObjects[ GID_Window ],
+				WA_BusyPointer, TRUE,
+				TAG_END
+			);
+		}
+	}
+	else
+	{
+		if ( cfg->cfg_WinData[WIN_PixelFormat].Busy > 0 )
+		{
+			 cfg->cfg_WinData[WIN_PixelFormat].Busy--;
+
+			if ( cfg->cfg_WinData[WIN_PixelFormat].Busy == 0 )
+			{
+				mySetTags( cfg, GUIObjects[ GID_Window ],
+					WA_BusyPointer, FALSE,
+					TAG_END
+				);
+			}
+		}
+	}
+}
+
+// --
+
 int myGUI_OpenPixelWindow( struct Config *cfg UNUSED )
 {
 //struct ColumnInfo *ci;
@@ -323,6 +351,7 @@ int error;
 		WA_DragBar,								    TRUE,
 		WA_SizeGadget,							    TRUE,
 		WA_Title,								    "RVNCd - Pixel Infomation",
+		WA_BusyPointer,								cfg->cfg_WinData[WIN_PixelFormat].Busy > 0,
 
 		( cfg->cfg_WinData[WIN_PixelFormat].Width == 0 ) ?
 		TAG_IGNORE : WA_Left, cfg->cfg_WinData[WIN_PixelFormat].XPos,
@@ -342,8 +371,11 @@ int error;
 //		WA_PubScreen,							    gs->up_PubScreen,
 		WINDOW_AppPort,								WinAppPort,
 		WINDOW_SharedPort,							WinMsgPort,
+		WINDOW_PopupGadget,							TRUE,
+		WINDOW_Icon,								ProgramIcon,
+		WINDOW_IconTitle,							"rVNCd Pixel",
+		WINDOW_IconNoDispose,						TRUE,
 		WINDOW_IconifyGadget,						TRUE,
-		WINDOW_IconTitle,							"Pixel Format",
 //		WINDOW_MenuStrip,					    	MainMenuStrip,
 //		WINDOW_MenuUserData,				    	WGUD_HOOK,
 //		WINDOW_Position,						    WPOS_CENTERSCREEN,
@@ -354,7 +386,7 @@ int error;
 		End,
 	End;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Program: Error creating Pixel GUI Object" );
 		goto bailout;
@@ -394,7 +426,7 @@ void myGUI_ClosePixelWindow( struct Config *cfg )
 {
 struct Window *win;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		goto bailout;
 	}
@@ -424,7 +456,7 @@ void myGUI_HandlePixelWindow( struct Config *cfg )
 {
 uint32 result;
 uint16 code;
-BOOL theend;
+int theend;
 
     theend = FALSE;
 
@@ -621,24 +653,22 @@ void myGUI_PxlFmtMessage( struct Config *cfg, struct CommandPxlFmt *msg )
 {
 	PxlFormat = *msg;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
 	}
 
 	myGUI_PixelRefresh( cfg );
-
-};
+}
 
 void myGUI_PxlFmtRefresh( struct Config *cfg )
 {
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
 	}
 
 	myGUI_PixelRefresh( cfg );
-
-};
+}
 
 // --

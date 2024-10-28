@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -110,6 +105,7 @@ BPTR o;
 		if (( i ) && ( o ))
 		{
 			stat = IDOS->SystemTags( FmtBuffer, 
+				SYS_UserShell, TRUE,
 				SYS_Asynch, TRUE,
 				SYS_Output, o,
 				SYS_Input, i,
@@ -138,6 +134,8 @@ BPTR o;
 
 void DoAction_ProgramStart( struct Config *cfg UNUSED )
 {
+printf( "DoAction_ProgramStart\n" );
+
 	IExec->ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ProgramStart );
@@ -149,6 +147,8 @@ void DoAction_ProgramStart( struct Config *cfg UNUSED )
 
 void DoAction_ProgramStop( struct Config *cfg UNUSED )
 {
+printf( "DoAction_ProgramStop\n" );
+
 	IExec->ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ProgramStop );
@@ -160,6 +160,8 @@ void DoAction_ProgramStop( struct Config *cfg UNUSED )
 
 void DoAction_ServerStart( struct Config *cfg UNUSED )
 {
+printf( "DoAction_ServerStart\n" );
+
 	IExec->ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ServerStart );
@@ -171,6 +173,8 @@ void DoAction_ServerStart( struct Config *cfg UNUSED )
 
 void DoAction_ServerStop( struct Config *cfg UNUSED )
 {
+printf( "DoAction_ServerStop\n" );
+
 	IExec->ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ServerStop );
@@ -182,6 +186,8 @@ void DoAction_ServerStop( struct Config *cfg UNUSED )
 
 void DoAction_UserConnect( struct Config *cfg UNUSED )
 {
+printf( "DoAction_UserConnect\n" );
+
 	IExec->ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_UserConnect );
@@ -193,6 +199,8 @@ void DoAction_UserConnect( struct Config *cfg UNUSED )
 
 void DoAction_UserDisconnect( struct Config *cfg UNUSED )
 {
+printf( "DoAction_UserDisconnect\n" );
+
 	IExec->ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_UserDisconnect );

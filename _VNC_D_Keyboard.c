@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -20,16 +15,7 @@
 
 // --
 
-/*
-** Purpose:
-** - Server handles a Key press from Client
-**
-** Returns:
-** - True and the socket will be closed
-** - False and we continue
-*/
-
-#pragma pack(1)
+#if 0
 
 struct KeyMessage
 {
@@ -40,12 +26,14 @@ struct KeyMessage
 	uint32	km_Key;
 };
 
-#pragma pack(0)
+#endif
+
+// --
 
 int VNC_Keyboard( struct Config *cfg )
 {
-struct KeyMessage *km;
 struct SocketIFace *ISocket;
+struct KeyMessage *km;
 struct InputEvent Event;
 struct IOStdReq *IOReq;
 char *text;
@@ -56,8 +44,6 @@ int error;
 int code;
 int size;
 int rc;
-
-// IExec->DebugPrintF( "myRead_Key\n" );
 
 	km = cfg->NetRead_ReadBuffer;
 
@@ -71,54 +57,20 @@ int rc;
 
 	size = sizeof( struct KeyMessage );
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, km, size, MSG_WAITALL );
+	rc = myNetRead( cfg, km, size, MSG_WAITALL );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	if (( km->km_Type != 4 ) || ( rc != size ))
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%d != %d)", rc, size );
+		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%ld != %ld)", rc, size );
 		goto bailout;
 	}
 
 	// -- Check if our Active screen is Front Most
-
-	#if 0
-	if ( cfg->GfxRead_Screen_Adr != IntuitionBase->FirstScreen )
-	{
-		error = FALSE;
-		goto bailout;
-	}
-	#endif
-
-	// --
-
-// IExec->DebugPrintF( "Key: %08lx (%d)\n", km->km_Key, km->km_Down );
 
 	switch( km->km_Key )
 	{

@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -190,6 +185,39 @@ Object *o;
 
 // --
 
+void myGUI_BusySessionWindow( struct Config *cfg, int val )
+{
+	if ( val )
+	{
+		/**/ cfg->cfg_WinData[WIN_Session].Busy++;
+
+		if ( cfg->cfg_WinData[WIN_Session].Busy == 1 )
+		{
+			mySetTags( cfg, GUIObjects[ GID_Window ],
+				WA_BusyPointer, TRUE,
+				TAG_END
+			);
+		}
+	}
+	else
+	{
+		if ( cfg->cfg_WinData[WIN_Session].Busy > 0 )
+		{
+			 cfg->cfg_WinData[WIN_Session].Busy--;
+
+			if ( cfg->cfg_WinData[WIN_Session].Busy == 0 )
+			{
+				mySetTags( cfg, GUIObjects[ GID_Window ],
+					WA_BusyPointer, FALSE,
+					TAG_END
+				);
+			}
+		}
+	}
+}
+
+// --
+
 int myGUI_OpenSessionWindow( struct Config *cfg UNUSED )
 {
 //struct ColumnInfo *ci;
@@ -240,6 +268,7 @@ int error;
 		WA_DragBar,								    TRUE,
 		WA_SizeGadget,							    TRUE,
 		WA_Title,								    "RVNCd - Session Infomation",
+		WA_BusyPointer,								cfg->cfg_WinData[WIN_Session].Busy > 0,
 
 		( cfg->cfg_WinData[WIN_Session].Width == 0 ) ?
 		TAG_IGNORE : WA_Left, cfg->cfg_WinData[WIN_Session].XPos,
@@ -259,8 +288,11 @@ int error;
 //		WA_PubScreen,							    gs->up_PubScreen,
 		WINDOW_AppPort,								WinAppPort,
 		WINDOW_SharedPort,							WinMsgPort,
+		WINDOW_PopupGadget,							TRUE,
+		WINDOW_Icon,								ProgramIcon,
+		WINDOW_IconTitle,							"rVNCd Session",
+		WINDOW_IconNoDispose,						TRUE,
 		WINDOW_IconifyGadget,						TRUE,
-		WINDOW_IconTitle,							"Session",
 //		WINDOW_MenuStrip,					    	MainMenuStrip,
 //		WINDOW_MenuUserData,				    	WGUD_HOOK,
 //		WINDOW_Position,						    WPOS_CENTERSCREEN,
@@ -271,7 +303,7 @@ int error;
 		End,
 	End;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Program: Error creating Session GUI Object" );
 		goto bailout;
@@ -311,7 +343,7 @@ void myGUI_CloseSessionWindow( struct Config *cfg )
 {
 struct Window *win;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		goto bailout;
 	}
@@ -341,7 +373,7 @@ void myGUI_HandleSessionWindow( struct Config *cfg )
 {
 uint32 result;
 uint16 code;
-BOOL theend;
+int theend;
 
     theend = FALSE;
 
@@ -423,80 +455,70 @@ BOOL theend;
 
 // --
 
-#if 0
-
-struct SessionInfo
-{
-	// -- Bytes Send/Read in total
-	uint64				si_Read_Bytes;
-	uint64				si_Send_Bytes;
-
-	// -- Tiles Send
-	uint64				si_Tiles_Raw;
-	uint64				si_Tiles_ZLib;
-	uint64				si_Tiles_Total;
-
-	// -- Time
-	struct TimeVal		si_Time_Logon;				// Start Tick
-	struct DateStamp	si_Time_Connect;			// Connection Time
-
-	// -- IP Addr
-	int					si_IPAddr[4];	
-};
-
-#endif
-
 static void myGUI_SessionRefresh( struct Config *cfg )
 {
-char *buffer;
-
-	buffer = myMalloc( 1024 );
-
-	if (( cfg->cfg_SessionUsed ) && ( buffer ))
+	if ( cfg->cfg_SessionUsed )
 	{
-		sprintf( buffer, "%d.%d.%d.%d", 
+		static char Buf_Tiles_Total[32];
+		static char Buf_Tiles_ZLib[32];
+		static char Buf_Tiles_Raw[32];
+		static char Buf_Duration[64];
+		static char Buf_Connect[64];
+		static char Buf_Read[32];
+		static char Buf_Send[32];
+		static char Buf_IP[64];
+
+		LogTime_GetConnectTime(  & cfg->SessionStatus.si_LogTime, Buf_Connect,  sizeof( Buf_Connect  ));
+		LogTime_GetDurationTime( & cfg->SessionStatus.si_LogTime, Buf_Duration, sizeof( Buf_Duration ));
+		Session_GetProcent(	Buf_Tiles_Total,	sizeof( Buf_Tiles_Total ),	cfg->SessionStatus.si_Tiles_Total, cfg->SessionStatus.si_Tiles_Total );
+		Session_GetProcent(	Buf_Tiles_ZLib,		sizeof( Buf_Tiles_ZLib ),	cfg->SessionStatus.si_Tiles_Total, cfg->SessionStatus.si_Tiles_ZLib );
+		Session_GetProcent(	Buf_Tiles_Raw,		sizeof( Buf_Tiles_Raw ),	cfg->SessionStatus.si_Tiles_Total, cfg->SessionStatus.si_Tiles_Raw );
+		Session_GetBytes(	Buf_Read,			sizeof( Buf_Read ),			cfg->SessionStatus.si_Read_Bytes );
+		Session_GetBytes(	Buf_Send,			sizeof( Buf_Send ),			cfg->SessionStatus.si_Send_Bytes );
+
+		snprintf( Buf_IP, sizeof( Buf_IP ), "%d.%d.%d.%d", 
 			cfg->SessionStatus.si_IPAddr[0] ,
 			cfg->SessionStatus.si_IPAddr[1] ,
 			cfg->SessionStatus.si_IPAddr[2] ,
 			cfg->SessionStatus.si_IPAddr[3] );
 
 		mySetTags( cfg, GUIObjects[ GID_Session_IP ],
-			GA_Text, buffer,
+			GA_Text, Buf_IP,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_Read ],
-			GA_Text, Session_Bytes( buffer, cfg->SessionStatus.si_Read_Bytes ),
+			GA_Text, Buf_Read,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_Send ],
-			GA_Text, Session_Bytes( buffer, cfg->SessionStatus.si_Send_Bytes ),
+			GA_Text, Buf_Send,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_Tiles ],
-			GA_Text, Session_Procent( buffer, cfg->SessionStatus.si_Tiles_Total, cfg->SessionStatus.si_Tiles_Total ),
+			GA_Text, Buf_Tiles_Total,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_Raw ],
-			GA_Text, Session_Procent( buffer, cfg->SessionStatus.si_Tiles_Total, cfg->SessionStatus.si_Tiles_Raw ),
+			GA_Text, Buf_Tiles_Raw,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_ZLib ],
-			GA_Text, Session_Procent( buffer, cfg->SessionStatus.si_Tiles_Total, cfg->SessionStatus.si_Tiles_ZLib ),
+			GA_Text, Buf_Tiles_ZLib,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_Connect ],
-			GA_Text, Session_Connect_Time( buffer, & cfg->SessionStatus.si_Time_Connect ),
+			GA_Text, Buf_Connect,
 			TAG_END
 		);
 
 		mySetTags( cfg, GUIObjects[ GID_Session_Duration ],
-			GA_Text, Session_Duration( cfg, buffer, & cfg->SessionStatus.si_Time_Logon ),
+			GA_Text, Buf_Duration,
 			TAG_END
 		);
 	}
@@ -542,17 +564,17 @@ char *buffer;
 			TAG_END
 		);
 	}
-
-	if ( buffer )
-	{
-		myFree( buffer );
-	}
 }
 
 // --
 
 void myGUI_TimerTick( struct Config *cfg )
 {
+	if ( cfg->cfg_WinData[WIN_Main].Status != WINSTAT_Close )
+	{
+		myGUI_Main_TimerTick( cfg );
+	}
+
 	if (( cfg->UserCount == 0 )
 	||	( GUIObjects[ GID_Window ] == NULL ) 
 	||	( cfg->cfg_WinData[WIN_Session].WindowAdr == NULL ))
@@ -567,7 +589,7 @@ void myGUI_TimerTick( struct Config *cfg )
 
 void myGUI_SessionMessage( struct Config *cfg, struct CommandSession *msg UNUSED )
 {
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
 	}

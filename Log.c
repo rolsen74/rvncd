@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -27,11 +22,11 @@ int nr;
 	{
 		if ( nr < 2 )
 		{
-			name = myASPrintF( "%s.txt", cfg->cfg_LogFileName );
+			name = myASPrintF( "%s.txt", cfg->cfg_LogFilename );
 		}
 		else
 		{
-			name = myASPrintF( "%s.%03d", cfg->cfg_LogFileName, nr );
+			name = myASPrintF( "%s.%03d", cfg->cfg_LogFilename, nr );
 		}
 
 		file = IDOS->Open( name, MODE_OLDFILE );
@@ -89,12 +84,12 @@ int len;
 
 	if ( curnr < 2 )
 	{
-		curname = myASPrintF( "%s.txt", cfg->cfg_LogFileName );
+		curname = myASPrintF( "%s.txt", cfg->cfg_LogFilename );
 		curnr = 1;
 	}
 	else
 	{
-		curname = myASPrintF( "%s.%03d", cfg->cfg_LogFileName, curnr );
+		curname = myASPrintF( "%s.%03d", cfg->cfg_LogFilename, curnr );
 	}
 
 	len = myGetFileSize( curname, & cursize );
@@ -110,7 +105,7 @@ int len;
 	{
 		curnr++;
 
-		curname = myASPrintF( "%s.%03d", cfg->cfg_LogFileName, curnr );
+		curname = myASPrintF( "%s.%03d", cfg->cfg_LogFilename, curnr );
 
 		if ( len < 0 )
 		{
@@ -161,7 +156,7 @@ int len;
 int pos;
 int h;
 
-	if ( cfg->cfg_LogFileName == NULL )
+	if ( cfg->cfg_LogFilename == NULL )
 	{
 		goto bailout;
 	}
@@ -214,6 +209,7 @@ int h;
 		// --
 
 		// We need to write Header (h) + String (len)
+		size = 0; // avoid gcc warning
 		file = myOpenFile( cfg, h + len, & size );
 
 		if ( file )
@@ -290,11 +286,7 @@ bailout:
 
 // --
 
-//#ifdef DO_CLIB
-//void Log_PrintF( struct Config *cfg, int type, const char *fmt, ... )
-//#else
 void VARARGS68K Log_PrintF( struct Config *cfg, int type, const char *fmt, ... )
-//#endif
 {
 va_list ap;
 time_t mytime;
@@ -311,16 +303,12 @@ int t;
 
 	va_start( ap, fmt );
 
-	if ( cfg->cfg_LogFileName == NULL )
+	if ( cfg->cfg_LogFilename == NULL )
 	{
 		goto bailout;
 	}
 
-//	#ifdef DO_CLIB
-//	vasprintf( & buf, fmt, ap );
-//	#else
 	buf = IUtility->VASPrintf( fmt, (APTR) va_getlinearva( ap, uint32 ));
-//	#endif
 
 	if ( buf == NULL )
 	{

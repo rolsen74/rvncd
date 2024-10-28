@@ -17,44 +17,17 @@
 
 static int myRead_Unknown( struct Config *cfg )
 {
-struct SocketIFace *ISocket;
 int error;
 int rc;
 
-	ISocket = cfg->NetRead_ISocket;
-
 	error = TRUE;
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, cfg->NetRead_ReadBuffer, 2048, 0 );
+	rc = myNetRead( cfg, cfg->NetRead_ReadBuffer, cfg->NetRead_ReadBufferSize, 0 );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		cfg->cfg_ServerRunning = FALSE;
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	Log_PrintF( cfg, LOGTYPE_Info, "Skipping packet data (%ld)", rc );
 
@@ -69,45 +42,19 @@ bailout:
 
 int VNC_HandleCmds_33( struct Config *cfg )
 {
-struct SocketIFace *ISocket;
 char type;
 int error;
 int stat;
 int rc;
 
-// IExec->DebugPrintF( "VNC_HandleCmds_33\n" );
-
 	// --
 
-	ISocket = cfg->NetRead_ISocket;
+	error = TRUE;
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, & type, 1, MSG_PEEK );
+	rc = myNetRead( cfg, & type, 1, MSG_WAITALL|MSG_PEEK );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to peek data (%d)", ISocket->Errno() );
-		}
-
-		error = TRUE;
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to peek data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
-		goto bailout;
-	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		error = TRUE;
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
 		goto bailout;
 	}
 
@@ -188,8 +135,6 @@ int rc;
 	error = FALSE;
 
 bailout:
-
-// IExec->DebugPrintF( "VNC_HandleCmds_33 (%d)\n", error );
 
 	return( error );
 }

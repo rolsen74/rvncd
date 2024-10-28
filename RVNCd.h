@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 #ifndef __RVNCD_H__
 #define __RVNCD_H__
@@ -29,7 +24,9 @@
 #include <proto/diskfont.h>
 #include <proto/dos.h>
 #include <proto/exec.h>
+#include <proto/getfile.h>
 #include <proto/graphics.h>
+#include <proto/icon.h>
 #include <proto/input.h>
 #include <proto/integer.h>
 #include <proto/intuition.h>
@@ -39,6 +36,7 @@
 #include <proto/listbrowser.h>
 #include <proto/Picasso96API.h>
 #include <proto/scroller.h>
+#include <proto/slider.h>
 #include <proto/string.h>
 #include <proto/timer.h>
 #include <proto/utility.h>
@@ -56,10 +54,12 @@
 #include <gadgets/checkbox.h>
 #include <gadgets/chooser.h>
 #include <gadgets/clicktab.h>
+#include <gadgets/getfile.h>
 #include <gadgets/layout.h>
 #include <gadgets/listbrowser.h>
 #include <gadgets/integer.h>
 #include <gadgets/scroller.h>
+#include <gadgets/slider.h>
 #include <gadgets/string.h>
 #include <graphics/gfx.h>
 #include <images/bitmap.h>
@@ -74,7 +74,7 @@
 #include <proto/bsdsocket.h>
 #undef  __NOGLOBALIFACE__
 #undef  __NOLIBBASE__
- 
+
 // --
 
 #include <errno.h>
@@ -94,6 +94,7 @@
 
 #include "RVNCd_rev.h"
 #include "d3des.h"
+#include "VNC.h"
 
 // --
 
@@ -108,11 +109,11 @@
 #define MAX_ACTIONBUFFER		1024
 
 #ifndef MIN
-#define MIN(a,b)				(( a ) < ( b )) ? ( a ) : ( b )
+#define MIN(a,b)				((( a ) < ( b )) ? ( a ) : ( b ))
 #endif
 
 #ifndef MAX
-#define MAX(a,b)				(( a ) > ( b )) ? ( a ) : ( b )
+#define MAX(a,b)				((( a ) > ( b )) ? ( a ) : ( b ))
 #endif
 
 #define SWAP16(x)				(((x) & 0x00ffU ) << 8 | \
@@ -131,6 +132,55 @@
 #define End						TAG_END)
 #endif
 
+// -- Config
+
+enum Cfg_LabelType
+{
+	CLT_Config_ip,		//  0 : IP
+	CLT_Config_vb,		//  1 : Verbose
+	CLT_Config_bstr,	//  2 : String (Buffer) - snprintf
+	CLT_Config_gstr,	//  3 : String (Global) - snprintf
+	CLT_Config_pstr,	//  4 : String (Pointer) - strdup
+	CLT_Config_u8,		//  5 : uint8  - With range check
+	CLT_Config_u32,		//  6 : uint32 - With range check
+	CLT_Config_s32,		//  7 :  int32 - With range check
+};
+
+enum Cfg_ListType
+{
+	CLT_B,				// Black List
+	CLT_W,				// White List
+};
+
+struct Cfg_Label
+{
+	const int		Len;
+	const char *	Name;
+	const int		Type;
+	const int		Arg1;
+	const int		Arg2;
+	const int		Offset;
+	const void *	Pointer;
+};
+
+struct Cfg_Group
+{
+	const int		Len;
+	const char *	Name;
+	const struct Cfg_Label *Cmds;
+};
+
+// -- IP Edit Status
+
+enum
+{
+	IPES_Unused = 0,
+	IPES_Black_Add,
+	IPES_Black_Edit,
+	IPES_White_Add,
+	IPES_White_Edit,
+};
+
 // -- Windows
 
 enum
@@ -141,6 +191,8 @@ enum
 	WIN_KeyLogger,
 	WIN_Encodings,
 	WIN_PixelFormat,
+	WIN_IPEdit,
+	WIN_Quit,
 	WIN_LAST
 };
 
@@ -151,6 +203,7 @@ enum WinStat
 	WINSTAT_Close,
 	WINSTAT_Open,
 	WINSTAT_Iconifyed,
+	WINSTAT_Last
 };
 
 // -- Process Status
@@ -169,6 +222,7 @@ enum
 {
 	VNCProtocol_Unknown,
 	VNCProtocol_33,				// Ver 3.3
+	VNCProtocol_37,				// Ver 3.7
 };
 
 // -- Tile Scanning for Updates in a .. method
@@ -177,6 +231,7 @@ enum
 {
 	SCANMethod_Linear,
 	SCANMethod_Random,
+	SCANMethod_Last
 };
 
 // -- Buffer Update Stats
@@ -216,59 +271,16 @@ struct WinNode
 	int16			YPos;
 	int16			Width;
 	int16			Height;
+	int16			Busy;
 	int32			Status;			// Save
 	struct Window *	WindowAdr;
+	void			(*BusyWin)	( struct Config *cfg, int val );
 	int				(*OpenWin)	( struct Config *cfg );
 	void			(*CloseWin)	( struct Config *cfg );
 	void			(*HandleWin)( struct Config *cfg );
 };
 
 // --
-
-#pragma pack(1)
-
-struct PixelMessage
-{
-	uint8	pm_Type;
-	uint8	pm_Pad;
-	uint8	pm_Pad2;
-	uint8	pm_Pad3;
-	uint8	pm_BitsPerPixel;
-	uint8	pm_Depth;
-	uint8	pm_BigEndian;
-	uint8	pm_TrueColor;
-	uint16	pm_RedMax;
-	uint16	pm_GreenMax;
-	uint16	pm_BlueMax;
-	uint8	pm_RedShift;
-	uint8	pm_GreenShift;
-	uint8	pm_BlueShift;
-	uint8	pm_Pad4;
-	uint8	pm_Pad5;
-	uint8	pm_Pad6;
-};
-
-struct ClipboardMessage
-{
-	uint8	cm_Type;
-	uint8	cm_Pad;
-	uint8	cm_Pad2;
-	uint8	cm_Pad3;
-	uint32	cm_Length;
-	// Text String
-};
-
-struct UpdateRequestMessage
-{
-	uint8	urm_Type;
-	uint8	urm_Incremental;
-	uint16	urm_XPos;
-	uint16	urm_YPos;
-	uint16	urm_Width;
-	uint16	urm_Height;
-};
-
-#pragma pack(0)
 
 struct UpdateNode
 {
@@ -323,6 +335,7 @@ struct CommandSession
 	struct Message		cs_Message;
 	int					cs_Command;
 	// --
+	uint32				cs_Starting;
 };
 
 struct CommandEncoding
@@ -371,45 +384,14 @@ struct myEncNode
 
 // --
 
-enum
+struct LogTime
 {
-	SCFG_Dummy,
-	SCFG_Password,
-	SCFG_KeyMapping,
+	int					lt_Inited;			// Struct have been Initalized
+	int					lt_Ended;			// Time Stopped
+	struct TimeVal		lt_Logon;			// Start Tick
+	struct TimeVal		lt_Logoff;			// End Tick
+	struct DateStamp	lt_Connect;			// Connection Time
 };
-
-struct ServerCfg_Group
-{
-	struct Node		scg_Node;
-	int				scg_GroupID;
-	struct List		scg_GroupList;
-};
-
-struct ServerCfg_Node
-{
-	struct Node		scn_Node;
-	int				scn_Type;
-};
-
-struct ServerCfg_Password
-{
-	struct Node		scn_Node;
-	int				scn_Type;
-	// --
-	char			scn_Password[];
-	// Text String follow
-};
-
-struct ServerCfg_KeyMapping
-{
-	struct Node		scn_Node;
-	int				scn_Type;
-	// --
-	uint32			scn_Key;		// Encodings Key
-	uint32			scn_Mapped;		// Remaped Key (also Encodings keycode)
-};
-
-// --
 
 struct SessionInfo
 {
@@ -423,9 +405,7 @@ struct SessionInfo
 	uint64				si_Tiles_Total;
 
 	// -- Time
-	struct TimeVal		si_Time_Logon;			// Start Tick
-	struct TimeVal		si_Time_Logoff;			// End Tick
-	struct DateStamp	si_Time_Connect;		// Connection Time
+	struct LogTime		si_LogTime;
 
 	// -- IP Addr
 	int					si_IPAddr[4];	
@@ -446,22 +426,21 @@ struct ClipData
 struct Settings
 {
 	uint32			Port;								// Save
+	uint32			SendWatchDog;						// Save
+	int32			TileSize;							// Save : Tile Size for Graphics Ripper
 	// --
 	uint8			ZLib;								// Save
 	uint8			RichCursor;							// Save
 	uint8			DisableBlanker;						// Save
 	uint8			SendClipboard;						// Save
 	uint8			ReadClipboard;						// Save
+	uint8			Protocol33;							// Save
+	uint8			Protocol37;							// Save
 	uint8			ScreenViewMode;
+	uint8			PointerType;						// Save : 0 = Built in, 1 = Custom
+	uint8			TileScanMethod;						// Save : 
 	char			Name[MAX_SERVERNAME+1];				// Save
 	char			Password[MAX_SERVERPASSWORD+1];		// Save
-};
-
-// -- Settings that just need a Program Restart
-
-struct Settings2
-{
-	uint8			AutoStart;							// Save
 };
 
 // --
@@ -471,30 +450,44 @@ struct Config
 	// -- Program
 
 	uint32					cfg_ID;
-	int32					cfg_TileSize;						// Save
 
 	int						UserCount;
 
-	char *					cfg_Startup_Config_FileName;
-	char *					cfg_Config_FileName;
+	char *					cfg_Startup_Config_Filename;
+	char *					cfg_Config_Filename;
+	struct Node *			cfg_IPEditNode;
 
 	int						cfg_LogFileNumber;
 	int						cfg_LogFileLimit;
-	char *					cfg_LogFileName;					// Save
+	char *					cfg_LogFilename;					// Save
 	struct SignalSemaphore	cfg_LogPrintFSema;
 
-	char *					cfg_PointerFileName;				// Save
+	char *					cfg_PointerFilename;				// Save
+	char *					cfg_PointerFilename2;				// Internal
 	uint8 *					cfg_PointerChunky;
+	uint8 *					cfg_PointerBuffer;
+	int						cfg_PointerBufferSize;
+	int						cfg_PointerBufferMod;
+	uint8 *					cfg_PointerMask;
+	uint8 *					cfg_PointerMask2;
+	int						cfg_PointerMaskSize;
+	int						cfg_PointerMaskMod;
 	int						cfg_PointerWidth;
 	int						cfg_PointerHeight;
-
-	struct ServerCfg_Group *cfg_ServerCfg_Active;
-	struct ServerCfg_Group *cfg_ServerCfg_Default;
-	struct List				cfg_ServerCfg_Groups;
+	struct PixelMessage		cfg_PointerFormat;
+	int						cfg_PointerFormatID;				// should match GfxRead_Enocde_ActivePixelID
 
 	z_stream				cfg_zStream;
 
 	char *					cfg_NetReason;
+
+	int						cfg_MouseDrawn;
+	int						cfg_OldMouseX;
+	int						cfg_OldMouseY;
+	int						cfg_CurMouseX;
+	int						cfg_CurMouseY;
+	int						cfg_RenderMouseX;
+	int						cfg_RenderMouseY;
 
 	// -- Stats
 	uint32					Connect_Accecpted;
@@ -504,10 +497,8 @@ struct Config
 
 	// -- Settings
 	struct Settings			cfg_Disk_Settings;
-	struct Settings2		cfg_Disk_Settings2;
 
 	struct Settings			cfg_Active_Settings;
-//	struct Settings2		cfg_Active_Settings2;
 
 	// -- User Config on/off settings
 	uint8					cfg_LogEnable;						// Save
@@ -529,17 +520,16 @@ struct Config
 	uint8					cfg_ActionsServerStopEnable;		// Save
 	uint8					cfg_ActionsUserConnectEnable;		// Save
 	uint8					cfg_ActionsUserDisconnectEnable;	// Save
+	uint8					AutoStart;							// Save
+	uint8					MainWinState;						// Save
 
 	// Internal Settings
 	uint8					cfg_LogInit;
 	uint8					cfg_ServerStatus;					// 0 = off, 1 = starting, 2 = running, 3 = shutting down
 	uint8					cfg_ServerShutdown;
-	uint8					cfg_ServerRunning;
-//	uint8					cfg_ServerGotSetPixelFormat;
-//	uint8					cfg_ServerGotBufferUpdateRequest;
+	uint8					cfg_ClientRunning;
 	uint8					cfg_ServerGotSetEncoding;
 	uint8					cfg_ServerZLibAvailable;
-//	uint8					cfg_ServerDoFullUpdate;
 	uint8					cfg_ServerNumLock;
 	uint8					cfg_ServerPrintSession;
 	uint8					cfg_ServerSupportsCursor;
@@ -547,24 +537,25 @@ struct Config
 	uint8					cfg_GfxReadStatus;
 	uint8					cfg_NetReadStatus;
 	uint8					cfg_NetSendStatus;
+	uint8					cfg_WatchDogStatus;
 	uint8					cfg_SessionUsed;
 	uint8					cfg_UserConnectSignal;
 	uint8					cfg_UserDisconnectSignal;
 	uint8					cfg_SettingChanged;
+	uint8					cfg_KickUser;
+	uint8					cfg_ServerCursorStat;				// Internal Status
+	uint8					cfg_IPEditStat;						// 0 = Free, 1 = Create New, 2 = Edit Old
 
 	// --
 
 	struct List				WhiteList;
 	struct List				BlackList;
 	struct WinNode			cfg_WinData[ WIN_LAST ];
-	struct SessionInfo		SessionStatus;		// Status about User connections
-
-
+	struct SessionInfo		SessionStatus;						// Status about User connections
 
 	// -- Gfx Read Task
 	struct Task *			GfxRead_Task;
 	struct Task *			GfxRead_Exit;
-	int32					GfxRead_BufferScanMethod;			// Save
 	int32					GfxRead_DelayFrequency;				// Save
 	struct Screen *			GfxRead_PubScreenAdr;
 	int						GfxRead_Screen_SupportChange;
@@ -594,6 +585,7 @@ struct Config
 	int						GfxRead_Encode_OldFormat;			// PIX_FMT
 	int						GfxRead_Encode_FormatSize;			// 1, 2 or 4 bytes
 	struct PixelMessage		GfxRead_Enocde_ActivePixel;
+	int						GfxRead_Enocde_ActivePixelID;		// Counter, inc. when Format change
 	int						GfxRead_Enocde_RedShift;
 	int						GfxRead_Enocde_GreenShift;
 	int						GfxRead_Enocde_BlueShift;
@@ -625,6 +617,7 @@ struct Config
 	struct Task *			NetRead_Task;
 	struct Task *			NetRead_Exit;
 	void *					NetRead_ReadBuffer;
+	int						NetRead_ReadBufferSize;
 	int						NetRead_ClientSocket;
 	struct Library *		NetRead_SocketBase;
 	struct SocketIFace *	NetRead_ISocket;
@@ -651,6 +644,15 @@ struct Config
 	int						Server_ClientSocket;
 	int32					Server_DuplicateSendSocket;
 	int32					Server_DuplicateReadSocket;
+	struct LogTime			Server_LogTime;
+
+	// -- WatchDog
+	struct Task *			WatchDog_Task;
+	struct Task *			WatchDog_Exit;
+	int						WatchDog_TimerActive;
+	struct TimeRequest		WatchDog_TimerIOReq;
+	struct MsgPort *		WatchDog_ReplyPort;
+	uint32					WatchDog_ReplyPortBit;
 };
 
 // --
@@ -686,12 +688,19 @@ struct ParseCommand
 struct IPNode
 {
 	struct Node		ipn_Node;
-	int				ipn_CfgNr;
 	int				ipn_A;
 	int				ipn_B;
 	int				ipn_C;
 	int				ipn_D;
 };
+
+// --
+
+typedef struct
+{
+	void ( *Function )( struct Config * );
+
+} GUIFunc;
 
 // --
 
@@ -712,9 +721,9 @@ void			Config_Delete(			struct Config *cfg );
 int				Config_Parse(			struct Config *cfg, int argc, char **argv );
 char *			Config_CopyString(		char *buffer );
 int				Config_ParseArgs(		struct Config *cfg, int argc, char **argv, int early );
-int				Config_ParseFile(		struct Config *cfg, char *filename );
 void			Config_Reset(			struct Config *cfg );
-void			Config_Save(			struct Config *cfg, char *filename );
+int				Config_Save(			struct Config *cfg, char *Filename );
+int				Config_Read(			struct Config *cfg, char *Filename, int CfgNeeded );
 
 void			Log_Setup(				struct Config *cfg );
 
@@ -735,7 +744,13 @@ void			myStop_Net_Send(		struct Config *cfg );
 int				myStart_Gfx_Read(		struct Config *cfg );
 void			myStop_Gfx_Read(		struct Config *cfg );
 
-int				VNC_Authenticate(		struct Config *cfg );
+int				myStart_WatchDog(		struct Config *cfg );
+void			myStop_WatchDog(		struct Config *cfg );
+void			WatchDog_StartTimer(	struct Config *cfg );
+void			WatchDog_StopTimer(		struct Config *cfg );
+
+int				VNC_Authenticate_33(	struct Config *cfg );
+int				VNC_Authenticate_37(	struct Config *cfg );
 int				VNC_BufferUpdate(		struct Config *cfg, int xx, int yy, int ww, int hh );
 int				VNC_ClientInit(			struct Config *cfg );
 int				VNC_Clipboard(			struct Config *cfg );
@@ -749,6 +764,7 @@ int				VNC_UpdateRequest(		struct Config *cfg );
 int				VNC_Version(			struct Config *cfg );
 
 int				VNC_HandleCmds_33(		struct Config *cfg );
+int				VNC_HandleCmds_37(		struct Config *cfg );
 
 // --
 
@@ -774,39 +790,68 @@ void			ARexx_Handle(			struct Config *cfg );
 
 // --
 
+void			myGUI_BusyMainWindow(			struct Config *cfg, int val );
 int				myGUI_OpenMainWindow(			struct Config *cfg );
 void			myGUI_CloseMainWindow(			struct Config *cfg );
 void			myGUI_HandleMainWindow(			struct Config *cfg );
+void			myGUI_Main_SessionMessage(		struct Config *cfg, struct CommandSession *msg );
+void			myGUI_Main_CheckSettings(		struct Config *cfg );
+void			myGUI_Main_RefreshSettings(		struct Config *cfg );
+void			myGUI_Main_TimerTick(			struct Config *cfg );
+void			myGUI_Main_UpdateBlackList(		struct Config *cfg );
+void			myGUI_Main_UpdateWhiteList(		struct Config *cfg );
+void			Page_Refresh_Black(				struct Config *cfg );
+void			Page_Refresh_White(				struct Config *cfg );
 
+void			myGUI_BusyKeyWindow(			struct Config *cfg, int val );
 int				myGUI_OpenKeyWindow(			struct Config *cfg );
 void			myGUI_CloseKeyWindow(			struct Config *cfg );
 void			myGUI_HandleKeyWindow(			struct Config *cfg );
 void			myGUI_AddKeyMessage(			struct Config *cfg, struct CommandKey *msg );
 
+void			myGUI_BusyEncodingsWindow(		struct Config *cfg, int val );
 int				myGUI_OpenEncodingsWindow(		struct Config *cfg );
 void			myGUI_CloseEncodingsWindow(		struct Config *cfg );
 void			myGUI_HandleEncodingsWindow(	struct Config *cfg );
 void			myGUI_EncodingMessage(			struct Config *cfg, struct CommandEncoding *msg );
 
-void			myGUI_AddLogStringMessage(		struct Config *cfg, struct CommandLogString *msg );
-void			myGUI_RefreshMessage(			struct Config *cfg, struct CommandRefresh *msg );
-void			myGUI_RefreshStats(				struct Config *cfg, struct CommandRefresh *msg );
-void			myGUI_TimerTick(				struct Config *cfg );
-
+void			myGUI_BusyAboutWindow(			struct Config *cfg, int val );
 int				myGUI_OpenAboutWindow(			struct Config *cfg );
 void			myGUI_CloseAboutWindow(			struct Config *cfg );
 void			myGUI_HandleAboutWindow(		struct Config *cfg );
 
+void			myGUI_BusySessionWindow(		struct Config *cfg, int val );
 int				myGUI_OpenSessionWindow(		struct Config *cfg );
 void			myGUI_CloseSessionWindow(		struct Config *cfg );
 void			myGUI_HandleSessionWindow(		struct Config *cfg );
 void			myGUI_SessionMessage(			struct Config *cfg, struct CommandSession *msg );
 
+void			myGUI_BusyPixelWindow(			struct Config *cfg, int val );
 int				myGUI_OpenPixelWindow(			struct Config *cfg );
 void			myGUI_ClosePixelWindow(			struct Config *cfg );
 void			myGUI_HandlePixelWindow(		struct Config *cfg );
 void			myGUI_PxlFmtMessage(			struct Config *cfg, struct CommandPxlFmt *msg );
 void			myGUI_PxlFmtRefresh(			struct Config *cfg );
+
+void			myGUI_BusyIPEditWindow(			struct Config *cfg, int val );
+int				myGUI_OpenIPEditWindow(			struct Config *cfg );
+void			myGUI_CloseIPEditWindow(		struct Config *cfg );
+void			myGUI_HandleIPEditWindow(		struct Config *cfg );
+
+void			myGUI_BusyQuitWindow(			struct Config *cfg, int val );
+int				myGUI_OpenQuitWindow(			struct Config *cfg );
+void			myGUI_CloseQuitWindow(			struct Config *cfg );
+void			myGUI_HandleQuitWindow(			struct Config *cfg );
+
+void			LogTime_Init(					struct LogTime *lt );
+void			LogTime_Stop(					struct LogTime *lt );
+void			LogTime_GetConnectTime(			struct LogTime *lt, char *buf, int len );
+void			LogTime_GetDurationTime(		struct LogTime *lt, char *buf, int len );
+
+void			myGUI_AddLogStringMessage(		struct Config *cfg, struct CommandLogString *msg );
+void			myGUI_RefreshMessage(			struct Config *cfg, struct CommandRefresh *msg );
+void			myGUI_RefreshStats(				struct Config *cfg, struct CommandRefresh *msg );
+void			myGUI_TimerTick(				struct Config *cfg );
 
 // --
 
@@ -821,30 +866,37 @@ int TileRender_Generic_32BE(	struct Config *cfg, APTR buf, int tile );
 int TileRender_Generic_32LE(	struct Config *cfg, APTR buf, int tile );
 
 int NewBuffer_Cursor(			struct Config *cfg );
-int NewBufferUpdate(			struct Config *cfg );
+int	NewBufferUpdate(			struct Config *cfg );
+void NewBuffer_AddCursor(		struct Config *cfg, uint8 *data, int tile );
 
-int myEnc_Raw(					struct Config *cfg, struct UpdateNode *un, int tile );
-int myEnc_ZLib(					struct Config *cfg, struct UpdateNode *un, int tile );
+int myEnc_Raw(					struct Config *cfg, struct UpdateNode *un, int tile, int hardcursor );
+int myEnc_ZLib(					struct Config *cfg, struct UpdateNode *un, int tile, int hardcursor );
 
-void myInitSessionInfo( struct Config *cfg, int a, int b, int c, int d );
-void myPrintSessionInfo( struct Config *cfg );
-char *Session_Bytes( char *buf, uint64 val );
-char *Session_Procent( char *buf, uint64 total, uint64 val );
-char *Session_Connect_Time( char *buf, struct DateStamp *ds );
-char *Session_Duration( struct Config *cfg, char *buf, struct TimeVal *time );
+void	myInitSessionInfo(		struct Config *cfg, int a, int b, int c, int d );
+void	myPrintSessionInfo(		struct Config *cfg );
+void	Session_GetProcent(		char *buf, int len, uint64 total, uint64 val );
+void	Session_GetBytes(		char *buf, int len, uint64 val );
 
-int Send_Load_Pointer( struct Config *cfg );
-void Send_Free_Pointer( struct Config *cfg );
+int Send_Load_Pointer(			struct Config *cfg );
+void Send_Free_Pointer(			struct Config *cfg );
 
 void GUIFunc_UpdateServerStatus( struct Config *cfg );
-void GUIFunc_StartServer( struct Config *cfg );
-void GUIFunc_StopServer( struct Config *cfg );
+void GUIFunc_StartServer(		struct Config *cfg );
+void GUIFunc_StopServer(		struct Config *cfg );
 
+void Func_Quit(					struct Config *cfg );
+void Func_ForceQuit(			struct Config *cfg );
 
-void *myMalloc( int size );
-void *myCalloc( int size );
-char *myStrdup( char *str );
-void  myFree(	void *mem );
+// --
+
+char *	myGetTempFilename(		char *path );
+int		mySameString(			char *str1, char *str2 );
+int		myNetRead(				struct Config *cfg, void *buf, int len, int flag );
+int		myNetSend(				struct Config *cfg, void *buf, int len );
+void *	myMalloc(				int size );
+void *	myCalloc(				int size );
+char *	myStrdup(				char *str );
+void	myFree(					void *mem );
 
 #ifdef DO_CLIB
 
@@ -861,6 +913,8 @@ void	VARARGS68K Log_PrintF( struct Config *cfg, int type, const char *fmt, ... )
 
 // --
 
+extern const struct Cfg_Group ConfigGroups[];
+extern const char *ConfigHeaderStr;
 extern char ActionBuffer_UserDisconnect[MAX_ACTIONBUFFER];	// Save
 extern char ActionBuffer_ProgramStart[MAX_ACTIONBUFFER];	// Save
 extern char ActionBuffer_ProgramStop[MAX_ACTIONBUFFER];		// Save
@@ -870,15 +924,15 @@ extern char ActionBuffer_ServerStop[MAX_ACTIONBUFFER];		// Save
 extern struct CommandEncoding *ActiveEncoding;
 extern struct SignalSemaphore UpdateSema;
 extern struct SignalSemaphore ActionSema;
-extern struct SignalSemaphore TestSema;
 extern struct SignalSemaphore UserSema;
-extern struct ParseCommand ParseServerCfgCmds[];
 extern struct ParseCommand ParseActionsCmds[];
 extern struct ParseCommand ParseProgramCmds[];
 extern struct ParseCommand ParseServerCmds[];
 extern struct ParseCommand ParseBlackCmds[];
 extern struct ParseCommand ParseWhiteCmds[];
 extern struct ParseCommand ParseLogCmds[];
+extern struct TimeRequest *TimerIOReq;
+extern struct DiskObject *ProgramIcon;
 extern struct MsgPort *CmdMsgPort;
 extern struct MsgPort *WinMsgPort;
 extern struct MsgPort *WinAppPort;
@@ -901,16 +955,7 @@ extern uint32 AppID;
 extern int ProgramRunning;
 extern int ProgramInfo;
 extern int DoVerbose;
-extern int DoMugWall;
 
-#ifdef VAL_TEST
-extern int TEST_VAL;
-#endif
-
-#ifdef FUNCLOG
-extern struct SignalSemaphore FuncLogSema;
-void FuncLogAdd( char *txt );
-#endif
 
 // --
 

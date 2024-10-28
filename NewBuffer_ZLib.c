@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,9 +10,9 @@
 
 // --
 
-#pragma pack(1)
+#if 0
 
-struct BufferRect
+struct GfxRectZLib
 {
 	// -- Rect Header
 	uint16	br_XPos;
@@ -30,13 +25,13 @@ struct BufferRect
 	// -- ZLib Data
 };
 
-#pragma pack(0)
+#endif
 
 // --
 
-int myEnc_ZLib( struct Config *cfg, struct UpdateNode *un, int tilenr )
+int myEnc_ZLib( struct Config *cfg, struct UpdateNode *un UNUSED, int tilenr, int hardcursor )
 {
-struct BufferRect *rect;
+struct GfxRectZLib *rect;
 struct TileInfo *ti;
 z_stream *zStream;
 uint8 *data;
@@ -68,6 +63,11 @@ int len;
 		}
 
 		IExec->ReleaseSemaphore( & cfg->GfxRead_Screen_Sema );
+
+		if ( ! hardcursor )
+		{
+			NewBuffer_AddCursor( cfg, & data[ 1000 ], tilenr );
+		}
 	}
 	else
 	{
@@ -98,7 +98,7 @@ int len;
 	zStream = & cfg->cfg_zStream;
 
 	zStream->next_in	= & data[ 1000 ];
-	zStream->next_out	= & data[ sizeof( struct BufferRect ) ];
+	zStream->next_out	= & data[ sizeof( struct GfxRectZLib ) ];
 	zStream->avail_in	= datalen;
 	zStream->avail_out	= bufsize;
 
@@ -128,29 +128,13 @@ int len;
 
 	// --
 
-	len  = sizeof( struct BufferRect ); 
+	len  = sizeof( struct GfxRectZLib ); 
 	len += rect->bz_Length;
 
 	cfg->SessionStatus.si_Tiles_ZLib++;
 	cfg->SessionStatus.si_Tiles_Total++;
 
 bailout:
-
-#if 0
-{
-static int cnt = 0;
-char name[32];
-BPTR h;
-
-	sprintf( name, "ram:raw%05d", cnt++ );
-
-	h = IDOS->Open( name, MODE_NEWFILE );
-	IDOS->Write( h, cfg->NetSend_SendBuffer, cfg->NetSend_SendBufferSize );
-	IDOS->Close( h );
-}
-
-printf( "len %d\n", len );
-#endif
 
 	return( len );
 }

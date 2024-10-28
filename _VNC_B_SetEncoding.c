@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,16 +10,7 @@
 
 // --
 
-/*
-** Purpose:
-** - Server handles a Mouse event from Client
-**
-** Returns:
-** - True and the socket will be closed
-** - False and we continue
-*/
-
-#pragma pack(1)
+#if 0
 
 struct EncodingMessage
 {
@@ -33,7 +19,7 @@ struct EncodingMessage
 	uint16	em_Encodings;
 };
 
-#pragma pack(0)
+#endif
 
 // --
 
@@ -41,7 +27,6 @@ int VNC_SetEncoding( struct Config *cfg )
 {
 struct CommandEncoding *msg;
 struct EncodingMessage em;
-struct SocketIFace *ISocket;
 struct myEncNode tmp;
 uint32 *enc;
 void *buf;
@@ -52,9 +37,8 @@ int cur;
 int cnt;
 int rc;
 
-//	printf( "Got : VNC_SetEncoding\n" );
-
-	ISocket = cfg->NetRead_ISocket;
+	// Don't Update Encodings while a UpdateBuffer, is being processed
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
 
 	error = TRUE;
 
@@ -64,42 +48,18 @@ int rc;
 
 	size = sizeof( struct EncodingMessage );
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, buf, size, MSG_WAITALL );
+	rc = myNetRead( cfg, buf, size, MSG_WAITALL );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		cfg->cfg_ServerRunning = FALSE;
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	memcpy( & em, buf, sizeof( struct EncodingMessage ));
 
-	if (( em.em_Type != 2 ) || ( rc != size ))
+	if ( em.em_Type != 2 )
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%d != %d)", rc, size );
+		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data type (%ld != %ld)", em.em_Type, 2 );
 		goto bailout;
 	}
 
@@ -117,36 +77,12 @@ int rc;
 			goto bailout;
 		}
 
-		rc = ISocket->recv( cfg->NetRead_ClientSocket, enc, em.em_Encodings * sizeof( uint32 ), MSG_WAITALL );
+		rc = myNetRead( cfg, enc, em.em_Encodings * sizeof( uint32 ), MSG_WAITALL );
 
-		if ( rc == -1 )
+		if ( rc <= 0 )
 		{
-			if ( ! cfg->cfg_NetReason )
-			{
-				cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-			}
-
-			Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 			goto bailout;
 		}
-
-		if ( rc == 0 )
-		{
-			if ( ! cfg->cfg_NetReason )
-			{
-				cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-			}
-
-			cfg->cfg_ServerRunning = FALSE;
-
-			if ( cfg->cfg_LogUserDisconnect )
-			{
-				Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-			}
-			goto bailout;
-		}
-
-		cfg->SessionStatus.si_Read_Bytes += rc;
 	}
 
 	// --
@@ -161,8 +97,7 @@ int rc;
 
 	if ( DoVerbose )
 	{
-		printf( "Client Supported Encodings\n" );
-		printf( "\n" );
+		printf( "Client Supported Encodings\n\n" );
 	}
 
 	for( cnt=0 ; cnt<em.em_Encodings ; cnt++ )
@@ -187,7 +122,6 @@ int rc;
 			else if ( enc[cnt] == 0xFFFFFF21 )	{ printf( " - NewFBSize" ); }
 			printf( "\n" );
 		}
-// #define rfbEncodingExtDesktopSize     0xFFFFFECC
 
 		if ( enc[cnt] == 0 ) // Raw
 		{
@@ -267,17 +201,6 @@ int rc;
 			/***/ cfg->NetSend_Encodings2[ cur ] = tmp;
 		}
 	}
-
-	#if 0
-	for( cnt=0 ; cnt<ENCODE_LAST ; cnt++ )
-	{
-		printf( "Node %2d : Encoding %d, Enabled %d, EncType: %d\n", cnt, 
-			cfg->NetSend_Encodings2[cnt].Type, 
-			cfg->NetSend_Encodings2[cnt].Enabled,
-			cfg->NetSend_Encodings2[cnt].EncType
-		);
-	}
-	#endif
 
 	// --
 
@@ -467,7 +390,7 @@ bailout:
 		myFree( enc );
 	}
 
-// Log_PrintF( "myRead_Mouse (%d)\n", error );
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
 
 	return( error );
 }

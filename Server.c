@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -52,13 +47,6 @@ bailout:
 
 // --
 
-static void mySetIPConfig( struct Config *cfg UNUSED, int cfgnr UNUSED )
-{
-
-}
-
-// --
-
 static int myValidateIP( struct Config *cfg, char *addrbuf, int a, int b, int c, int d )
 {
 struct IPNode *node;
@@ -99,15 +87,8 @@ int users;
 			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "Connection from %s accepted. (Whitelisted)", addrbuf );
 		}
 
-		if ( node->ipn_CfgNr >= 0 )
-		{
-			mySetIPConfig( cfg, node->ipn_CfgNr );
-		}
-
 		cfg->Connect_Accecpted++;
 		cfg->Connect_WhiteListed++;
-
-// printf( "WhiteListed: %ld, Total Accecpted: %ld\n", cfg->Connect_WhiteListed, cfg->Connect_Accecpted );
 
 		rejected = FALSE;
 		goto bailout;
@@ -138,9 +119,6 @@ int users;
 
 		cfg->Connect_Rejected++;
 		cfg->Connect_BlackListed++;
-
-//		printf( "BlackListed: %ld, Total Rejected: %ld\n", cfg->Connect_BlackListed, cfg->Connect_Rejected );
-
 		goto bailout;
 	}
 
@@ -158,16 +136,12 @@ int users;
 		}
 
 		cfg->Connect_Accecpted++;
-
-//		printf( "WhiteListed: %ld, Total Accecpted: %ld\n", cfg->Connect_WhiteListed, cfg->Connect_Accecpted );
 	}
 	else
 	{
 		Log_PrintF( cfg, LOGTYPE_Info, "Server: Closing connection, maximum users reached." );
 
 		cfg->Connect_Rejected++;
-
-//		printf( "BlackListed: %ld, Total Rejected: %ld\n", cfg->Connect_BlackListed, cfg->Connect_Rejected );
 		goto bailout;
 	}
 
@@ -197,6 +171,8 @@ static int myOpen_Net( struct Config *cfg )
 {
 struct SocketIFace *ISocket;
 struct sockaddr_in serverAddress;
+struct timeval timeout;
+int enable;
 int error;
 int reuse;
 
@@ -235,14 +211,24 @@ int reuse;
 		goto bailout;
 	}
 
-	// --	
+	// -- Enable Keep Alive
+
+	enable = 1;
+
+	ISocket->setsockopt( cfg->Server_ListenSocket, SOL_SOCKET, SO_KEEPALIVE, & enable, sizeof( int ));
+
+	// -- Set 10s Timeout
+
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
+
+	ISocket->setsockopt( cfg->Server_ListenSocket, SOL_SOCKET, SO_RCVTIMEO, & timeout, sizeof( timeout ));
+
+	// -- Enable Reuse of Port
 
 	reuse = 1;
 
-	if ( ISocket->setsockopt( cfg->Server_ListenSocket, SOL_SOCKET, SO_REUSEADDR, & reuse, sizeof( int )) < 0 )
-	{
-printf( "set sock opt failed\n" );
-	}
+	ISocket->setsockopt( cfg->Server_ListenSocket, SOL_SOCKET, SO_REUSEADDR, & reuse, sizeof( int ));
 
 	// --
 
@@ -292,12 +278,6 @@ int s;
 		s = ISocket->ObtainSocket( cfg->Server_DuplicateReadSocket, AF_INET, SOCK_STREAM, 0 );
 		if ( s != -1 ) ISocket->CloseSocket( s );
 		cfg->Server_DuplicateReadSocket = -1;
-	}
-
-	if ( cfg->NetSend_ClientSocket != -1 )
-	{
-		ISocket->CloseSocket( cfg->NetSend_ClientSocket );
-		cfg->NetSend_ClientSocket = -1;
 	}
 
 	if ( cfg->Server_ListenSocket != -1 )
@@ -359,7 +339,7 @@ int a, b, c, d, s;
 
 		// -- Wait for next connection
 
-		cfg->Server_ClientSocket = ISocket->accept( cfg->Server_ListenSocket, (void *) & clientAddress, & clientAddressLength );
+		cfg->Server_ClientSocket = ISocket->accept( cfg->Server_ListenSocket, (APTR) & clientAddress, & clientAddressLength );
 
 		if ( cfg->Server_ClientSocket == -1 )
 		{
@@ -398,7 +378,7 @@ int a, b, c, d, s;
 
 		if ( cfg->Server_DuplicateSendSocket == -1 )
 		{
-			Log_PrintF( cfg, LOGTYPE_Error, "Server: Failed to clone Socket. (%d)", myStrError( ISocket->Errno() ), ISocket->Errno() );
+			Log_PrintF( cfg, LOGTYPE_Error, "Server: Failed to clone Socket. (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 			continue;
 		}
 
@@ -406,16 +386,14 @@ int a, b, c, d, s;
 
 		if ( cfg->Server_DuplicateReadSocket == -1 )
 		{
-			Log_PrintF( cfg, LOGTYPE_Error, "Server: Failed to clone Socket. (%d)", myStrError( ISocket->Errno() ), ISocket->Errno() );
+			Log_PrintF( cfg, LOGTYPE_Error, "Server: Failed to clone Socket. (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 			continue;
 		}
 
+		cfg->cfg_ServerCursorStat = -1;
+
 		myStart_Net_Send( cfg );
 	}
-
-	// -- 
-
-//	Log_PrintF( cfg, LOGTYPE_Info, "Server stopping" );
 }
 
 // --
@@ -432,6 +410,8 @@ int ts;
 	cfg->Server_DuplicateSendSocket = -1;
 	cfg->Server_DuplicateReadSocket = -1;
 
+	LogTime_Init( & cfg->Server_LogTime );
+
 	// --
 
 	if ( cfg->cfg_LogServerStart )
@@ -439,14 +419,23 @@ int ts;
 		Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "Server starting up .." );
 	}
 
+	// --
+
 	// Copy Settings
 	memcpy( & cfg->cfg_Active_Settings, & cfg->cfg_Disk_Settings, sizeof( struct Settings ));
 
 	// --
 
-	ts = MAX(  16, cfg->cfg_TileSize );
+	ts = MAX(  16, cfg->cfg_Active_Settings.TileSize );
 	ts = MIN( 256, ts );
 	cfg->GfxRead_Screen_TileSize = ts;
+
+	if (( ! cfg->cfg_Active_Settings.Protocol33 )
+	&&	( ! cfg->cfg_Active_Settings.Protocol37 ))
+	{
+		Log_PrintF( cfg, LOGTYPE_Error, "No VNC Protocols have been enabled" );
+		goto bailout;
+	}
 
 	// --
 
@@ -479,6 +468,8 @@ static void myProcess_Free( struct Config *cfg )
 APTR un;
 
 	// --
+
+	LogTime_Stop( & cfg->Server_LogTime );
 
 	if ( cfg->cfg_LogServerStop )
 	{
@@ -524,7 +515,6 @@ APTR un;
 	}
 
 	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
-
 }
 
 // --

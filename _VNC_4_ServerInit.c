@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,16 +10,7 @@
 
 // --
 
-/*
-** Purpose:
-** - Server send Screen Info to Client
-**
-** Returns:
-** - True and the socket will be closed
-** - False and we continue
-*/
-
-#pragma pack(1)
+#if 0
 
 struct ServerInitMessage
 {
@@ -47,19 +33,16 @@ struct ServerInitMessage
 	// Name String
 };
 
-#pragma pack(0)
+#endif
 
 int VNC_ServerInit( struct Config *cfg )
 {
 struct ServerInitMessage *sim;
-struct SocketIFace *ISocket;
 char *str;
 int rejected;
 int size;
 int len;
 int rc;
-
-// IExec->DebugPrintF( "VNC_ServerInit\n" );
 
 	rejected = TRUE;
 
@@ -69,7 +52,6 @@ int rc;
 		goto bailout;
 	}
 
-	ISocket = cfg->NetSend_ISocket;
 	sim	= cfg->NetSend_SendBuffer;
 	str = cfg->NetSend_SendBuffer;
 
@@ -133,42 +115,18 @@ int rc;
 
 	// --
 
-	rc = ISocket->send( cfg->NetSend_ClientSocket, sim, size + len, 0 );
+	rc = myNetSend( cfg, sim, size + len );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to send data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Send_Bytes += rc;
 
 	// --
 
 	rejected = FALSE;
 
 bailout:
-
-// IExec->DebugPrintF( "VNC_ServerInit (%d)\n", rejected );
 
 	return( rejected );
 }

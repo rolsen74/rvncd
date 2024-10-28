@@ -1,28 +1,14 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
 #include "RVNCd.h"
 
 // --
-
-/*
-** Purpose:
-** - Server handles a Mouse event from Client
-**
-** Returns:
-** - True and the socket will be closed
-** - False and we continue
-*/
 
 #if 0
 
@@ -38,10 +24,11 @@ struct ClipboardMessage
 
 #endif
 
+// --
+
 int VNC_Clipboard( struct Config *cfg )
 {
 struct ClipboardMessage *cm;
-struct SocketIFace *ISocket;
 struct IOClipReq *ioreq;
 struct MsgPort *port;
 struct Library *base;
@@ -61,46 +48,22 @@ int rc;
 	ioreq = NULL;
 	error = TRUE;
 
-	ISocket = cfg->NetRead_ISocket;
-
 	// --
 
 	size = sizeof( struct ClipboardMessage );
 
 	cm = cfg->NetRead_ReadBuffer;
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, cm, size, MSG_WAITALL );
+	rc = myNetRead( cfg, cm, size, MSG_WAITALL );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	if (( cm->cm_Type != 6 ) || ( rc != size ))
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%d != %d)", rc, size );
+		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%ld != %ld)", rc, size );
 		goto bailout;
 	}
 
@@ -136,36 +99,12 @@ int rc;
 
 	// --
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, data, datalen, 0 );
+	rc = myNetRead( cfg, data, datalen, 0 );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		cfg->cfg_ServerRunning = FALSE;
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	// --
 	// We dont stop just becoarse Clipboard fails
@@ -277,8 +216,6 @@ bailout:
 	{
 		IExec->FreeSysObject( ASOT_PORT, port );
 	}
-
-// IExec->DebugPrintF( "myRead_Mouse (%d)\n", error );
 
 	return( error );
 }

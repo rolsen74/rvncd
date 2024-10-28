@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,16 +10,7 @@
 
 // --
 
-/*
-** Purpose:
-** - Server handles a Mouse event from Client
-**
-** Returns:
-** - True and the socket will be closed
-** - False and we continue
-*/
-
-#pragma pack(1)
+#if 0
 
 struct MouseMessage
 {
@@ -34,16 +20,88 @@ struct MouseMessage
 	int16	mm_Y;
 };
 
-#pragma pack(0)
+#endif
+
+// --
+
+static void myMarkDirty( struct Config *cfg, uint32 pos2 )
+{
+int tilenr;
+int posx;
+int posy;
+int mx2;
+int my2;
+int mx;
+int my;
+int mw;
+int mh;
+int ts;
+int x;
+int y;
+
+	x = ( pos2 & 0x0000ffff ) >>  0;
+	y = ( pos2 & 0xffff0000 ) >> 16;
+
+	mx = ( x > 0 ) ? x : 0 ;
+	my = ( y > 0 ) ? y : 0 ;
+	mw = ( x > 0 ) ? cfg->cfg_PointerWidth  : cfg->cfg_PointerWidth  + x ;
+	mh = ( y > 0 ) ? cfg->cfg_PointerHeight : cfg->cfg_PointerHeight + y ;
+
+	ts = cfg->GfxRead_Screen_TileSize;
+
+	my2 = ( my / ts ) * ts;
+
+	while( TRUE )
+	{
+		posy = my2;
+
+		if ( posy >= my + mh )
+		{
+			break;
+		}
+
+		if ( posy >= cfg->GfxRead_Screen_PageHeight )
+		{
+			break;
+		}
+
+		mx2 = ( mx / ts ) * ts;
+
+		while( TRUE )
+		{
+			posx = mx2;
+
+			if ( posx >= mx + mw )
+			{
+				break;
+			}
+
+			if ( posx >= cfg->GfxRead_Screen_PageWidth )
+			{
+				break;
+			}
+
+			tilenr  = ( posy / ts ) * ( cfg->GfxRead_Screen_TileWidth );
+			tilenr += ( posx / ts );
+			cfg->GfxRead_Screen_TileArrayBuffer[tilenr] = 0x80;
+
+			mx2 += ts;
+		}
+
+		my2 += ts;
+	}
+}
+
+// --
 
 int VNC_Mouse( struct Config *cfg )
 {
-struct MouseMessage *mm;
 struct IEPointerPixel Pointer;
-struct SocketIFace *ISocket;
+struct MouseMessage *mm;
 struct InputEvent Event;
 struct IOStdReq *IOReq;
 uint32 pos;
+int hardcursor;
 int error;
 int code;
 int size;
@@ -55,58 +113,22 @@ int v2;
 
 	error = TRUE;
 
-	ISocket = cfg->NetRead_ISocket;
-
 	size = sizeof( struct MouseMessage );
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, mm, size, MSG_WAITALL );
+	rc = myNetRead( cfg, mm, size, MSG_WAITALL );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		cfg->cfg_ServerRunning = FALSE;
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	if (( mm->mm_Type != 5 ) || ( rc != size ))
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%d != %d)", rc, size );
+		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%ld != %ld)", rc, size );
 		goto bailout;
 	}
 
 	// -- Check if our Active screen is Front Most
-
-	#if 0
-	if ( cfg->GfxRead_Screen_Adr != IntuitionBase->FirstScreen )
-	{
-		error = FALSE;
-		goto bailout;
-	}
-	#endif
-
-	// --
 
 	IOReq = cfg->NetRead_InputIOReq;
 
@@ -116,6 +138,9 @@ int v2;
 
 	if ( cfg->NetRead_OldMousePos != pos )
 	{
+		cfg->cfg_CurMouseX = mm->mm_X;
+		cfg->cfg_CurMouseY = mm->mm_Y;
+
 		Pointer.iepp_Screen		= cfg->GfxRead_Screen_Adr;
 		Pointer.iepp_Position.X	= mm->mm_X;	// - xadjust;
 		Pointer.iepp_Position.Y	= mm->mm_Y;	// - yadjust;
@@ -148,6 +173,16 @@ int v2;
 
 		IExec->DoIO( (APTR) IOReq );
 	
+		// are we Using Hardware Cursor ..
+		hardcursor = (( cfg->cfg_Active_Settings.RichCursor ) && ( cfg->cfg_ServerSupportsCursor ) && ( cfg->NetSend_Encodings1[ ENCODE_RichCursor ] ));
+
+		if ( ! hardcursor )
+		{
+			myMarkDirty( cfg, cfg->NetRead_OldMousePos );
+			myMarkDirty( cfg, pos );
+		}
+
+		// -- Set new Pos
 		cfg->NetRead_OldMousePos = pos;
 	}
 
@@ -160,13 +195,6 @@ int v2;
 		//  4 = Right
 		//  8 = scroll up
 		// 16 = scroll down
-
-	#ifdef VAL_TEST
-	if ( TEST_VAL )
-	{
-		Log_PrintF( cfg, LOGTYPE_Info, "Mouse Button : New %04lx, Old %04lx", mm->mm_Buttons, cfg->NetRead_OldMouseButtons );
-	}
-	#endif
 
 		// -- Left Mouse Button
 

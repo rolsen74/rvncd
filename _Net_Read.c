@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -100,7 +95,9 @@ static void myClose_Input( struct Config *cfg )
 static int myOpen_Socket( struct Config *cfg )
 {
 struct SocketIFace *ISocket;
+struct timeval timeout;
 int32 d;
+int enable;
 int error;
 int s;
 
@@ -121,6 +118,19 @@ int s;
 
 	cfg->Server_DuplicateReadSocket = -1;
 	cfg->NetRead_ClientSocket = s;
+
+	// -- Enable Keep Alive
+
+	enable = 1;
+
+	ISocket->setsockopt( cfg->NetRead_ClientSocket, SOL_SOCKET, SO_KEEPALIVE, & enable, sizeof( int ));
+
+	// -- Set 10s Timeout
+
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
+
+	ISocket->setsockopt( cfg->NetRead_ClientSocket, SOL_SOCKET, SO_RCVTIMEO, & timeout, sizeof( timeout ));
 
 	// --
 
@@ -215,13 +225,38 @@ int err;
 
 	ISocket = cfg->NetRead_ISocket;
 
+	// --
+
+	switch( cfg->NetSend_ClientProtocol )
+	{
+		case VNCProtocol_33:
+		{
+			printf( "VNC_HandleCmds_33\n" );
+			break;
+		}
+
+		case VNCProtocol_37:
+		{
+			printf( "VNC_HandleCmds_37\n" );
+			break;
+		}
+
+		default:
+		{
+			Log_PrintF( cfg, LOGTYPE_Error, "Invalid Client Protocol type (%ld)", cfg->NetSend_ClientProtocol );
+			break;
+		}
+	}
+
+	// --
+
 	while( TRUE )
 	{
 		if ( cfg->NetRead_Idle )
 		{
 			mask = IDOS->CheckSignal( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E );
 
-			if (( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetRead_Exit ))
+			if ((( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetRead_Exit ))
 			{
 				gotsignal = TRUE;
 				break;
@@ -257,50 +292,54 @@ int err;
 			{
 				// Timeout or Signals
 
-//				Log_PrintF( cfg, LOGTYPE_Error, "timeout" );
-
 				if ( signal )
 				{
-					if (( signal & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetRead_Exit ))
+					if ((( signal & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetRead_Exit ))
 					{
 						gotsignal = TRUE;
 						break;
 					}
-//					else
-//					{
-//						Log_PrintF( cfg, LOGTYPE_Error, "not signal %08x", signal );
-//					}
 				}
 			}
 			else
 			{
 				if ( FD_ISSET( cfg->NetRead_ClientSocket, & readfd ))
 				{
-//					IExec->ObtainSemaphore( & TestSema );
+					switch( cfg->NetSend_ClientProtocol )
+					{
+						case VNCProtocol_33:
+						{
+							err = VNC_HandleCmds_33( cfg );
+							break;
+						}
 
-					err = VNC_HandleCmds_33( cfg );
+						case VNCProtocol_37:
+						{
+							err = VNC_HandleCmds_37( cfg );
+							break;
+						}
 
-//					IExec->ReleaseSemaphore( & TestSema );
+						default:
+						{
+							Log_PrintF( cfg, LOGTYPE_Error, "Invalid Client Protocol type (%ld)", cfg->NetSend_ClientProtocol );
+							err = TRUE;
+							break;
+						}
+					}
 
 					if ( err )
 					{
 						break;
 					}
 				}
-//				else
-//				{
-//					Log_PrintF( cfg, LOGTYPE_Error, "not fd" );
-//				}
 			}
 		}
 	}
 
 	// --
 
-//	Log_PrintF( cfg, LOGTYPE_Info, "Stopping 1" );
-
 	// Shutdown NetSend process
-	cfg->cfg_ServerRunning = FALSE;
+	cfg->cfg_ClientRunning = FALSE;
 
 	// --
 
@@ -311,7 +350,7 @@ int err;
 		{
 			mask = IDOS->CheckSignal( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E );
 
-			if (( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetRead_Exit ))
+			if ((( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetRead_Exit ))
 			{
 				break;
 			}
@@ -319,8 +358,6 @@ int err;
 			IDOS->Delay( 2 );
 		}
 	}
-
-//	Log_PrintF( cfg, LOGTYPE_Info, "Stopping 2" );
 }
 
 // --
@@ -333,18 +370,13 @@ int retval;
 
 	// --
 
-//	Log_PrintF( cfg, LOGTYPE_Info, "Starting up .. " );
-
-	// --
-
-//	cfg->cfg_ServerGotSetPixelFormat = FALSE;
-//	cfg->cfg_ServerGotBufferUpdateRequest = 0;
 	cfg->NetRead_ClientSocket = -1;
 	cfg->NetRead_Idle = TRUE;
 
 	// --
 
-	cfg->NetRead_ReadBuffer = IExec->AllocVecTags( 4096,
+	cfg->NetRead_ReadBufferSize = 1024 * 4;
+	cfg->NetRead_ReadBuffer = IExec->AllocVecTags( cfg->NetRead_ReadBufferSize,
 		AVT_PhysicalAlignment, 4096,
 		AVT_Contiguous, TRUE,
 		AVT_Alignment, 4096,
@@ -354,7 +386,7 @@ int retval;
 
 	if ( cfg->NetRead_ReadBuffer == NULL )
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Error allocating memory (%ld Bytes)", 4096 );
+		Log_PrintF( cfg, LOGTYPE_Error, "Error allocating memory (%ld Bytes)", cfg->NetRead_ReadBufferSize );
 		goto bailout;
 	}
 
@@ -390,10 +422,6 @@ static void myProcess_Free( struct Config *cfg )
 {
 	// --
 
-//	Log_PrintF( cfg, LOGTYPE_Info, "Shutting down .. " );
-
-	// --
-
 	myClose_Socket( cfg );
 
 	myClose_Input( cfg );
@@ -404,7 +432,7 @@ static void myProcess_Free( struct Config *cfg )
 
 	if ( cfg->NetRead_ReadBuffer )
 	{
-		IExec->UnlockMem( cfg->NetRead_ReadBuffer, 4096 );
+		IExec->UnlockMem( cfg->NetRead_ReadBuffer, cfg->NetRead_ReadBufferSize );
 		IExec->FreeVec( cfg->NetRead_ReadBuffer );
 		cfg->NetRead_ReadBuffer = NULL;
 	}

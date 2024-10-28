@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -16,7 +11,6 @@
 // --
 
 int		DoVerbose		= FALSE;
-int		DoMugWall		= FALSE;
 
 // --
 
@@ -37,8 +31,7 @@ static void Config_Usage( void )
 	printf( "  -v, --verbose        Enable verbose mode\n" );
 	printf( "  -h, --help           Display this help message\n" );
 	printf( "  -c, --config <file>  Specify the config file\n" );
-	printf( "  -p, --port <port>    Specify the network port to listen on\n");	
-	printf( "      --mugwall        Enables Memory MugWalls.\n");	
+	printf( "  -p, --port <port>    Specify the network port to listen on\n");
 	printf( "      --nogui          Disables GUI.\n");	
 	printf( "      --noarexx        Disables ARexx.\n");	
 	printf( "      --nocxbroker     Disables Commodities Broker.\n");	
@@ -52,14 +45,6 @@ static int ArgFunc_Help( struct Config *cfg UNUSED, char *arg UNUSED )
 	Config_Usage();
 
 	return( RC_Done );
-}
-
-// --
-
-static int ArgFunc_Nop( struct Config *cfg UNUSED, char *arg UNUSED )
-{
-	// --mugwall allready set
-	return( RC_Okay );
 }
 
 // --
@@ -81,14 +66,14 @@ int rc;
 
 	rc = RC_Error;
 
-	if ( cfg->cfg_Startup_Config_FileName )
+	if ( cfg->cfg_Startup_Config_Filename )
 	{
-		myFree( cfg->cfg_Startup_Config_FileName );
+		myFree( cfg->cfg_Startup_Config_Filename );
 	}
 
-	cfg->cfg_Startup_Config_FileName = myStrdup( arg );
+	cfg->cfg_Startup_Config_Filename = myStrdup( arg );
 
-	if ( cfg->cfg_Startup_Config_FileName == NULL )
+	if ( cfg->cfg_Startup_Config_Filename == NULL )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Error allocating memory" );
 		goto bailout;
@@ -172,10 +157,6 @@ struct myArgs myOptions[] =
 { "-v", "--verbose",	1, 0, ArgFunc_Verbose },
 { "-c", "--config",		1, 1, ArgFunc_Config },
 { "-p", "--port",		0, 1, ArgFunc_Port },
-{ NULL, "--mugwall",	1, 0, ArgFunc_Nop },
-#ifdef VAL_TEST
-{ NULL, "--mousetest",	1, 0, ArgFunc_Nop },
-#endif
 { NULL, "--nogui",		0, 0, ArgFunc_NoGUI },
 { NULL, "--noarexx",	0, 0, ArgFunc_NoARexx },
 { NULL, "--nocxbroker",	0, 0, ArgFunc_NoBroker },

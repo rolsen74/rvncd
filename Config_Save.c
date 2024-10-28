@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,216 +10,457 @@
 
 // --
 
-static const char *	ConfigHeaderStr	= "[RVNC SERVER CONFIG]\n";
-
-enum myLabelType
+static int myType_gstr( struct Config *cfg UNUSED, char *buf UNUSED, BPTR h, const struct Cfg_Label *Cmd )
 {
-	LT_Config_vb,		// uint8  
-	LT_Config_u8,		// uint8  
-	LT_Config_s32,		//  int32 
-	LT_Config_str,		// char []
-	LT_Config_strptr,	// char *
-	LT_Config_gstr,		// char * (global)
-};
-
-struct myLabel
-{
-	const char *	Name;
-	const int		Type;
-	const int		Offset;
-	const void *	Pointer;
-};
-
-struct myGroup
-{
-	const char *Name;
-	const struct myLabel *Labels;
-};
-
-static const struct myLabel myProgram[] =
-{
-{ "Verbose",				LT_Config_vb, 0, NULL },
-{ "DisableGUI",				LT_Config_u8, offsetof( struct Config, cfg_ProgramDisableGUI ), NULL },
-{ "DisableARexx",			LT_Config_u8, offsetof( struct Config, cfg_ProgramDisableARexx ), NULL },
-{ "DisableCxBroker",		LT_Config_u8, offsetof( struct Config, cfg_ProgramDisableCxBroker ), NULL },
-{ "WinKeyStatus",			LT_Config_s32, offsetof( struct Config, cfg_WinData[WIN_KeyLogger].Status ), NULL },
-{ "WinMainStatus",			LT_Config_s32, offsetof( struct Config, cfg_WinData[WIN_Main].Status ), NULL },
-{ "WinAboutStatus",			LT_Config_s32, offsetof( struct Config, cfg_WinData[WIN_About].Status ), NULL },
-{ "WinEncodingsStatus",		LT_Config_s32, offsetof( struct Config, cfg_WinData[WIN_Encodings].Status ), NULL },
-{ "WinSessionStatus",		LT_Config_s32, offsetof( struct Config, cfg_WinData[WIN_Session].Status ), NULL },
-{ "WinPixelStatus",			LT_Config_s32, offsetof( struct Config, cfg_WinData[WIN_PixelFormat].Status ), NULL },
-{ NULL, 0, 0, NULL },
-};
-
-static const struct myLabel myActions[] =
-{
-{ "ProgramStartEnable",		LT_Config_u8, offsetof( struct Config, cfg_ActionsProgramStartEnable ), NULL },
-{ "ProgramStartBuffer",		LT_Config_gstr, 0, ActionBuffer_ProgramStart },
-{ "ProgramStopEnable",		LT_Config_u8, offsetof( struct Config, cfg_ActionsProgramStopEnable ), NULL },
-{ "ProgramStopBuffer",		LT_Config_gstr, 0, ActionBuffer_ProgramStop },
-{ "ServerStartEnable",		LT_Config_u8, offsetof( struct Config, cfg_ActionsServerStartEnable ), NULL },
-{ "ServerStartBuffer",		LT_Config_gstr, 0, ActionBuffer_ServerStart },
-{ "ServerStopEnable",		LT_Config_u8, offsetof( struct Config, cfg_ActionsServerStopEnable ), NULL },
-{ "ServerStopBuffer",		LT_Config_gstr, 0, ActionBuffer_ServerStop },
-{ "UserConnectEnable",		LT_Config_u8, offsetof( struct Config, cfg_ActionsUserConnectEnable ), NULL },
-{ "UserConnectBuffer",		LT_Config_gstr, 0, ActionBuffer_UserConnect },
-{ "UserDisconnectEnable",	LT_Config_u8, offsetof( struct Config, cfg_ActionsUserDisconnectEnable ), NULL },
-{ "UserDisconnectBuffer",	LT_Config_gstr, 0, ActionBuffer_UserDisconnect },
-{ NULL, 0, 0, NULL },
-};
-
-static const struct myLabel myLog[] =
-{
-{ "LogFile",				LT_Config_strptr, offsetof( struct Config, cfg_LogFileName ), NULL },
-{ "Enable",					LT_Config_u8, offsetof( struct Config, cfg_LogEnable ), NULL },
-{ "ProgramStart",			LT_Config_u8, offsetof( struct Config, cfg_LogProgramStart ), NULL },
-{ "ProgramStop",			LT_Config_u8, offsetof( struct Config, cfg_LogProgramStop ), NULL },
-{ "ServerStart",			LT_Config_u8, offsetof( struct Config, cfg_LogServerStart ), NULL },
-{ "ServerStop",				LT_Config_u8, offsetof( struct Config, cfg_LogServerStop ), NULL },
-{ "UserConnect",			LT_Config_u8, offsetof( struct Config, cfg_LogUserConnect ), NULL },
-{ "UserDisconnect",			LT_Config_u8, offsetof( struct Config, cfg_LogUserDisconnect ), NULL },
-{ "Infos",					LT_Config_u8, offsetof( struct Config, cfg_ProgramLogInfos ), NULL },
-{ "Warnings",				LT_Config_u8, offsetof( struct Config, cfg_ProgramLogErrors ), NULL },
-{ "Errors",					LT_Config_u8, offsetof( struct Config, cfg_ProgramLogWarnings ), NULL },
-{ NULL, 0, 0, NULL },
-};
-
-static const struct myLabel myServer[] =
-{
-{ "Port",					LT_Config_s32, offsetof( struct Config, cfg_Disk_Settings.Port ), NULL },
-{ "Name",					LT_Config_str, offsetof( struct Config, cfg_Disk_Settings.Name ), NULL },
-{ "Password",				LT_Config_str, offsetof( struct Config, cfg_Disk_Settings.Password ), NULL },
-{ "EncZLIB",				LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.ZLib ), NULL },
-{ "DisableBlanker",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.DisableBlanker ), NULL },
-{ "SendClipboard",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.SendClipboard ), NULL },
-{ "ReadClipboard",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.ReadClipboard ), NULL },
-{ "AutoStart",				LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings2.AutoStart ), NULL },
-{ "EncRichCursor",			LT_Config_u8, offsetof( struct Config, cfg_Disk_Settings.RichCursor ), NULL },
-{ "TileSize",				LT_Config_s32, offsetof( struct Config, cfg_TileSize ), NULL },
-{ "ScanMethod",				LT_Config_s32, offsetof( struct Config, GfxRead_BufferScanMethod ), NULL },
-{ "DelayFrequency",			LT_Config_s32, offsetof( struct Config, GfxRead_DelayFrequency ), NULL },
-{ "PointerFile",			LT_Config_strptr, offsetof( struct Config, cfg_PointerFileName ), NULL },
-{ NULL, 0, 0, NULL },
-};
-
-static const struct myGroup myGroups[] =
-{
-{ "Program",	myProgram },
-{ "Actions",	myActions },
-{ "Server",		myServer },
-{ "Log",		myLog },
-{ NULL,			NULL }
-};
-
-// --
-
-static int myTest( struct Config *cfg, BPTR h );
-
-// --
-
-static int Config_Save_Whitelist( struct Config *cfg, char *buffer, BPTR h )
-{
-struct IPNode *node;
 char *str;
+char *mem;
 int error;
 int stat;
 int len;
 
 	error = TRUE;
 
-	#if 0
+	str = (APTR) ( Cmd->Pointer );
 
-	[WhiteList]
-	 IP = 192.168.1.211 [2]
-	 IP = 192.168.*.*
-	 IP = 10.0.*.*
+	mem = myASPrintF( " %s = \"%s\"\n", Cmd->Name, str );
 
-	#endif
-
-	str = "\n[Whitelist]\n";
-	stat = IDOS->Write( h, str, strlen( str ));
-
-	if ( stat <= 0 )
+	if ( ! mem )
 	{
 		goto bailout;
 	}
 
-	node = (APTR) IExec->GetHead( & cfg->WhiteList );
+	len = strlen( mem );
+
+	stat = IDOS->Write( h, mem, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	if ( mem )
+	{
+		myFree( mem );
+	}
+
+	return( error );
+}
+
+// --
+
+static int myType_bstr( struct Config *cfg, char *buf UNUSED, BPTR h, const struct Cfg_Label *Cmd )
+{
+char *str;
+char *mem;
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	str = (APTR) ( (uint32) cfg + Cmd->Offset );
+
+	mem = myASPrintF( " %s = \"%s\"\n", Cmd->Name, str );
+
+	if ( ! mem )
+	{
+		goto bailout;
+	}
+
+	len = strlen( mem );
+
+	stat = IDOS->Write( h, mem, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	if ( mem )
+	{
+		myFree( mem );
+	}
+
+	return( error );
+}
+
+// --
+
+static int myType_pstr( struct Config *cfg, char *buf UNUSED, BPTR h, const struct Cfg_Label *Cmd )
+{
+char **strptr;
+char *str;
+char *mem;
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	strptr = (APTR) ( (uint32) cfg + Cmd->Offset );
+
+	str = ( *strptr ) ? *strptr : "";
+
+	mem = myASPrintF( " %s = \"%s\"\n", Cmd->Name, str );
+
+	if ( ! mem )
+	{
+		goto bailout;
+	}
+
+	len = strlen( mem );
+
+	stat = IDOS->Write( h, mem, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	if ( mem )
+	{
+		myFree( mem );
+	}
+
+	return( error );
+}
+
+// --
+
+static int myType_u8( struct Config *cfg, char *buf, BPTR h, const struct Cfg_Label *Cmd )
+{
+uint8 *u8;
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	u8 = (APTR) ( (uint32) cfg + Cmd->Offset );
+
+	sprintf( buf, " %s = %d\n", Cmd->Name, *u8 );
+
+	len = strlen( buf );
+
+	stat = IDOS->Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+// --
+
+static int myType_u32( struct Config *cfg, char *buf, BPTR h, const struct Cfg_Label *Cmd )
+{
+uint32 *u32;
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	u32 = (APTR) ( (uint32) cfg + Cmd->Offset );
+
+	sprintf( buf, " %s = %ld\n", Cmd->Name, *u32 );
+
+	len = strlen( buf );
+
+	stat = IDOS->Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+// --
+
+static int myType_s32( struct Config *cfg, char *buf, BPTR h, const struct Cfg_Label *Cmd )
+{
+int32 *s32;
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	s32 = (APTR) ( (uint32) cfg + Cmd->Offset );
+
+	sprintf( buf, " %s = %ld\n", Cmd->Name, *s32 );
+
+	len = strlen( buf );
+
+	stat = IDOS->Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+// --
+
+static int myType_vb( struct Config *cfg UNUSED, char *buf, BPTR h, const struct Cfg_Label *Cmd UNUSED )
+{
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	if ( DoVerbose )
+	{
+		sprintf( buf, " Verbose = 1\n" );
+	}
+	else
+	{
+		// Writing 0 will over write the -v shell option
+		// so we do not set it by default
+		sprintf( buf, "; Verbose = 1\n" );
+	}
+
+	len = strlen( buf );
+
+	stat = IDOS->Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+// --
+
+static int myGroup( struct Config *cfg, BPTR h, char *buf, const char *grpname, const struct Cfg_Label *label )
+{
+int (*func)( struct Config *cfg, char *buf, BPTR h, const struct Cfg_Label *Cmd );
+int error;
+int stat;
+int len;
+int pos;
+
+	error = TRUE;
+
+	// -- Write Header
+
+	sprintf( buf, "\n%s\n", grpname );
+
+	len = strlen( buf );
+
+	stat = IDOS->Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	pos = 0;
+
+	while( label[pos].Name )
+	{
+		switch( label[pos].Type )
+		{
+//			case CLT_Config_ip:		{ func = myType_ip; break; }
+			case CLT_Config_vb:		{ func = myType_vb; break; }
+			case CLT_Config_u8:		{ func = myType_u8; break; }
+			case CLT_Config_u32:	{ func = myType_u32; break; }
+			case CLT_Config_s32:	{ func = myType_s32; break; }
+			case CLT_Config_gstr:	{ func = myType_gstr; break; }
+			case CLT_Config_bstr:	{ func = myType_bstr; break; }
+			case CLT_Config_pstr:	{ func = myType_pstr; break; }
+
+			default:
+			{
+				printf( "%s:%04d: Error unknown type (%d) for '%s'\n", __FILE__, __LINE__, label[pos].Type, label[pos].Name );
+				goto bailout;
+			}
+		}
+
+		if ( func( cfg, buf, h, & label[pos] ))
+		{
+			goto bailout;
+		}
+
+		pos++;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+// --
+
+static int myGroups( struct Config *cfg, BPTR h, char *buf )
+{
+char *str;
+int err;
+int pos;
+
+	err = TRUE;
+	pos = 0;
+
+	while( TRUE )
+	{
+		str = (APTR) ConfigGroups[pos].Name;
+
+		if ( ! str )
+		{
+			break;
+		}
+
+		if (( strcmp( str, "[BLACKLIST]" )) 
+		&&  ( strcmp( str, "[WHITELIST]" )))
+		{
+			if ( myGroup( cfg, h, buf, str, ConfigGroups[pos].Cmds ))
+			{
+				goto bailout;
+			}
+		}
+
+		pos++;
+	}
+
+	err = FALSE;
+
+bailout:
+
+	return( err );
+}
+
+// --
+
+static int myList( struct Config *cfg UNUSED, char *buf, char *name, struct List *list, BPTR h )
+{
+struct IPNode *node;
+int error;
+int stat;
+int len;
+
+	error = TRUE;
+
+	sprintf( buf, "\n[%s]\n", name );
+
+	len = strlen( buf );
+
+	stat = IDOS->Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	node = (APTR) IExec->GetHead( list );
 
 	while( node )
 	{
-		sprintf( buffer, " IP = " );
+		sprintf( buf, " IP = " );
 
 		// -- A
 
-		len = strlen( buffer );
+		len = strlen( buf );
 
 		if ( node->ipn_A == -1 )
 		{
-			sprintf( & buffer[len], "*" );
+			sprintf( & buf[len], "*" );
 		}
 		else
 		{
-			sprintf( & buffer[len], "%d", node->ipn_A );
+			sprintf( & buf[len], "%d", node->ipn_A );
 		}
 
 		// -- B
 
-		len = strlen( buffer );
+		len = strlen( buf );
 
 		if ( node->ipn_B == -1 )
 		{
-			sprintf( & buffer[len], ".*" );
+			sprintf( & buf[len], ".*" );
 		}
 		else
 		{
-			sprintf( & buffer[len], ".%d", node->ipn_B );
+			sprintf( & buf[len], ".%d", node->ipn_B );
 		}
 
 		// -- C
 
-		len = strlen( buffer );
+		len = strlen( buf );
 
 		if ( node->ipn_C == -1 )
 		{
-			sprintf( & buffer[len], ".*" );
+			sprintf( & buf[len], ".*" );
 		}
 		else
 		{
-			sprintf( & buffer[len], ".%d", node->ipn_C );
+			sprintf( & buf[len], ".%d", node->ipn_C );
 		}
 
 		// -- D
 
-		len = strlen( buffer );
+		len = strlen( buf );
 
 		if ( node->ipn_D == -1 )
 		{
-			sprintf( & buffer[len], ".*" );
+			sprintf( & buf[len], ".*" );
 		}
 		else
 		{
-			sprintf( & buffer[len], ".%d", node->ipn_D );
+			sprintf( & buf[len], ".%d", node->ipn_D );
 		}
 
 		// -- Config nr
 
-		len = strlen( buffer );
+		len = strlen( buf );
 
-		if ( node->ipn_CfgNr >= 0 )
-		{
-			sprintf( & buffer[len], " [%d]\n", node->ipn_CfgNr );
-		}
-		else
-		{
-			sprintf( & buffer[len], "\n" );
-		}
+		sprintf( & buf[len], "\n" );
 
 		// -- Write
 
-		stat = IDOS->Write( h, buffer, strlen( buffer ));
+		len = strlen( buf );
 
-		if ( stat <= 0 )
+		stat = IDOS->Write( h, buf, len );
+
+		if ( stat != len )
 		{
 			goto bailout;
 		}
@@ -243,152 +479,55 @@ bailout:
 
 // --
 
-static int Config_Save_Blacklist( struct Config *cfg, char *buffer, BPTR h )
+int Config_Save( struct Config *cfg, char *Filename )
 {
-struct IPNode *node;
-char *str;
+char *tmpname;
+char *buf;
 int error;
 int stat;
 int len;
-
-	error = TRUE;
-
-	#if 0
-
-	[BlackList]
-	 IP = *.*.*.*
-
-	#endif
-
-	str = "\n[Blacklist]\n";
-	stat = IDOS->Write( h, str, strlen( str ));
-
-	if ( stat <= 0 )
-	{
-		goto bailout;
-	}
-
-	node = (APTR) IExec->GetHead( & cfg->BlackList );
-
-	while( node )
-	{
-		sprintf( buffer, " IP = " );
-
-		// -- A
-
-		len = strlen( buffer );
-
-		if ( node->ipn_A == -1 )
-		{
-			sprintf( & buffer[len], "*" );
-		}
-		else
-		{
-			sprintf( & buffer[len], "%d", node->ipn_A );
-		}
-
-		// -- B
-
-		len = strlen( buffer );
-
-		if ( node->ipn_B == -1 )
-		{
-			sprintf( & buffer[len], ".*" );
-		}
-		else
-		{
-			sprintf( & buffer[len], ".%d", node->ipn_B );
-		}
-
-		// -- C
-
-		len = strlen( buffer );
-
-		if ( node->ipn_C == -1 )
-		{
-			sprintf( & buffer[len], ".*" );
-		}
-		else
-		{
-			sprintf( & buffer[len], ".%d", node->ipn_C );
-		}
-
-		// -- D
-
-		len = strlen( buffer );
-
-		if ( node->ipn_D == -1 )
-		{
-			sprintf( & buffer[len], ".*\n" );
-		}
-		else
-		{
-			sprintf( & buffer[len], ".%d\n", node->ipn_D );
-		}
-
-		// -- Write
-
-		stat = IDOS->Write( h, buffer, strlen( buffer ));
-
-		if ( stat <= 0 )
-		{
-			goto bailout;
-		}
-
-		// --
-
-		node = (APTR) IExec->GetSucc( (APTR) node );
-	}
-
-	error = FALSE;
-
-bailout:
-
-	return( error );
-}
-
-// --
-
-void Config_Save( struct Config *cfg, char *filename )
-{
-char *tmpname;
-char *str;
-char *buf;
-BPTR h;
-int error;
-int stat;
+int h;
 
 	h = 0;
+
+	buf = NULL;
 
 	error = TRUE;
 
 	tmpname = NULL;
 
-
-	if ( filename == NULL )
+	if (( cfg == NULL ) || ( cfg->cfg_ID != ID_CFG ))
 	{
-		filename = "RVNCd.config";
+		Log_PrintF( cfg, LOGTYPE_Error, "Error invalid Config Pointer" );
+		goto bailout;
+	}
+
+	if ( ! Filename )
+	{
+		Filename = "RVNCd.config";
 	}
 
 	buf = myMalloc( 1024 );
 
-	if ( buf == NULL )
+	if ( ! buf )
 	{
+		Log_PrintF( cfg, LOGTYPE_Error, "Error allocating memory" );
 		goto bailout;
 	}
 
-	tmpname = myASPrintF( "%S.tmp", filename );
+	tmpname = myGetTempFilename( Filename );
 
-	if ( tmpname == NULL )
+	if ( ! tmpname )
 	{
+		Log_PrintF( cfg, LOGTYPE_Error, "Error allocating memory" );
 		goto bailout;
 	}
 
 	h = IDOS->Open( tmpname, MODE_NEWFILE );
 
-	if ( h == 0 )
+	if ( ! h )
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Error opening file '%s'", filename );
+		Log_PrintF( cfg, LOGTYPE_Error, "Error opening file '%s'", Filename );
 		goto bailout;
 	}
 
@@ -396,10 +535,11 @@ int stat;
 	** File Header
 	*/
 
-	str = (APTR) ConfigHeaderStr;
-	stat = IDOS->Write( h, str, strlen( str ));
+	len = strlen( ConfigHeaderStr );
 
-	if ( stat <= 0 )
+	stat = IDOS->Write( h, ConfigHeaderStr, len );
+
+	if ( stat != len )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Error writing to file" );
 		goto bailout;
@@ -409,43 +549,39 @@ int stat;
 	** Groups
 	*/
 
-	if ( myTest( cfg, h ))
+	if ( myGroups( cfg, h, buf ))
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Error writing to file" );
 		goto bailout;
 	}
 
-	if ( Config_Save_Whitelist( cfg, buf, h ))
+	if ( myList( cfg, buf, "WhiteList", & cfg->WhiteList, h ))
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Error writing to file" );
 		goto bailout;
 	}
 
-	if ( Config_Save_Blacklist( cfg, buf, h ))
+	if ( myList( cfg, buf, "BlackList", & cfg->BlackList, h ))
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Error writing to file" );
 		goto bailout;
 	}
-
-	#if 0
-	[ServerCfg:2]
-	#endif
 
 	// --
 
-	if ( cfg->cfg_Config_FileName != filename )
+	if ( ! mySameString( cfg->cfg_Config_Filename, Filename ))
 	{
-		if ( cfg->cfg_Config_FileName )
+		if ( cfg->cfg_Config_Filename )
 		{
-			myFree( cfg->cfg_Config_FileName );
+			myFree( cfg->cfg_Config_Filename );
 		}
 
-		cfg->cfg_Config_FileName = myStrdup( filename );
+		cfg->cfg_Config_Filename = myStrdup( Filename );
 	}
 
 	// --
 
-	Log_PrintF( cfg, LOGTYPE_Info, "Config saved to %s", filename );
+	Log_PrintF( cfg, LOGTYPE_Info, "Config saved to %s", Filename );
 
 	// --
 
@@ -461,8 +597,9 @@ bailout:
 
 		if ( ! error )
 		{
-			IDOS->Delete( filename );
-			IDOS->Rename( tmpname, filename );
+			// Todo check if Delete fails
+			IDOS->Delete( Filename );
+			IDOS->Rename( tmpname, Filename );
 		}
 		else
 		{
@@ -479,189 +616,8 @@ bailout:
 	{
 		myFree( buf );
 	}
-}
 
-// --
-
-static int myTest2( struct Config *cfg, BPTR h, const char *grpname, const struct myLabel *labels )
-{
-static char buffer[1024];
-char **strptr;
-char *gstr;
-char *buf;
-char *str;
-int32 *s32;
-uint8 *u8;
-int stat;
-int err;
-int pos;
-
-	pos = 0;
-	err = TRUE;
-
-	// -- Write Header
-
-	sprintf( buffer, "\n[%s]\n", grpname );
-
-	stat = IDOS->Write( h, buffer, strlen( buffer ));
-
-	if ( stat <= 0 )
-	{
-		goto bailout;
-	}
-
-	// --
-
-	while( labels[pos].Name )
-	{
-		switch( labels[pos].Type )
-		{
-			case LT_Config_vb:
-			{
-				if ( DoVerbose )
-				{
-					sprintf( buffer, " Verbose = 1\n" );
-				}
-				else
-				{
-					// Writing 0 will over write the -v shell option
-					// so we do not set it by default
-					sprintf( buffer, "; Verbose = 1\n" );
-				}
-
-				stat = IDOS->Write( h, buffer, strlen( buffer ));
-				break;
-			}
-
-			case LT_Config_u8: // uint8 type
-			{
-				u8 = (void *) ( (uint32) cfg + labels[pos].Offset );
-
-				sprintf( buffer, " %s = %d\n", labels[pos].Name, *u8 );
-
-				stat = IDOS->Write( h, buffer, strlen( buffer ));
-				break;
-			}
-
-			case LT_Config_s32: // int32 type
-			{
-				s32 = (void *) ( (uint32) cfg + labels[pos].Offset );
-
-				sprintf( buffer, " %s = %ld\n", labels[pos].Name, *s32 );
-
-				stat = IDOS->Write( h, buffer, strlen( buffer ));
-				break;
-			}
-
-			case LT_Config_str: // char []
-			{
-				str = (void *) ( (uint32) cfg + labels[pos].Offset );
-
-				buf = myASPrintF( " %s = \"%s\"\n", labels[pos].Name, str );
-
-				if ( buf == NULL )
-				{
-					stat = -1;
-					break;
-				}
-
-				stat = IDOS->Write( h, buf, strlen( buf ));
-
-				myFree( buf );
-				break;
-			}
-
-			case LT_Config_strptr: // char *
-			{
-				strptr = (void *) ( (uint32) cfg + labels[pos].Offset );
-
-				str = ( *strptr ) ? *strptr : "";
-
-				buf = myASPrintF( " %s = \"%s\"\n", labels[pos].Name, str );
-
-				if ( buf == NULL )
-				{
-					stat = -1;
-					break;
-				}
-
-				stat = IDOS->Write( h, buf, strlen( buf ));
-
-				myFree( buf );
-				break;
-			}
-
-			case LT_Config_gstr: // Global String
-			{
-				gstr = (void *) labels[pos].Pointer;
-
-				buf = myASPrintF( " %s = \"%s\"\n", labels[pos].Name, gstr );
-
-				if ( buf == NULL )
-				{
-					stat = -1;
-					break;
-				}
-
-				stat = IDOS->Write( h, buf, strlen( buf ));
-
-				myFree( buf );
-				break;
-			}
-
-			default:
-			{
-				printf( "Illegal Label Type\n" );
-				goto bailout;
-			}
-		}
-
-		if ( stat <= 0 )
-		{
-			printf( "myTest2 : Write error\n" );
-			goto bailout;
-		}
-
-		pos++;
-	}
-
-	// --
-
-	err = FALSE;
-
-bailout:
-
-	return( err );
-}
-
-// --
-
-static int myTest( struct Config *cfg, BPTR h )
-{
-int err;
-int pos;
-
-	err = TRUE;
-	pos = 0;
-
-	while( myGroups[pos].Name )
-	{
-		if ( myTest2( cfg, h, myGroups[pos].Name, myGroups[pos].Labels ))
-		{
-			printf( "myTest error\n" );
-			goto bailout;
-		}
-		else
-		{
-			pos++;
-		}
-	}
-
-	err = FALSE;
-
-bailout:
-
-	return( err );
+	return( error );
 }
 
 // --

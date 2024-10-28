@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -68,6 +63,39 @@ va_list ap;
 
 // --
 
+void myGUI_BusyKeyWindow( struct Config *cfg, int val )
+{
+	if ( val )
+	{
+		/**/ cfg->cfg_WinData[WIN_KeyLogger].Busy++;
+
+		if ( cfg->cfg_WinData[WIN_KeyLogger].Busy == 1 )
+		{
+			mySetTags( cfg, GUIObjects[ GID_Window ],
+				WA_BusyPointer, TRUE,
+				TAG_END
+			);
+		}
+	}
+	else
+	{
+		if ( cfg->cfg_WinData[WIN_KeyLogger].Busy > 0 )
+		{
+			 cfg->cfg_WinData[WIN_KeyLogger].Busy--;
+
+			if ( cfg->cfg_WinData[WIN_KeyLogger].Busy == 0 )
+			{
+				mySetTags( cfg, GUIObjects[ GID_Window ],
+					WA_BusyPointer, FALSE,
+					TAG_END
+				);
+			}
+		}
+	}
+}
+
+// --
+
 int myGUI_OpenKeyWindow( struct Config *cfg UNUSED )
 {
 struct CommandKey *ck;
@@ -121,6 +149,7 @@ int error;
 		WA_DragBar,								    TRUE,
 		WA_SizeGadget,							    TRUE,
 		WA_Title,								    "RVNCd - Key Logger",
+		WA_BusyPointer,								cfg->cfg_WinData[WIN_KeyLogger].Busy > 0,
 
 		( cfg->cfg_WinData[WIN_KeyLogger].Width == 0 ) ?
 		TAG_IGNORE : WA_Left, cfg->cfg_WinData[WIN_KeyLogger].XPos,
@@ -140,8 +169,11 @@ int error;
 //		WA_PubScreen,							    gs->up_PubScreen,
 		WINDOW_AppPort,								WinAppPort,
 		WINDOW_SharedPort,							WinMsgPort,
+		WINDOW_PopupGadget,							TRUE,
+		WINDOW_Icon,								ProgramIcon,
+		WINDOW_IconTitle,							"rVNCd Key",
+		WINDOW_IconNoDispose,						TRUE,
 		WINDOW_IconifyGadget,						TRUE,
-		WINDOW_IconTitle,							"KeyLogger",
 //		WINDOW_MenuStrip,					    	MainMenuStrip,
 //		WINDOW_MenuUserData,				    	WGUD_HOOK,
 //		WINDOW_Position,						    WPOS_CENTERSCREEN,
@@ -181,7 +213,7 @@ int error;
 		End,
 	End;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Program: Error creating KeyLogger GUI Object" );
 		goto bailout;
@@ -242,7 +274,7 @@ void myGUI_CloseKeyWindow( struct Config *cfg )
 {
 struct Window *win;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		goto bailout;
 	}
@@ -291,7 +323,7 @@ APTR n;
 		LISTBROWSER_Position, LBP_BOTTOM,
 		TAG_END
 	);
-};
+}
 
 // --
 
@@ -299,7 +331,7 @@ void myGUI_HandleKeyWindow( struct Config *cfg )
 {
 uint32 result;
 uint16 code;
-BOOL theend;
+int theend;
 
     theend = FALSE;
 
@@ -386,7 +418,7 @@ void myGUI_AddKeyMessage( struct Config *cfg UNUSED, struct CommandKey *msg )
 APTR img;
 APTR n;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		goto bailout;
 	}
@@ -433,7 +465,7 @@ APTR n;
 bailout:
 
 	return;
-};
+}
 
 // --
 

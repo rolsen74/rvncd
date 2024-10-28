@@ -1,28 +1,14 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
 #include "RVNCd.h"
 
 // --
-
-/*
-** Purpose:
-** - Client sets what Pixel format we should use
-**
-** Returns:
-** - True and the socket will be closed
-** - False and we continue
-*/
 
 #if 0
 
@@ -49,18 +35,18 @@ struct PixelMessage
 
 #endif
 
+// --
+
 int VNC_SetPixelFormat( struct Config *cfg )
 {
 struct PixelMessage *buf;
 struct PixelMessage *pm;
-struct SocketIFace *ISocket;
 int error;
 int size;
 int rc;
 
-//	printf( "Got : VNC_SetPixelFormat\n" );
-
-	ISocket = cfg->NetRead_ISocket;
+	// Don't Change PixelFormat while a UpdateBuffer, is being processed
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
 
 	error = TRUE;
 
@@ -68,40 +54,16 @@ int rc;
 
 	size = sizeof( struct PixelMessage );
 
-	rc = ISocket->recv( cfg->NetRead_ClientSocket, buf, size, MSG_WAITALL );
+	rc = myNetRead( cfg, buf, size, MSG_WAITALL );
 
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to read data (%d)", ISocket->Errno() );
-		}
-
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		cfg->cfg_ServerRunning = FALSE;
-
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Read_Bytes += rc;
 
 	if (( buf->pm_Type != 0 ) || ( rc != size ))
 	{
-		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%d != %d)", rc, size );
+		Log_PrintF( cfg, LOGTYPE_Error, "Invalid data (%ld != %ld)", rc, size );
 		goto bailout;
 	}
 
@@ -150,8 +112,6 @@ int rc;
 		}
 
 		mySetEncoding_Message( cfg, buf, TRUE );
-
-//		cfg->cfg_UpdateCursor = TRUE;
 	}
 	else
 	{
@@ -161,11 +121,11 @@ int rc;
 		}
 	}
 
-//	cfg->cfg_ServerGotSetPixelFormat = TRUE;
-
 	error = FALSE;
 
 bailout:
+
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
 
 	return( error );
 }

@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,9 +10,9 @@
 
 // --
 
-#pragma pack(1)
+#if 0
 
-struct BufferMessage
+struct GfxRectHeader
 {
 	uint8	bm_Type;
 	uint8	bm_Pad;
@@ -25,11 +20,11 @@ struct BufferMessage
 	// Rects
 };
 
-#pragma pack(0)
+#endif
 
 // --
 
-static int myNewFill( struct Config *cfg, struct UpdateNode *un, int tile )
+static int myNewFill( struct Config *cfg, struct UpdateNode *un, int tile, int hardcursor )
 {
 int datalen;
 int cnt;
@@ -50,7 +45,7 @@ int t;
 		{
 			case ENCODE_Raw:
 			{
-				datalen = myEnc_Raw( cfg, un, tile );
+				datalen = myEnc_Raw( cfg, un, tile, hardcursor );
 				break;
 			}
 
@@ -58,7 +53,7 @@ int t;
 			{
 				if ( cfg->cfg_Active_Settings.ZLib )
 				{
-					datalen = myEnc_ZLib( cfg, un, tile );
+					datalen = myEnc_ZLib( cfg, un, tile, hardcursor );
 				}
 				break;
 			}
@@ -87,9 +82,8 @@ int t;
 
 // --
 
-static int myNewTile( struct Config *cfg, struct UpdateNode *un, int tiles )
+static int myNewTile( struct Config *cfg, struct UpdateNode *un, int tiles, int hardcursor )
 {
-struct SocketIFace *ISocket;
 struct TileInfo *ti;
 int stat;
 int pos;
@@ -99,8 +93,6 @@ int x1;
 int y1;
 int x2;
 int y2;
-
-	ISocket = cfg->NetSend_ISocket;
 
 	stat = UPDATESTAT_Error;
 
@@ -153,7 +145,7 @@ int y2;
 
 		// --
 
-		len = myNewFill( cfg, un, pos );
+		len = myNewFill( cfg, un, pos, hardcursor );
 
 		if ( len < 0 )
 		{
@@ -178,34 +170,12 @@ int y2;
 			goto bailout;
 		}
 
-		rc = ISocket->send( cfg->NetSend_ClientSocket, cfg->NetSend_SendBuffer, len, 0 );
+		rc = myNetSend( cfg, cfg->NetSend_SendBuffer, len );
 
-		if ( rc == -1 )
+		if ( rc <= 0 )
 		{
-			if ( ! cfg->cfg_NetReason )
-			{
-				cfg->cfg_NetReason = myASPrintF( "Failed to send data (%d)", ISocket->Errno() );
-			}
-
-			Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 			goto bailout;
 		}
-
-		if ( rc == 0 )
-		{
-			if ( ! cfg->cfg_NetReason )
-			{
-				cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-			}
-
-			if ( cfg->cfg_LogUserDisconnect )
-			{
-				Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-			}
-			goto bailout;
-		}
-
-		cfg->SessionStatus.si_Send_Bytes += rc;
 
 		tiles--;
 	}
@@ -239,14 +209,6 @@ int y2;
 	y1 = un->un_YPos;
 	x2 = un->un_XPos + un->un_Width;
 	y2 = un->un_YPos + un->un_Height;
-
-#if 0
-if (( cfg->GfxRead_Screen_PageWidth  != un->un_Width  )
-||  ( cfg->GfxRead_Screen_PageHeight != un->un_Height ))
-{
-	printf( "Request Update : %dx%d %dx%d\n", un->un_XPos, un->un_YPos, un->un_Width, un->un_Height );
-}
-#endif
 
 	for( pos=0 ; pos < cfg->GfxRead_Screen_Tiles ; pos++ )
 	{
@@ -287,10 +249,10 @@ if (( cfg->GfxRead_Screen_PageWidth  != un->un_Width  )
 
 int NewBufferUpdate( struct Config *cfg )
 {
-struct BufferMessage *header;
-struct SocketIFace *ISocket;
+struct GfxRectHeader *header;
 struct UpdateNode *un;
 int doCursor;
+int hardcursor;
 int total;
 int tiles;
 int stat;
@@ -302,15 +264,20 @@ int rc;
 
 	un = (APTR) IExec->GetHead( & cfg->Server_UpdateList );
 
-	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
-
 	// Sending RichCursor Updates, without a BufferUpdateReq
 	// could fail if Client changed Screen format
+	// happens with RealVNC client
+
 	if ( un == NULL )
 	{
 		stat = UPDATESTAT_NoChange;		// Do a Delay(2)
 		goto bailout;
 	}
+
+	// Make a copy, so it don't change during Render
+	cfg->cfg_RenderMouseX = cfg->cfg_CurMouseX;
+	cfg->cfg_RenderMouseY = cfg->cfg_CurMouseY;
+
 
 	doCursor = 0;
 	total = 0;
@@ -321,13 +288,16 @@ int rc;
 	tiles = myCountTiles( cfg, un );
 	total += tiles;
 
-	if (( cfg->cfg_Active_Settings.RichCursor )
-	&&	( cfg->cfg_ServerSupportsCursor )
-	&&	( cfg->NetSend_Encodings1[ ENCODE_RichCursor ] )
-	&&	( cfg->cfg_UpdateCursor ))
+	// are we Using Hardware Cursor ..
+	hardcursor = (( cfg->cfg_Active_Settings.RichCursor ) && ( cfg->cfg_ServerSupportsCursor ) && ( cfg->NetSend_Encodings1[ ENCODE_RichCursor ] ));
+
+	if ( hardcursor )
 	{
-		doCursor = TRUE;
-		total++;
+		if ( cfg->cfg_UpdateCursor )
+		{
+			doCursor = TRUE;
+			total++;
+		}
 	}
 
 	if ( total == 0 )
@@ -338,6 +308,20 @@ int rc;
 
 	// --
 
+	if ( cfg->cfg_ServerCursorStat != hardcursor )
+	{
+		cfg->cfg_ServerCursorStat = hardcursor;
+
+		if ( hardcursor )
+		{
+			Log_PrintF( cfg, LOGTYPE_Info, "Using Rich cursor" );
+		}
+		else
+		{
+			Log_PrintF( cfg, LOGTYPE_Info, "Using Soft cursor" );
+		}
+	}
+
 	// -- Send Header
 
 	header = cfg->NetSend_SendBuffer;
@@ -346,44 +330,19 @@ int rc;
 	header->bm_Pad	= 0;
 	header->bm_Rects = total;
 
-	ISocket = cfg->NetSend_ISocket;
+	rc = myNetSend( cfg, header, sizeof( header ));
 
-	rc = ISocket->send( cfg->NetSend_ClientSocket, header, sizeof( header ), 0 );
-
-	if ( rc == -1 )
+	if ( rc <= 0 )
 	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Failed to send data (%d)", ISocket->Errno() );
-		}
-
 		stat = UPDATESTAT_Error;
-		Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError( ISocket->Errno() ), ISocket->Errno() );
 		goto bailout;
 	}
-
-	if ( rc == 0 )
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
-		}
-
-		stat = UPDATESTAT_Error;
-		if ( cfg->cfg_LogUserDisconnect )
-		{
-			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
-		}
-		goto bailout;
-	}
-
-	cfg->SessionStatus.si_Send_Bytes += rc;
 
 	// -- Update Graphics Tiles
 
 	if ( tiles )
 	{
-		stat = myNewTile( cfg, un, tiles );
+		stat = myNewTile( cfg, un, tiles, hardcursor );
 
 		if ( stat != UPDATESTAT_Okay )
 		{
@@ -409,13 +368,13 @@ int rc;
 
 	if ( un )
 	{
-		IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+//		IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
 
 		IExec->Remove( & un->un_Node );
 
 		IExec->AddTail( & cfg->Server_UpdateFree, & un->un_Node );
 
-		IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+//		IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
 	}
 
 	// -- All Done
@@ -424,6 +383,8 @@ int rc;
 //	stat = UPDATESTAT_NoChange;		// Do a Delay(2)
 
 bailout:
+
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
 
 	return( stat );
 }

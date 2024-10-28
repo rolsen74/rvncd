@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -125,7 +120,6 @@ static void mySetEncoding_RGB888( struct Config *cfg, struct PixelMessage *msg U
 	cfg->GfxRead_Encode_Format		= PIXF_A8R8G8B8;
 	cfg->GfxRead_Encode_FormatSize	= 4;
 	cfg->GfxRead_Encode_RenderTile	= TileRender_Copy;
-//	cfg->Enc_BufferRender	= BufferRender_RGB888;
 }
 
 static void mySetEncoding_RGB888PC( struct Config *cfg, struct PixelMessage *msg UNUSED )
@@ -137,7 +131,6 @@ static void mySetEncoding_RGB888PC( struct Config *cfg, struct PixelMessage *msg
 	cfg->GfxRead_Encode_Format		= PIXF_B8G8R8A8;
 	cfg->GfxRead_Encode_FormatSize	= 4;
 	cfg->GfxRead_Encode_RenderTile	= TileRender_Copy;
-//	cfg->Enc_BufferRender	= BufferRender_RGB888PC;
 }
 
 static void mySetEncoding_RGB565PC( struct Config *cfg, struct PixelMessage *msg UNUSED )
@@ -149,7 +142,6 @@ static void mySetEncoding_RGB565PC( struct Config *cfg, struct PixelMessage *msg
 	cfg->GfxRead_Encode_Format		= PIXF_R5G6B5PC;
 	cfg->GfxRead_Encode_FormatSize	= 2;
 	cfg->GfxRead_Encode_RenderTile	= TileRender_Copy;
-//	cfg->Enc_BufferRender	= BufferRender_RGB565PC;
 }
 
 // --
@@ -265,9 +257,9 @@ struct myFormatClient *format;
 struct CommandPxlFmt *pfmsg;
 int pos;
 
-	// --
+//printf( "\n\n-- Set Encoding\n\n\n" );
 
-//	cfg->cfg_ServerDoFullUpdate = TRUE;
+	// --
 
 	if ( User )
 	{
@@ -276,6 +268,7 @@ int pos;
 
 //	printf( "Setting GfxRead_Enocde_ActivePixel 22\n" );
 	memcpy( & cfg->GfxRead_Enocde_ActivePixel, msg, sizeof( struct PixelMessage ));
+	cfg->GfxRead_Enocde_ActivePixelID++;
 
 	// -- Update GUI
 

@@ -386,3 +386,151 @@ RVNCd v1.29 ( 03-Mar-2024 )
 - Removed: Before there was a up to 3 sec delay at Client connect, waiting
   for client sending accepted Encoding and requesting buffer. That should
   not be needed anymore.
+
+
+RVNCd v1.30 ( 13-Mar-2024 )
+
+- Fixed: Raw tile encoding were not enabled on startup, only after client
+  send its first Support encodings.
+
+- Changed: If the server is in the process of handling a UpdateBufferReq,
+  its now not possible to change PixelFormat or Encodings. Those will be
+  delayed untell the BufferUpdate is finished.
+
+- Added: On the the Main page, a user status line is showing info About
+  user connected.
+
+- Added: Its now possible to kick a user off via the menus.
+
+
+RVNCd v1.31 ( 07-Sep-2024 )
+
+- Changed: Created myNetSend() and myNetRead() function to standalize
+  reading and sending network data. Should result in smaller size exe.
+
+- Added: A WatchDog timer for sending.. Incase of Network stalls during
+  sending, a timer can be added (off by default) and it will Kick the 
+  user if it times out.
+
+- Fixed: Before a process shutdown, it waited for one of either CTRL+D
+  or CTRL+E. It was meant to wait for Both flags to be pressent before 
+  exiting.
+
+- Added: Set SO_KEEPALIVE to True, and SO_RCVTIMEO to 10s. In the hopes
+  that it would improve detection of Client disconnects.
+
+- Changed: gui for "Delay Frquency" setting, it now uses a Slider 
+  instead of Integer+Scroller. Thanks to Javier de las Rivas
+  (javierdlr) for that patch code.
+
+- Added: Information of what type of cursor the client is using,
+  is now being printed.
+
+
+RVNCd v1.32 ( 14-Sep-2024 )
+
+- The license header of all the source files has changed to SPDX. 
+  Additionally, the license has changed slightly from "GPL v3" to 
+  "GPL v3 or later." It now looks like
+
+  /*
+  ** SPDX-License-Identifier: GPL-3.0-or-later
+  ** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+  */
+
+- Added: Mouse Pointer image can now be controlled via GUI.
+
+- Added: Support for VNC Protocol v3.5. v3.5 is just a faked v3.3.
+  It behave just like v3.3, but for compatibility reasons it may
+  improve to handle it.
+
+- Added: Support for VNC Protocol v3.7.
+
+- Fixed: Found a bug in the Server process that tried to close
+  the NetSend socket if an error happend, but at that point
+  it had not been initalized.
+
+- Fixed: Pointer image would sometime show grabage, it could
+  happen if image change. Ie. if you loaded a config file.
+
+
+RVNCd v1.33 ( 15-Sep-2024 )
+
+- Changed: The showing of "Connected at" and "Duration" code.
+  Used in Session Info and Server Stat.
+
+- Added: Gadget to control Tile Size for Screen Grabber.
+
+
+RVNCd v1.34 ( 16-Sep-2024 )
+
+- Fixed: A Crash would happen on exit, if Creating Config structure failed.
+
+- Changed: Rewrote the Loading and Saving of Config files.
+
+
+RVNCd v1.35 ( 17-Sep-2024 )
+
+- Changed: Streamlining the Quit functions, now they will open a requester
+  if there is users connected. Excluding the ForceQuit functions.
+  
+  Currect quit methods
+  - Shell...: CTRL+C (Quit)
+  - ARexx...: Quit, ForceQuit 
+  - AppLib..: Quit, ForceQuit
+  - GUI Menu: Quit (Amiga Q)
+  - CxBroker: Remove (Quit)
+  - Double Start: Will Signal First Program, and the ForceQuit it self.
+
+- Added: One new ARexx command, ForceQuit, this one do not open a requester
+  if users are connect. so this one is the execption to the Quit rules :)
+
+- Changed: When saving a config file, a temp Filename is used before it was
+  just "<path/Filename>_tmp". I now create a real temp name and check if its
+  exists. The new temp Filenames looks like this "<path>/tmp_bilqcuum", 
+  where the last 8 chars is random.
+
+- Removed: The Memory Mugwall have been removed.
+
+- Removed: The Protocol v3.5.
+
+- Updated: The GUI for White and Black list now finished. You are now able
+  to add/move/edit/delete IP entries.
+
+- Added: You can now control what state the Main Window state is at program
+  startup via GUI. Most of the other Windows state are just saved. So lets 
+  say you have the About window open when saving the config file. I will 
+  remember the About window state and now automatic reopen the About window
+  too.
+
+- Enabled: Window Popup Menu.
+
+- Added: Program Icon are now passed too the Windows for iconify.
+
+
+RVNCd v1.36 ( 21-Sep-2024 )
+
+- Fixed: Trying to login with vnc protocol v3.7 and no password set,
+  would fail.
+
+- Fixed: Changing Password and Server name did not inform user a server
+  restart was needed.
+
+
+RVNCd v1.37 ( 04-Oct-2024 )
+
+- Changed: In NetRead/NetSend, the server will now retry up to 3 times,
+  if it get an EINTR error code.
+
+RVNCd v1.38 ( 28-Oct-2024 ) ## AmiWest Release ##
+
+- Fixed: if starting rvncd and a config file (default: rvncd.config)
+  was not found, an error would be trigered.
+
+- Changed: Default config setting now have print Info on.
+
+- Changed: Default config setting now do not auto start server.
+
+- Updated: config file example.. you can also just start the program
+  and then via menu save default to get all settings.
+

@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -15,9 +10,9 @@
 
 // --
 
-#pragma pack(1)
+#if 0
 
-struct BufferRect
+struct GfxRectBuffer
 {
 	uint16	br_XPos;
 	uint16	br_YPos;
@@ -26,13 +21,13 @@ struct BufferRect
 	uint32	br_Encoding;
 };
 
-#pragma pack(0)
+#endif
 
 // --
 
-int myEnc_Raw( struct Config *cfg, struct UpdateNode *un, int tile )
+int myEnc_Raw( struct Config *cfg, struct UpdateNode *un, int tile, int hardcursor )
 {
-struct BufferRect *rect;
+struct GfxRectBuffer *rect;
 struct TileInfo *ti;
 uint8 *data;
 int datalen;
@@ -48,8 +43,6 @@ int h;
 
 	rect = cfg->NetSend_SendBuffer;
 	data = cfg->NetSend_SendBuffer;
-
-// IExec->DebugPrintF( "myEnc_Raw - %p - %dx%d %dx%d\n", data, ti->X, ti->Y, ti->W, ti->H );
 
 	x = ti->X;
 	y = ti->Y;
@@ -79,7 +72,7 @@ int h;
 
 		IExec->ObtainSemaphore( & cfg->GfxRead_Screen_Sema );
 
-		datalen = cfg->GfxRead_Encode_RenderTile( cfg, & data[ sizeof( struct BufferRect ) ], tile );
+		datalen = cfg->GfxRead_Encode_RenderTile( cfg, & data[ sizeof( struct GfxRectBuffer ) ], tile );
 
 		if ( datalen <= 0 )
 		{
@@ -87,6 +80,11 @@ int h;
 		}
 
 		IExec->ReleaseSemaphore( & cfg->GfxRead_Screen_Sema );
+
+		if ( ! hardcursor )
+		{
+			NewBuffer_AddCursor( cfg, & data[ sizeof( struct GfxRectBuffer ) ], tile );
+		}
 	}
 	else
 	{
@@ -98,15 +96,6 @@ int h;
 		Log_PrintF( cfg, LOGTYPE_Error, "TileRender not set" );
 		datalen = -1;
 	}
-
-//	if ( cfg->GfxRead_Encode_RenderTile )
-//	{
-//		len = cfg->GfxRead_Encode_RenderTile( cfg, data, tile );
-//	}
-//	else
-//	{
-//		len = cfg->Enc_BufferRender( cfg, data, ti->X, ti->Y, ti->W, ti->H );
-//	}
 
 	if ( datalen <= 0 )
 	{
@@ -120,16 +109,12 @@ int h;
 	}
 
 	len  = datalen;
-	len += sizeof( struct BufferRect ); 
+	len += sizeof( struct GfxRectBuffer ); 
 
 	cfg->SessionStatus.si_Tiles_Raw++;
 	cfg->SessionStatus.si_Tiles_Total++;
 
 bailout:
-
-// printf( "Raw: DataLen: %d, Header %d, Total %d\n", datalen, sizeof( struct BufferRect ), len );
-
-// IExec->DebugPrintF( "myEnc_Raw 2 - %ld\n", len );
 
 	return( len );
 }

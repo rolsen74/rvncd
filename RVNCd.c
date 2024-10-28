@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -18,7 +13,7 @@
 static int	myOpenSystem(	struct Config *cfg );
 static int  myOpenSystem2(	struct Config *cfg );
 static void myCloseSystem(	struct Config *cfg );
-static void Handle_Application( struct Config *cfg );
+static void myHandle_AppLib( struct Config *cfg );
 static int  myOpen_CxBroker( struct Config *cfg );
 static void myClose_CxBroker( struct Config *cfg );
 static void myHandle_CxBroker( struct Config *cfg );
@@ -45,6 +40,9 @@ struct DiskfontIFace *		IDiskfont			= NULL;
 
 struct GfxBase *			GfxBase				= NULL;
 struct GraphicsIFace *  	IGraphics			= NULL;
+
+struct Library *			IconBase			= NULL;
+struct IconIFace *			IIcon				= NULL;
 
 struct IntuitionBase *		IntuitionBase		= NULL;
 struct IntuitionIFace * 	IIntuition			= NULL;
@@ -80,12 +78,13 @@ struct Library *			BitmapBase			= NULL;
 struct Library *			CheckBoxBase		= NULL;
 struct Library *			ChooserBase			= NULL;
 struct Library *			ClickTabBase		= NULL;
-//struct ClassLibrary *		GetFileBase			= NULL;
+struct Library *			GetFileBase			= NULL;
 struct Library *			IntegerBase			= NULL;
 struct Library *			LabelBase			= NULL;
 struct Library *			LayoutBase			= NULL;
 struct Library *			ListBrowserBase		= NULL;
 struct Library *			ScrollerBase		= NULL;
+struct Library *			SliderBase			= NULL;
 struct Library *			StringBase			= NULL;
 struct Library *			WindowBase			= NULL;
 
@@ -95,6 +94,7 @@ uint32						AppID				= 0;
 static uint32				AppBit				= 0;
 static struct MsgPort *		AppPort				= NULL;
 
+char *						OrgTaskName		= NULL;
 struct Task *				ProgramTask			= NULL;
 int							ProgramRunning		= FALSE;
 int							ProgramInfo			= FALSE;
@@ -108,7 +108,7 @@ static int32				CxBrokerError		= 0;
 struct MsgPort *			CmdMsgPort			= NULL;
 uint32						CmdMsgPortBit		= 0;
 
-struct Hook					WinAppHook;
+//struct Hook					WinAppHook;
 struct MsgPort *			WinAppPort			= NULL;
 uint32						WinAppPortBit		= 0;
 
@@ -126,12 +126,14 @@ Class *						BitMapClass			= NULL;
 Class *						CheckBoxClass		= NULL;
 Class *						ChooserClass		= NULL;
 Class *						ClickTabClass		= NULL;
+Class *						GetFileClass		= NULL;
 Class *						IntegerClass		= NULL;
 Class *						LabelClass			= NULL;
 Class *						LayoutClass			= NULL;
 Class *						ListBrowserClass	= NULL;
 Class *						PageClass			= NULL;
 Class *						StringClass			= NULL;
+Class *						SliderClass			= NULL;
 Class *						ScrollerClass		= NULL;
 Class *						WindowClass			= NULL;
 
@@ -142,7 +144,6 @@ char	ActionBuffer_ServerStop[MAX_ACTIONBUFFER];
 char	ActionBuffer_UserConnect[MAX_ACTIONBUFFER];
 char	ActionBuffer_UserDisconnect[MAX_ACTIONBUFFER];
 
-struct SignalSemaphore		TestSema;
 struct SignalSemaphore		ActionSema;
 
 
@@ -151,7 +152,7 @@ static const USED char *	MyVersion			= VERSTAG;
 static struct NewBroker BrokerData =
 {
 /* nb_Version	*/ NB_VERSION,
-/* nb_Name		*/ (STRPTR) "RVNCd",
+/* nb_Name		*/ (STRPTR) "rVNCd",
 /* nb_Title		*/ (STRPTR) "RVNCd (c) 2023-2024 Rene W. Olsen",
 /* nb_Descr		*/ (STRPTR) "VNC Server",
 /* nb_Unique	*/ NBU_NOTIFY | NBU_UNIQUE,
@@ -163,15 +164,10 @@ static struct NewBroker BrokerData =
 
 // --
 
-#ifdef VAL_TEST
-int TEST_VAL = 0;
-#endif
-
 int main( int argc, char **argv )
 {
 struct Config *cfg;
 struct Task *task;
-char *prgname;
 uint32 mask;
 BPTR olddir;
 BPTR newdir;
@@ -182,21 +178,20 @@ int cnt;
 	IExec->Forbid();
 
 	ProgramTask = IExec->FindTask( NULL );
-	prgname = ProgramTask->tc_Node.ln_Name;
+	OrgTaskName = ProgramTask->tc_Node.ln_Name;
 	ProgramTask->tc_Node.ln_Name = "<NULL>";
 
-	task = IExec->FindTask( "RVNCd" );
+	task = IExec->FindTask( "rVNCd" );
 
 	if ( task )
 	{
-		ProgramTask->tc_Node.ln_Name = prgname;
-
+		ProgramTask->tc_Node.ln_Name = OrgTaskName;
 		IExec->Signal( task, SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E );
 		IExec->Permit();
 		return( 0 );
 	}
 
-	ProgramTask->tc_Node.ln_Name = "RVNCd";
+	ProgramTask->tc_Node.ln_Name = "rVNCd";
 
 	IExec->Permit();
 
@@ -216,27 +211,6 @@ int cnt;
 	IExec->NewList( & LogStringList );
 
 	IExec->InitSemaphore( & ActionSema );
-	IExec->InitSemaphore( & TestSema );
-
-	// --
-
-	for( int cnt=1 ; cnt<argc ; cnt++ )
-	{
-		if ( ! strcmp( argv[cnt], "--mugwall" ))
-		{
-			IExec->DebugPrintF( "Doing MugWall\n" );
-			DoMugWall = TRUE;
-			continue;
-		}
-
-		#ifdef VAL_TEST
-		if ( ! strcmp( argv[cnt], "--mousetest" ))
-		{
-			TEST_VAL = TRUE;
-			continue;
-		}
-		#endif
-	}
 
 	// --
 
@@ -296,6 +270,8 @@ int cnt;
 
 	if ( ! cfg->cfg_ProgramDisableGUI )
 	{
+		cfg->cfg_WinData[WIN_Main].Status = cfg->MainWinState;
+
 		for( cnt=0 ; cnt<WIN_LAST ; cnt++ )
 		{
 			if ( cfg->cfg_WinData[cnt].Status != WINSTAT_Close )
@@ -307,7 +283,7 @@ int cnt;
 
 	// -- --
 
-	if ( cfg->cfg_Disk_Settings2.AutoStart )
+	if ( cfg->AutoStart )
 	{
 		StartServer( cfg );
 	}
@@ -324,41 +300,24 @@ int cnt;
 	while( ProgramRunning )
 	{
 		mask = IExec->Wait( 
-			SIGBREAKF_CTRL_C | 
-			SIGBREAKF_CTRL_D | 
-			SIGBREAKF_CTRL_E |
 			AppBit | 
 			ARexxBit | 
 			CmdMsgPortBit |
 			WinMsgPortBit |
 			WinAppPortBit |
 			TimerMsgPortBit |
+			SIGBREAKF_CTRL_C |
+			SIGBREAKF_CTRL_D |
+			SIGBREAKF_CTRL_E |
 			CxBrokerMsgPortBit
 		);
 
 		if ( mask & SIGBREAKF_CTRL_C )
 		{
-			if ( cfg->UserCount )
-			{
-				if ( IDOS->TimedDosRequesterTags(
-					TDR_Window, cfg->cfg_WinData[WIN_Main].WindowAdr,
-					TDR_ImageType, TDRIMAGE_QUESTION,
-					TDR_TitleString, "RVNCd",
-					TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
-					TDR_GadgetString, "_No|_Yes",
-					TDR_Arg1, cfg->UserCount,
-					TAG_END ) == 0 )
-				{
-					break;
-				}
-			}
-			else
-			{
-				break;
-			}
+			Func_Quit( cfg );
 		}
 
-		if ( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E ))
+		if (( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E ))
 		{
 			// Someone tryed to start us again.
 			cfg->cfg_WinData[WIN_Main].Status = WINSTAT_Open;
@@ -367,7 +326,7 @@ int cnt;
 
 		if ( mask & AppBit )
 		{
-			Handle_Application( cfg );
+			myHandle_AppLib( cfg );
 		}
 
 		if ( mask & ARexxBit )
@@ -411,35 +370,32 @@ int cnt;
 
 bailout:
 
-	if ( cfg->cfg_ActionsProgramStopEnable )
-	{
-		DoAction_ProgramStop( cfg );
-	}
-
-	if ( cfg->cfg_LogProgramStop )
-	{
-		Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "Program : Shutting down .." );
-	}
-
-//	printf( "WhiteListed: %d, Total Accecpted: %d\n", cfg->Connect_WhiteListed, cfg->Connect_Accecpted );
-//	printf( "BlackListed: %d, Total Rejected: %d\n", cfg->Connect_BlackListed, cfg->Connect_Rejected );
-
-	for( cnt=0 ; cnt<WIN_LAST ; cnt++ )
-	{
-		if ( cfg->cfg_WinData[cnt].Status != WINSTAT_Close )
-		{
-			cfg->cfg_WinData[cnt].CloseWin( cfg );
-		}
-	}
-
-	myClose_CxBroker( cfg );
-
-	ARexx_Cleanup( cfg );
-
-	myCloseSystem( cfg );
-
 	if ( cfg )
 	{
+		if ( cfg->cfg_ActionsProgramStopEnable )
+		{
+			DoAction_ProgramStop( cfg );
+		}
+
+		if ( cfg->cfg_LogProgramStop )
+		{
+			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "Program : Shutting down .." );
+		}
+
+		for( cnt=0 ; cnt<WIN_LAST ; cnt++ )
+		{
+			if ( cfg->cfg_WinData[cnt].Status != WINSTAT_Close )
+			{
+				cfg->cfg_WinData[cnt].CloseWin( cfg );
+			}
+		}
+
+		myClose_CxBroker( cfg );
+
+		ARexx_Cleanup( cfg );
+
+		myCloseSystem( cfg );
+
 		Config_Delete( cfg );
 	}
 
@@ -448,7 +404,7 @@ bailout:
 	IDOS->SetCurrentDir( olddir );
 	IDOS->UnLock( newdir );
 
-	ProgramTask->tc_Node.ln_Name = prgname;
+	ProgramTask->tc_Node.ln_Name = OrgTaskName;
 
 	return( 0 );
 }
@@ -599,6 +555,15 @@ int error;
 		goto bailout;
 	}
 
+	IconBase = (APTR) IExec->OpenLibrary( "icon.library", 53 );
+	IIcon = (APTR) IExec->GetInterface( (APTR) IconBase, "main", 1, NULL );
+
+	if ( IIcon == NULL )
+	{
+		Log_PrintF( cfg, LOGTYPE_Error, "Error opening icon library (v53)" );
+		goto bailout;
+	}
+
 	IntuitionBase = (APTR) IExec->OpenLibrary( "intuition.library", 53 );
 	IIntuition = (APTR) IExec->GetInterface( (APTR) IntuitionBase, "main", 1, NULL );
 
@@ -729,12 +694,13 @@ int error;
 			goto bailout;
 		}
 
-//		GetFileBase = (APTR) IIntuition->OpenClass( "gadgets/getfile.gadget", 53, & GetFileClass );
-//
-//		if ( GetFileBase == NULL )
-//		{
-//			goto bailout;
-//		}
+		GetFileBase = (APTR) IIntuition->OpenClass( "gadgets/getfile.gadget", 53, & GetFileClass );
+
+		if ( GetFileBase == NULL )
+		{
+			Log_PrintF( cfg, LOGTYPE_Error, "Error opening getfile gadget class" );
+			goto bailout;
+		}
 
 		LabelBase = (APTR) IIntuition->OpenClass( "images/label.image", 53, & LabelClass );
 
@@ -804,6 +770,16 @@ int error;
 
 		// --
 
+		SliderBase = (APTR) IIntuition->OpenClass( "gadgets/slider.gadget", 53, & SliderClass );
+
+		if ( SliderBase == NULL )
+		{
+			Log_PrintF( cfg, LOGTYPE_Error, "Error opening lider gadget class" );
+			goto bailout;
+		}
+
+		// --
+
 		StringBase = (APTR) IIntuition->OpenClass( "gadgets/string.gadget", 53, & StringClass );
 
 		if ( StringBase == NULL )
@@ -826,7 +802,7 @@ int error;
 
 	// --
 
-	AppID = IApplication->RegisterApplication( "RVNCd",
+	AppID = IApplication->RegisterApplication( "rVNCd",
 		REGAPP_LoadPrefs, FALSE,
 		REGAPP_SavePrefs, FALSE,
 		TAG_END
@@ -881,6 +857,14 @@ int error;
 
 	// --
 
+//	printf( "OrgName: %s\n", OrgTaskName );
+//
+//	ProgramIcon = IIcon->GetDiskObjectNew( (( OrgTaskName ) && ( *OrgTaskName )) ? OrgTaskName : "rVNCd" );
+
+	ProgramIcon = IIcon->GetDiskObjectNew( "rVNCd" );
+
+	// --
+
 	error = FALSE;
 
 bailout:
@@ -895,6 +879,12 @@ static void myCloseSystem( struct Config *cfg UNUSED )
 APTR node;
 
 	// --
+
+	if ( ProgramIcon )
+	{
+		IIcon->FreeDiskObject( ProgramIcon );
+		ProgramIcon = NULL;
+	}
 
 	if ( ActiveEncoding )
 	{
@@ -959,6 +949,13 @@ APTR node;
 		StringBase = NULL;
 	}
 
+	if ( SliderBase )
+	{
+		IIntuition->CloseClass( (APTR) SliderBase );
+		SliderClass = NULL;
+		SliderBase = NULL;
+	}
+
 	if ( ScrollerBase )
 	{
 		IIntuition->CloseClass( (APTR) ScrollerBase );
@@ -1006,12 +1003,12 @@ APTR node;
 		LabelBase = NULL;
 	}
 
-//	if ( GetFileBase )
-//	{
-//		IIntuition->CloseClass( (APTR) GetFileBase );
-//		GetFileClass = NULL;
-//		GetFileBase = NULL;
-//	}
+	if ( GetFileBase )
+	{
+		IIntuition->CloseClass( (APTR) GetFileBase );
+		GetFileClass = NULL;
+		GetFileBase = NULL;
+	}
 
 	if ( ClickTabBase )
 	{
@@ -1136,6 +1133,18 @@ APTR node;
 		IntuitionBase = NULL;
 	}
 
+	if ( IIcon )
+	{
+		IExec->DropInterface( (APTR) IIcon );
+		IIcon = NULL;
+	}
+
+	if ( IconBase )
+	{
+		IExec->CloseLibrary( IconBase );
+		IconBase = NULL;
+	}
+
 	if ( IGraphics )
 	{
 		IExec->DropInterface( (APTR) IGraphics );
@@ -1211,7 +1220,7 @@ APTR node;
 
 // --
 
-static void Handle_Application( struct Config *cfg UNUSED )
+static void myHandle_AppLib( struct Config *cfg UNUSED )
 {
 struct ApplicationMsg *msg;
 
@@ -1221,7 +1230,13 @@ struct ApplicationMsg *msg;
 		{
 			case APPLIBMT_Quit:
 			{
-				ProgramRunning = FALSE;
+				Func_Quit( cfg );
+				break;
+			}
+
+			case APPLIBMT_ForceQuit:
+			{
+				Func_ForceQuit( cfg );
 				break;
 			}
 
@@ -1435,24 +1450,7 @@ int cnt;
 
 					case CXCMD_KILL:
 					{
-						if ( cfg->UserCount )
-						{
-							if ( IDOS->TimedDosRequesterTags(
-								TDR_Window, cfg->cfg_WinData[WIN_Main].WindowAdr,
-								TDR_ImageType, TDRIMAGE_QUESTION,
-								TDR_TitleString, "RVNCd",
-								TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
-								TDR_GadgetString, "_No|_Yes",
-								TDR_Arg1, cfg->UserCount,
-								TAG_END ) == 0 )
-							{
-								ProgramRunning = FALSE;
-							}
-						}
-						else
-						{
-							ProgramRunning = FALSE;
-						}
+						Func_Quit( cfg );
 						break;
 					}
 
@@ -1580,6 +1578,7 @@ int doFree;
 			case CMD_Session:
 			{
 				myGUI_SessionMessage( cfg, (APTR) msg );
+				myGUI_Main_SessionMessage( cfg, (APTR) msg );
 				break;
 			} 
 
@@ -1668,29 +1667,61 @@ int cnt;
 
 // --
 
-#ifdef FUNCLOG
-
-struct SignalSemaphore FuncLogSema;
-
-void FuncLogAdd( char *txt )
+void Func_Quit( struct Config *cfg )
 {
-BPTR h;
+	// Todo .. started on Quit gui .. but never finished it
+	//
+	// Idea is to open Quit window with a 10s timer
+	// also check if last user disconnect
+	// but only if a User is connected
 
-	if ( txt == NULL )
+	if ( cfg->UserCount )
 	{
-		return;
+		//
+		//	if ( ! cfg->cfg_WinData[WIN_Quit].OpenWin( cfg ))
+		//	{
+		//		if ( IDOS->TimedDosRequesterTags(
+		//			TDR_Window, cfg->cfg_WinData[WIN_Main].WindowAdr,
+		//			TDR_ImageType, TDRIMAGE_QUESTION,
+		//			TDR_TitleString, "rVNCd",
+		//			TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
+		//			TDR_GadgetString, "_No|_Yes",
+		//			TDR_Arg1, cfg->UserCount,
+		//			TAG_END ) == 0 )
+		//		{
+		//			IExec->Signal( ProgramTask, SIGBREAKF_CTRL_C );
+		//			ProgramRunning = FALSE;
+		//		}
+		//	}
+		//
+
+		if ( IDOS->TimedDosRequesterTags(
+			TDR_Window, cfg->cfg_WinData[WIN_Main].WindowAdr,
+			TDR_ImageType, TDRIMAGE_QUESTION,
+			TDR_TitleString, "rVNCd",
+			TDR_FormatString, "There are %ld user(s) connected\nAre you sure you want to Quit?",
+			TDR_GadgetString, "_No|_Yes",
+			TDR_Arg1, cfg->UserCount,
+			TAG_END ) == 0 )
+		{
+			IExec->Signal( ProgramTask, SIGBREAKF_CTRL_C );
+			ProgramRunning = FALSE;
+		}
+	}
+	else
+	{
+		IExec->Signal( ProgramTask, SIGBREAKF_CTRL_C );
+		ProgramRunning = FALSE;
 	}
 
-	h = IDOS->Open( "progdir:FuncLog.txt", MODE_READWRITE );
-
-	if ( h == 0 )
-	{
-		return;
-	}
-
-	IDOS->Write( h, txt, strlen( txt ));
-
-	IDOS->Close( h );
 }
 
-#endif
+// --
+
+void Func_ForceQuit( struct Config *cfg UNUSED )
+{
+	IExec->Signal( ProgramTask, SIGBREAKF_CTRL_C );
+	ProgramRunning = FALSE;
+}
+
+// --

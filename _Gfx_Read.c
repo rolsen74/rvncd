@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -85,18 +80,6 @@ int ts;
 		goto bailout;
 	}
 
-	#if 0
-IExec->DebugPrintF( "X: %4d, Y: %4d, W: %3d, H: %3d, %d, Pos: %d\n", 
-	ti[tile].X,
-	ti[tile].Y,
-	ti[tile].W,
-	ti[tile].H,
-	cfg->Enc_FormatSize,
-	pos );
-	#endif
-
-
-
 	int sx = ti[tile].X;
 	int sy = ti[tile].Y;
 
@@ -135,8 +118,6 @@ IExec->DebugPrintF( "X: %4d, Y: %4d, W: %3d, H: %3d, %d, Pos: %d\n",
 	if ( stat )
 	{
 		memcpy( buf2, buf1, size ) ;
-
-// IExec->DebugPrintF( "Update pos %d\n", pos );
 
 		cfg->GfxRead_Screen_TileArrayBuffer[tile] = 0x80;
 	}
@@ -280,7 +261,7 @@ int err;
 
 	size = cfg->GfxRead_Screen_Tiles;
 
-	buf = myMalloc( size * sizeof( int8 ));
+	buf = myCalloc( size * sizeof( int8 ));
 
 	if ( buf == NULL )
 	{
@@ -414,14 +395,14 @@ int i;
 
 	// --
 
-	/**/ if ( cfg->GfxRead_BufferScanMethod == SCANMethod_Linear )
+	/**/ if ( cfg->cfg_Active_Settings.TileScanMethod == SCANMethod_Linear )
 	{
 		for( i=0 ; i<size ; i++ )
 		{
 			buf[i] = i;
 		}
 	}
-	else // ( cfg->GfxRead_BufferScanMethod == SCANMethod_Random )
+	else // ( cfg->cfg_Active_Settings.TileScanMethod == SCANMethod_Random )
 	{
 		rnd = myMalloc( size * sizeof( int ));
 
@@ -473,10 +454,6 @@ int err;
 
 	if ( scr == NULL )
 	{
-
-//IExec->DebugPrintF( "Set Screen NULL\n" );
-//printf( "Set Screen NULL\n" );
-
 		cfg->GfxRead_Screen_Adr			= NULL;
 		cfg->GfxRead_Screen_PageWidth	= 0;
 		cfg->GfxRead_Screen_PageHeight	= 0;
@@ -596,10 +573,6 @@ bailout:
 	}
 
 	IExec->ReleaseSemaphore( & cfg->GfxRead_Screen_Sema );
-
-//IExec->DebugPrintF( "22 ScrAdr: %p\n", cfg->GfxRead_Screen_Adr );
-//printf( "22 ScrAdr: %p\n", cfg->GfxRead_Screen_Adr );
-
 }
 
 // --
@@ -655,11 +628,6 @@ int h;
 
 	// --
 
-//	IExec->DebugPrintF( "Dectected Screen Change\n" );
-//	printf( "Dectected Screen Change\n" );
-
-	// --
-
 	mySetScreen( cfg, scr );
 
 	myGUI_PxlFmtRefresh( cfg );
@@ -688,7 +656,7 @@ int pos;
 	{
 		mask = IDOS->CheckSignal( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E );
 
-		if (( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->GfxRead_Exit ))
+		if ((( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->GfxRead_Exit ))
 		{
 			break;
 		}
@@ -737,8 +705,6 @@ int pos;
 			pos = 0;
 		}
 	}
-
-//	Log_PrintF( cfg, LOGTYPE_Info, "Stopping" );
 }
 
 // --
@@ -761,10 +727,6 @@ int retval;
 
 static void myProcess_Free( struct Config *cfg )
 {
-	// --
-
-//	Log_PrintF( cfg, LOGTYPE_Info, "Shutting down .. " );
-
 	// --
 
 	// Free Screen Resources

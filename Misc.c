@@ -1,17 +1,122 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
 #include "RVNCd.h"
+
+// -- Same String
+// TRUE  = Same String (excluding NULL,NULL)
+// FALSE = Diffrent Strings
+
+int mySameString( char *str1, char *str2 )
+{
+	if (( ! str1 ) && ( ! str2 ))
+	{
+		return( FALSE );
+	}
+
+	if (( ! str1 ) && ( str2 ))
+	{
+		return( FALSE );
+	}
+
+	if (( str1 ) && ( ! str2 ))
+	{
+		return( FALSE );
+	}
+
+	if ( strcmp( str1, str2 ))
+	{
+		return( FALSE );
+	}
+
+	return( TRUE );
+}
+
+// -- Get a Temp Filename
+// Get a temp filenamw in same path,
+// that is not in use.
+
+char *myGetTempFilename( char *path )
+{
+char buf[10];
+char *str;
+char *dup;
+char *tmp;
+int cnt;
+int i;
+int h;
+
+	str = NULL;
+
+	if ( path )
+	{
+		dup = myStrdup( path );
+	}
+	else
+	{
+		// Use progdir: or just "" ??
+		dup = myStrdup( "progdir:" );
+	}
+
+	if ( dup )
+	{
+		// -- Remove Filename
+
+		 tmp = (APTR) IDOS->FilePart( dup );
+		*tmp = 0; 
+
+		// -- Find Unique Path+Filename
+
+		for( cnt=0 ; cnt<15 ; cnt++ )
+		{
+			// -- Init Random Buffer
+
+			for( i=0 ; i<8 ; i++ )
+			{
+				buf[i] = ( rand() % 26 ) + 'a';
+			}	buf[i] = 0;
+
+			// -- Build Filename String
+
+			str = myASPrintF( "%stmp_%s", dup, buf );
+
+			if ( ! str )
+			{
+//				printf( "%s:%04d: Error out of mem\n", __FILE__, __LINE__ );
+				break;
+			}
+
+			// -- Check if the File Exists
+
+			h = IDOS->Lock( str, ACCESS_READ );
+
+			if ( ! h )
+			{
+				// Found a Unique Filename
+				break;
+			}
+
+			// -- No its in use, loop and try again
+
+			IDOS->UnLock( h );
+			myFree( str );
+			str = NULL;
+		}
+
+		myFree( dup );
+	}
+//	else
+//	{
+//		printf( "%s:%04d: Error out of mem\n", __FILE__, __LINE__ );
+//	}
+
+	return( str );
+}
 
 // --
 
@@ -226,40 +331,16 @@ bailout:
 	{
 		myZLib_Cleanup( cfg );
 	}
-};
+}
 
 // --
 
-static uint8 WALLDATA[] = 
-{
-	0x00,0x11,0x22,0x33,
-	0x44,0x55,0x66,0x77,
-	0x88,0x99,0xaa,0xbb,
-	0xcc,0xdd,0xee,0xff,
-
-	0x0f,0x1e,0x2d,0x3c,
-	0x4b,0x5a,0x69,0x78,
-	0x87,0x96,0xa5,0xb4,
-	0xc3,0xd2,0xe1,0xf0
-};
-
 void *myMalloc( int size )
 {
-char *data;
 void *mem;
 int newsize;
-int pos;
-
-// IExec->DebugPrintF( "myMalloc 11 : size: %d\n", size );
 
 	newsize = size;
-
-	if ( DoMugWall )
-	{
-		newsize += 4; // Size
-		newsize += sizeof( WALLDATA ); // Front Wall
-		newsize += sizeof( WALLDATA ); // Rear Wall
-	}
 
 	#ifdef DO_CLIB
 
@@ -273,33 +354,7 @@ int pos;
 
 	#endif
 
-	if ( DoMugWall )
-	{
-		pos = 0;
-		data = mem;
-
-		data[pos++] = ( newsize & 0xff000000 ) >> 24;
-		data[pos++] = ( newsize & 0x00ff0000 ) >> 16;
-		data[pos++] = ( newsize & 0x0000ff00 ) >> 8;
-		data[pos++] = ( newsize & 0x000000ff ) >> 0;
-
-		memcpy( & data[pos], WALLDATA, sizeof( WALLDATA ));
-
-		pos += sizeof( WALLDATA );
-		pos += size;
-
-		memcpy( & data[pos], WALLDATA, sizeof( WALLDATA ));
-
-// IExec->DebugPrintF( "myMalloc 22 : mem: %p\n", & data[ 4 + sizeof( WALLDATA ) ] );
-
-		return( & data[ 4 + sizeof( WALLDATA ) ] );
-	}
-	else
-	{
-// IExec->DebugPrintF( "myMalloc 33 : mem: %p\n", mem );
-
-		return( mem );
-	}
+	return( mem );
 }
 
 // --
@@ -307,22 +362,11 @@ int pos;
 void *myCalloc( int size )
 {
 void *mem;
-char *data;
+//char *data;
 int newsize;
-int pos;
-
-// IExec->DebugPrintF( "myCalloc 11 : size: %d\n", size );
+//int pos;
 
 	newsize = size;
-
-	if ( DoMugWall )
-	{
-		newsize += 4; // Size
-		newsize += sizeof( WALLDATA ); // Front Wall
-		newsize += sizeof( WALLDATA ); // Rear Wall
-
-// IExec->DebugPrintF( "myCalloc 11.2 : newsize: %d\n", newsize );
-	}
 
 	#ifdef DO_CLIB
 
@@ -337,33 +381,7 @@ int pos;
 
 	#endif
 
-	if ( DoMugWall )
-	{
-		pos = 0;
-		data = mem;
-
-		data[pos++] = ( newsize & 0xff000000 ) >> 24;
-		data[pos++] = ( newsize & 0x00ff0000 ) >> 16;
-		data[pos++] = ( newsize & 0x0000ff00 ) >> 8;
-		data[pos++] = ( newsize & 0x000000ff ) >> 0;
-
-		memcpy( & data[pos], WALLDATA, sizeof( WALLDATA ));
-
-		pos += sizeof( WALLDATA );
-		pos += size;
-
-		memcpy( & data[pos], WALLDATA, sizeof( WALLDATA ));
-
-// IExec->DebugPrintF( "myCalloc 22 : mem: %p\n", & data[ 4 + sizeof( WALLDATA ) ] );
-
-		return( & data[ 4 + sizeof( WALLDATA ) ] );
-	}
-	else
-	{
-// IExec->DebugPrintF( "myCalloc 33 : mem: %p\n", mem );
-
-		return( mem );
-	}
+	return( mem );
 }
 
 // --
@@ -371,8 +389,6 @@ int pos;
 char *myStrdup( char *str )
 {
 char *copy;
-
-// IExec->DebugPrintF( "myStrdup 11 : str %s\n", str );
 
 	if ( str )
 	{
@@ -395,8 +411,6 @@ char *copy;
 		copy = NULL;
 	}
 
-// IExec->DebugPrintF( "myStrdup 22 : mem %p, str %s\n", copy, copy );
-
 	return( copy );
 }
 
@@ -410,11 +424,9 @@ char * VARARGS68K myASPrintF( char *fmt, ... )
 {
 va_list ap;
 char *str;
-char *s;
+//char *s;
 
 	va_start( ap, fmt );
-
-// IExec->DebugPrintF( "myASPrintF 11 : fmt %s\n", fmt );
 
 	if ( fmt )
 	{
@@ -425,27 +437,9 @@ char *s;
 			str = NULL;
 		}
 
-		if (( DoMugWall ) && ( str ))
-		{
-			s = str;
-
-			str = myStrdup( str );
-
-			free( s );
-		}
-
 		#else
 
 		str = IUtility->VASPrintf( fmt, (APTR) va_getlinearva( ap, uint32 ));
-
-		if (( DoMugWall ) && ( str ))
-		{
-			s = str;
-
-			str = myStrdup( str );
-
-			IExec->FreeVec( s );
-		}
 
 		#endif
 	}
@@ -456,8 +450,6 @@ char *s;
 
 	va_end( ap );
 
-// IExec->DebugPrintF( "myASPrintF 22 : mem %p, str %s\n", str, str );
-
 	return( str );
 }
 
@@ -465,63 +457,9 @@ char *s;
 
 void myFree( void *mem )
 {
-uint32 cnt;
-char *data;
-int size;
-
-// IExec->DebugPrintF( "myFree 11 : mem %p\n", mem );
-
 	if ( mem == NULL )
 	{
 		goto bailout;
-	}
-
-	if ( DoMugWall )
-	{
-		data = mem;
-		data -= 4;
-		data -= sizeof( WALLDATA );
-		size = ( data[0] << 24 ) | ( data[1] << 16 ) | ( data[2] << 8 ) | ( data[3] << 0 );
-
-		if ( memcmp( & data[4], WALLDATA, sizeof( WALLDATA )))
-		{
-			printf( "Front Wall Damaged, Mem %p, Size %d\n", mem, size );
-
-			for( cnt=0 ; cnt<sizeof(WALLDATA) ; cnt++ )
-			{
-				printf( "%02X", data[4+cnt] );
-			}
-
-			printf( "\n" );
-
-			for( cnt=0 ; cnt<sizeof(WALLDATA) ; cnt++ )
-			{
-				printf( "%02X", WALLDATA[cnt] );
-			}
-
-			printf( "\n" );
-		}
-
-		if ( memcmp( & data[ size - sizeof( WALLDATA ) ], WALLDATA, sizeof( WALLDATA )))
-		{
-			printf( "Rear Wall Damaged, Mem %p, Size %d\n", mem, size );
-
-			for( cnt=0 ; cnt<sizeof(WALLDATA) ; cnt++ )
-			{
-				printf( "%02X", data[size-16+cnt] );
-			}
-
-			printf( "\n" );
-
-			for( cnt=0 ; cnt<sizeof(WALLDATA) ; cnt++ )
-			{
-				printf( "%02X", WALLDATA[cnt] );
-			}
-
-			printf( "\n" );
-		}
-
-		mem = data;
 	}
 
 	#ifdef DO_CLIB
@@ -536,9 +474,163 @@ int size;
 
 bailout:
 
-// IExec->DebugPrintF( "myFree 22 :\n" );
-
 	return;
+}
+
+// --
+
+int myNetRead( struct Config *cfg, void *buf, int len, int flag )
+{
+struct SocketIFace *ISocket;
+int err;
+int max;
+int cnt;
+int rc;
+int s;
+
+	// During startup we read From Send socket
+
+	if ( cfg->NetRead_Idle )
+	{
+		s = cfg->NetSend_ClientSocket;
+
+		ISocket = cfg->NetSend_ISocket;
+	}
+	else
+	{
+		s = cfg->NetRead_ClientSocket;
+
+		ISocket = cfg->NetRead_ISocket;
+	}
+
+	cnt = 0;
+	max = 3;
+
+	while( TRUE )
+	{
+		rc = ISocket->recv( s, buf, len, flag );
+
+		if ( rc == -1 )
+		{
+			err = ISocket->Errno();
+
+			if (( err == EINTR ) && ( cnt++ < max ))
+			{
+				Log_PrintF( cfg, LOGTYPE_Warning, "Failed to read data '%s' (%ld) Retyring %ld/%ld", myStrError(err), err, cnt, max );
+				continue;
+			}
+			else
+			{
+				if ( ! cfg->cfg_NetReason )
+				{
+					cfg->cfg_NetReason = myASPrintF( "Failed to read data (%ld)", err );
+				}
+
+				Log_PrintF( cfg, LOGTYPE_Error, "Failed to read data '%s' (%ld)", myStrError(err), err );
+				goto bailout;
+			}
+		}
+
+		break;
+	}
+
+	if ( rc == 0 )
+	{
+		if ( ! cfg->cfg_NetReason )
+		{
+			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
+		}
+
+		if ( cfg->cfg_LogUserDisconnect )
+		{
+			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
+		}
+
+		goto bailout;
+	}
+
+	if (( rc != len ) && ( flag & MSG_WAITALL ))
+	{
+		Log_PrintF( cfg, LOGTYPE_Error, "myNetRead : Invalid data length (%ld != %ld)", rc, len );
+		rc = -2;
+		goto bailout;
+	}
+
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+	cfg->SessionStatus.si_Read_Bytes += rc;
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+
+bailout:
+
+	return( rc );
+}
+
+// --
+
+int myNetSend( struct Config *cfg, void *buf, int len )
+{
+struct SocketIFace *ISocket;
+int rc;
+int max;
+int cnt;
+int err;
+
+	ISocket = cfg->NetSend_ISocket;
+
+	cnt = 0;
+	max = 3;
+
+	while( TRUE )
+	{
+		rc = ISocket->send( cfg->NetSend_ClientSocket, buf, len, 0 );
+
+		if ( rc == -1 )
+		{
+			err = ISocket->Errno();
+
+			if (( err == EINTR ) && ( cnt++ < max ))
+			{
+				Log_PrintF( cfg, LOGTYPE_Warning, "Failed to send data '%s' (%ld) Retyring %ld/%ld", myStrError(err), err, cnt, max );
+				continue;
+			}
+			else
+			{
+				if ( ! cfg->cfg_NetReason )
+				{
+					cfg->cfg_NetReason = myASPrintF( "Failed to send data (%ld)", err );
+				}
+
+				Log_PrintF( cfg, LOGTYPE_Error, "Failed to send data '%s' (%ld)", myStrError(err), err );
+				goto bailout;
+			}
+		}
+
+		break;
+	}
+
+
+	if ( rc == 0 )
+	{
+		if ( ! cfg->cfg_NetReason )
+		{
+			cfg->cfg_NetReason = myASPrintF( "Client closed connection" );
+		}
+
+		if ( cfg->cfg_LogUserDisconnect )
+		{
+			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "User disconnect" );
+		}
+
+		goto bailout;
+	}
+
+	IExec->ObtainSemaphore( & cfg->Server_UpdateSema );
+	cfg->SessionStatus.si_Send_Bytes += rc;
+	IExec->ReleaseSemaphore( & cfg->Server_UpdateSema );
+
+bailout:
+
+	return( rc );
 }
 
 // --

@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -31,6 +26,7 @@ static void		ARexx_StopServer(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_RestartServer(	struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_ServerStatus(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_Quit(				struct ARexxCmd *ac, struct RexxMsg *msg );
+static void		ARexx_ForceQuit(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_LoadConfig(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_SaveConfig(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_SaveASConfig(		struct ARexxCmd *ac, struct RexxMsg *msg );
@@ -60,7 +56,8 @@ static struct ARexxCmd Commands[] =
 {	   "SAVEASCONFIG",	8,	ARexx_SaveASConfig,			"FILE/F",	0,	NULL, 0, 0, NULL },
 { "SAVEDEFAULTCONFIG",	9,	ARexx_SaveDefaultConfig,	NULL,		0,	NULL, 0, 0, NULL },
 {	           "HELP", 10,	ARexx_Help,					NULL,		0,	NULL, 0, 0, NULL },
-{	NULL,				0,	NULL,						NULL,		0,	NULL, 0, 0, NULL },
+{	      "FORCEQUIT", 11,	ARexx_ForceQuit,			NULL,		0,	NULL, 0, 0, NULL },
+{                NULL,	0,	NULL,						NULL,		0,	NULL, 0, 0, NULL },
 };
 
 // --
@@ -100,7 +97,7 @@ int error;
 	myARexxObject = IIntuition->NewObject( ARexxClass, NULL,
 		AREXX_ReplyHook, & myARexxHook,
 		AREXX_ErrorCode, & err,
-		AREXX_HostName, "RVNCD",
+		AREXX_HostName, "rVNCd",
 		AREXX_Commands, Commands,
 		AREXX_NoSlot, TRUE,
 		TAG_END
@@ -174,7 +171,7 @@ int err;
 	{
 		ac->ac_Result = "Successful";
 	}
-};
+}
 
 // --
 
@@ -192,7 +189,7 @@ int err;
 	{
 		ac->ac_Result = "Successful";
 	}
-};
+}
 
 // --
 
@@ -210,7 +207,7 @@ int err;
 	{
 		ac->ac_Result = "Successful";
 	}
-};
+}
 
 // --
 
@@ -240,7 +237,7 @@ char *txt;
 	}
 
 	ac->ac_Result = txt;
-};
+}
 
 // --
 
@@ -248,10 +245,17 @@ static void ARexx_Quit( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
 	ac->ac_Result = "Exiting Program";
 
-	ProgramRunning = FALSE;
+	Func_Quit( ActiveConfig );
+}
 
-	IExec->Signal( ProgramTask, SIGBREAKF_CTRL_C );
-};
+// --
+
+static void ARexx_ForceQuit( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
+{
+	ac->ac_Result = "Exiting Program";
+
+	Func_ForceQuit( ActiveConfig );
+}
 
 // --
 
@@ -267,7 +271,8 @@ int err;
 
 	if ( file )
 	{
-		err = Config_ParseFile( ActiveConfig, file );
+		Config_Reset( ActiveConfig );
+		err = Config_Read( ActiveConfig, file, TRUE );
 
 		if ( err )
 		{
@@ -276,6 +281,9 @@ int err;
 		else
 		{
 			Log_PrintF( ActiveConfig, LOGTYPE_Info, "Config file '%s' loaded", IDOS->FilePart( file ) );
+
+			myGUI_Main_RefreshSettings( ActiveConfig );
+			myGUI_Main_CheckSettings( ActiveConfig );
 
 			str = "Successful";
 
@@ -300,7 +308,7 @@ int err;
 
 static void ARexx_SaveConfig( struct ARexxCmd *ac UNUSED, struct RexxMsg *msg UNUSED )
 {
-	Config_Save( ActiveConfig, ActiveConfig->cfg_Config_FileName );
+	Config_Save( ActiveConfig, ActiveConfig->cfg_Config_Filename );
 }
 
 // --

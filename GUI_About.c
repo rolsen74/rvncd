@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -28,6 +23,33 @@ enum
 // --
 
 static Object *				GUIObjects[GID_LAST];
+
+// --
+
+static void VARARGS68K mySetTags( struct Config *cfg, void *object, ... )
+{
+va_list ap;
+
+	va_start( ap, object );
+
+	// Not sure the WinAdr check is needed
+	if ( cfg->cfg_WinData[WIN_About].WindowAdr )
+	{
+		ILayout->SetPageGadgetAttrsA( 
+			object,
+			GUIObjects[ GID_Root ],
+			cfg->cfg_WinData[WIN_About].WindowAdr,
+			NULL,
+			va_getlinearva( ap, APTR )
+		);
+	}
+	else
+	{
+		IIntuition->SetAttrsA( object, va_getlinearva( ap, APTR ));
+	}
+
+	va_end( ap );
+}
 
 // --
 
@@ -155,6 +177,39 @@ Object *o;
 
 // --
 
+void myGUI_BusyAboutWindow( struct Config *cfg, int val )
+{
+	if ( val )
+	{
+		/**/ cfg->cfg_WinData[WIN_About].Busy++;
+
+		if ( cfg->cfg_WinData[WIN_About].Busy == 1 )
+		{
+			mySetTags( cfg, GUIObjects[ GID_Window ],
+				WA_BusyPointer, TRUE,
+				TAG_END
+			);
+		}
+	}
+	else
+	{
+		if ( cfg->cfg_WinData[WIN_About].Busy > 0 )
+		{
+			 cfg->cfg_WinData[WIN_About].Busy--;
+
+			if ( cfg->cfg_WinData[WIN_About].Busy == 0 )
+			{
+				mySetTags( cfg, GUIObjects[ GID_Window ],
+					WA_BusyPointer, FALSE,
+					TAG_END
+				);
+			}
+		}
+	}
+}
+
+// --
+
 int myGUI_OpenAboutWindow( struct Config *cfg UNUSED )
 {
 //struct ColumnInfo *ci;
@@ -200,6 +255,7 @@ int error;
 		WA_DragBar,								    TRUE,
 		WA_SizeGadget,							    TRUE,
 		WA_Title,								    "RVNCd - About Infomation",
+		WA_BusyPointer,								cfg->cfg_WinData[WIN_About].Busy > 0,
 
 		( cfg->cfg_WinData[WIN_About].Width == 0 ) ?
 		TAG_IGNORE : WA_Left, cfg->cfg_WinData[WIN_About].XPos,
@@ -219,8 +275,11 @@ int error;
 //		WA_PubScreen,							    gs->up_PubScreen,
 		WINDOW_AppPort,								WinAppPort,
 		WINDOW_SharedPort,							WinMsgPort,
+		WINDOW_PopupGadget,							TRUE,
+		WINDOW_Icon,								ProgramIcon,
+		WINDOW_IconTitle,							"rVNCd About",
+		WINDOW_IconNoDispose,						TRUE,
 		WINDOW_IconifyGadget,						TRUE,
-		WINDOW_IconTitle,							"About",
 //		WINDOW_MenuStrip,					    	MainMenuStrip,
 //		WINDOW_MenuUserData,				    	WGUD_HOOK,
 		WINDOW_ParentGroup,						    GUIObjects[ GID_Root ] = IIntuition->NewObject( LayoutClass, NULL,
@@ -230,7 +289,7 @@ int error;
 		End,
 	End;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		Log_PrintF( cfg, LOGTYPE_Error, "Program: Error creating About GUI Object" );
 		goto bailout;
@@ -268,7 +327,7 @@ void myGUI_CloseAboutWindow( struct Config *cfg )
 {
 struct Window *win;
 
-	if ( GUIObjects[ GID_Window ] == NULL )
+	if ( ! GUIObjects[ GID_Window ] )
 	{
 		goto bailout;
 	}

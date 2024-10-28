@@ -2,7 +2,7 @@
 
 ## Protocols:
 
-- Only v3.3 is supported.
+- Only v3.3 and v3.7 is supported.
 
 ## Authentications:
 
@@ -50,4 +50,5 @@
 
 ## Missing:
 
-Well, there are lots... but server drawing mouse pointer before sending graphics, and screen cycling are two things high on the to-do list.
+Well, there are lots... like screen cycling, more tile encodings are two 
+things high on the to-do list.

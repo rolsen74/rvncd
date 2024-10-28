@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -18,7 +13,9 @@
 int Send_Open_Socket( struct Config *cfg )
 {
 struct SocketIFace *ISocket;
+struct timeval timeout;
 int32 d;
+int enable;
 int error;
 int s;
 
@@ -62,6 +59,19 @@ int s;
 
 	cfg->Server_DuplicateSendSocket = -1;
 	cfg->NetSend_ClientSocket = s;
+
+	// -- Enable Keep Alive
+
+	enable = 1;
+
+	ISocket->setsockopt( cfg->NetSend_ClientSocket, SOL_SOCKET, SO_KEEPALIVE, & enable, sizeof( int ));
+
+	// -- Set 10s Timeout
+
+	timeout.tv_sec = 10;
+	timeout.tv_usec = 0;
+
+	ISocket->setsockopt( cfg->NetSend_ClientSocket, SOL_SOCKET, SO_RCVTIMEO, & timeout, sizeof( timeout ));
 
 	// --
 

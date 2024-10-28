@@ -1,13 +1,8 @@
- 
+
 /*
- * Copyright (c) 2023-2024 Rene W. Olsen < renewolsen @ gmail . com >
- *
- * This software is released under the GNU General Public License, version 3.
- * For the full text of the license, please visit:
- * https://www.gnu.org/licenses/gpl-3.0.html
- *
- * You can also find a copy of the license in the LICENSE file included with this software.
- */
+** SPDX-License-Identifier: GPL-3.0-or-later
+** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+*/
 
 // --
 
@@ -26,8 +21,7 @@ int stat;
 
 	if ( DoVerbose )
 	{
-		printf( "\n" );
-		printf( "VNC Init [1/6]\n\n" );
+		printf( "\nVNC Init [1/6]\n\n" );
 	}
 
 	if ( VNC_Version( cfg ))
@@ -37,19 +31,39 @@ int stat;
 
 	if ( DoVerbose )
 	{
-		printf( "\n" );
-		printf( "VNC Init [2/6]\n\n" );
+		printf( "\nVNC Init [2/6]\n\n" );
 	}
 
-	if ( VNC_Authenticate( cfg ))
+	switch( cfg->NetSend_ClientProtocol )
 	{
-		goto bailout;
+		case VNCProtocol_33:
+		{
+			if ( VNC_Authenticate_33( cfg ))
+			{
+				goto bailout;
+			}
+			break;
+		}
+
+		case VNCProtocol_37:
+		{
+			if ( VNC_Authenticate_37( cfg ))
+			{
+				goto bailout;
+			}
+			break;
+		}
+
+		default:
+		{
+			Log_PrintF( cfg, LOGTYPE_Error, "Invalid Client Protocol type (%d)", cfg->NetSend_ClientProtocol );
+			goto bailout;
+		}
 	}
 
 	if ( DoVerbose )
 	{
-		printf( "\n" );
-		printf( "VNC Init [3/6]\n\n" );
+		printf( "\nVNC Init [3/6]\n\n" );
 	}
 
 	if ( VNC_ClientInit( cfg ))
@@ -78,48 +92,32 @@ int stat;
 
 	// --
 
-	// -- Giving client a chance to get SetPixelFormat and Encodings before continuing..
-
-	#if 0
-	// Max 3 sec
-	delay = 150/2; 
-	
-	while( --delay )
-	{
-		if (( cfg->cfg_ServerGotSetPixelFormat ) 
-		&&	( cfg->cfg_ServerGotBufferUpdateRequest ))
-		{
-			break;
-		}
-		else
-		{
-			// Wait 2/50 of a sec.
-			IDOS->Delay( 2 ); 
-		}
-	}
-	#endif
-
-//	Log_PrintF( cfg, LOGTYPE_Info, "Got PixelFormat %ld", cfg->cfg_ServerGotSetPixelFormat );
-//	Log_PrintF( cfg, LOGTYPE_Info, "Got UpdateReq %ld", cfg->cfg_ServerGotBufferUpdateRequest );
-
-	// --
-
-//	cfg->cfg_UpdateCursor = TRUE;
-//	cfg->cfg_ServerDoFullUpdate = TRUE;
-
 	// Clear ClipBoard signal
 	IExec->SetSignal( 0, cfg->NetSend_ClipBoardSignal );
 
 	if ( DoVerbose )
 	{
+		Log_PrintF( cfg, LOGTYPE_Info, "Clinet Connected" );
 		printf( "VNC Init [6/6] -- Rock'n Roll\n\n" );
 	}
 
 	// --
 
-	while( cfg->cfg_ServerRunning )
+	cfg->cfg_KickUser = 0;
+
+	while(( cfg->cfg_ClientRunning ) && ( ! cfg->cfg_KickUser ))
 	{
+		if ( cfg->cfg_Active_Settings.SendWatchDog )
+		{
+			WatchDog_StartTimer( cfg );
+		}
+
 		stat = NewBufferUpdate( cfg );
+
+		if ( cfg->cfg_Active_Settings.SendWatchDog )
+		{
+			WatchDog_StopTimer(	cfg );
+		}
 
 		/**/ if ( stat == UPDATESTAT_Error ) // Error
 		{
@@ -138,7 +136,7 @@ int stat;
 
 		mask = IDOS->CheckSignal( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E | cfg->NetSend_ClipBoardSignal );
 
-		if (( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetSend_Exit ))
+		if ((( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) && ( cfg->NetSend_Exit ))
 		{
 			cfg->cfg_ServerShutdown = TRUE;
 			break;
@@ -174,7 +172,7 @@ bailout:
 
 	myPrintSessionInfo( cfg );
 
-	cfg->cfg_ServerRunning = FALSE;
+	cfg->cfg_ClientRunning = FALSE;
 }
 
 // --
@@ -190,7 +188,7 @@ int cnt;
 
 	// --
 
-	cfg->cfg_ServerRunning = TRUE;
+	cfg->cfg_ClientRunning = TRUE;
 	cfg->NetSend_ClientSocket = -1;
 	cfg->NetSend_ClipBoardSignalNr = -1;
 	cfg->GfxRead_Screen_SupportChange = FALSE;
@@ -223,7 +221,7 @@ int cnt;
 
 	cfg->NetSend_SendBuffer = buf;
 	cfg->NetSend_SendBufferSize = size;
-	
+
 	// --
 
 	if ( cfg->UserCount == 0 )
@@ -231,9 +229,13 @@ int cnt;
 		cfg->GfxRead_Enocde_ActivePixelSet = FALSE;
 		memset( & cfg->NetSend_Encodings1, 0, ENCODE_LAST * sizeof( uint8 ) );
 		memset( & cfg->NetSend_Encodings2, 0, ENCODE_LAST * sizeof( struct myEncNode ) );
-
-//		printf( "Clearing GfxRead_Enocde_ActivePixel 11\n" );
 		memset( & cfg->GfxRead_Enocde_ActivePixel, 100, sizeof( struct PixelMessage ));
+
+		// Always have Raw Enabled
+		cfg->NetSend_Encodings1[ENCODE_Raw] = TRUE;
+		cfg->NetSend_Encodings2[ENCODE_Raw].Pos = 0;
+		cfg->NetSend_Encodings2[ENCODE_Raw].Enabled = TRUE;
+		cfg->NetSend_Encodings2[ENCODE_Raw].EncType = TRUE;
 
 		if ( cfg->cfg_Active_Settings.DisableBlanker )
 		{
@@ -250,8 +252,6 @@ int cnt;
 	}
 
 	// -- Wakeup GfxRead
-
-//	printf( "Wakingup GfxRead\n" );
 
 	IExec->Forbid();
 	cfg->cfg_UserConnectSignal = TRUE;
@@ -270,15 +270,6 @@ int cnt;
 		}
 	}
 
-//	if ( cnt == 50 )
-//	{
-//		printf( "Wakingup GfxRead Missing Signal (%d)\n", cnt );
-//	}
-//	else
-//	{
-//		printf( "Wakingup GfxRead Done (%d)\n", cnt );
-//	}
-
 	// --
 
 	if ( Send_Open_Socket( cfg ))
@@ -291,6 +282,14 @@ int cnt;
 	if ( myStart_Net_Read( cfg ))
 	{
 		goto bailout;
+	}
+
+	if ( cfg->cfg_Active_Settings.SendWatchDog )
+	{
+		if ( myStart_WatchDog( cfg ))
+		{
+			goto bailout;
+		}
 	}
 
 	// -- Setup Z Library
@@ -319,6 +318,8 @@ int cnt;
 	// --
 
 	myZLib_Cleanup( cfg );
+
+	myStop_WatchDog( cfg );
 
 	myStop_Net_Read( cfg );
 
@@ -349,8 +350,6 @@ int cnt;
 
 		// --
 
-//		printf( "Stopping GfxRead\n" );
-
 		IExec->Forbid();
 		cfg->cfg_UserDisconnectSignal = TRUE;
 		cfg->UserCount--;
@@ -367,15 +366,6 @@ int cnt;
 				break;
 			}
 		}
-
-//		if ( cnt == 50 )
-//		{
-//			printf( "Stopping GfxRead Missing Signal (%d)\n", cnt );
-//		}
-//		else
-//		{
-//			printf( "Stopping GfxRead Done (%d)\n", cnt );
-//		}
 	}
 	else
 	{
@@ -391,6 +381,7 @@ int cnt;
 
 static void myServerProcess( void )
 {
+struct CommandSession *msg;
 struct StartMessage *sm;
 struct Config *Config;
 struct Task *Parent;
@@ -424,6 +415,18 @@ int stat;
 
 		// --
 
+		msg = myCalloc( sizeof( struct CommandSession ) );
+
+		if ( msg )
+		{
+			msg->cs_Command = CMD_Session;
+			msg->cs_Starting = 1;
+		
+			IExec->PutMsg( CmdMsgPort, & msg->cs_Message );
+		}
+
+		// --
+
 		if ( Config->cfg_ActionsUserConnectEnable )
 		{
 			DoAction_UserConnect( Config );
@@ -443,10 +446,20 @@ int stat;
 			myFree( Config->cfg_NetReason );
 			Config->cfg_NetReason = NULL;
 		}
-		else
+
+		// --
+
+		msg = myCalloc( sizeof( struct CommandSession ) );
+
+		if ( msg )
 		{
-			Log_PrintF( Config, LOGTYPE_Info, "Client Shutdown .. ??" );
+			msg->cs_Command = CMD_Session;
+			msg->cs_Starting = 0;
+		
+			IExec->PutMsg( CmdMsgPort, & msg->cs_Message );
 		}
+
+		// --
 
 		if ( Config->cfg_ActionsUserDisconnectEnable )
 		{
