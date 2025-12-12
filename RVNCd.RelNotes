@@ -1,10 +1,10 @@
 
-RVNCd v1.1 ( 16-Jul-2023 )
+rVNCd v1.1 ( 16-Jul-2023 )
 
 - First Release
 
 
-RVNCd v1.2 ( 21-Jul-2023 )
+rVNCd v1.2 ( 21-Jul-2023 )
 
 - Added STARTSERVER, STOPSERVER, RESTARTSERVER, SERVERSTATUS, QUIT 
   commands to ARexx port.
@@ -33,7 +33,7 @@ RVNCd v1.2 ( 21-Jul-2023 )
   messages on user CTRL+C.
 
 
-RVNCd v1.3 ( 24-Jul-2023 )
+rVNCd v1.3 ( 24-Jul-2023 )
 
 - Fixed a possible crash in Server shutdown code. Where a 
   ReleaseCopyOfSocket() KeyID got passed to CloseSocket().
@@ -46,7 +46,7 @@ RVNCd v1.3 ( 24-Jul-2023 )
   screen.
 
 
-RVNCd v1.4 ( 26-Jul-2023 )
+rVNCd v1.4 ( 26-Jul-2023 )
 
 - Changes dir to progdir: on program start. So Loading of Config file and 
   Adding to Log file now defaults to progdir:
@@ -58,7 +58,7 @@ RVNCd v1.4 ( 26-Jul-2023 )
 - Added Session info that will be printed on user disconnect.
 
 
-RVNCd v1.5 ( 29-jul-2023 )
+rVNCd v1.5 ( 29-jul-2023 )
 
 - You can now set a password (max 8 chars) with the Password option in the
   config file.
@@ -68,7 +68,7 @@ RVNCd v1.5 ( 29-jul-2023 )
   to test it out.
 
 
-RVNCd v1.6 ( 29-jul-2023 )
+rVNCd v1.6 ( 29-jul-2023 )
 
 - Fixed Pointer rendering on 16 bit screens.
 
@@ -76,7 +76,7 @@ RVNCd v1.6 ( 29-jul-2023 )
   transparent.
 
 
-RVNCd v1.7 ( 30-Aug-2023 )
+rVNCd v1.7 ( 30-Aug-2023 )
 
 - Some clients do not like the server sending BufferUpdates if they have not
   asked for them. The Pointer image update, is send as a BufferUpdate
@@ -102,7 +102,7 @@ RVNCd v1.7 ( 30-Aug-2023 )
   ServerCfg groups still have no options, its work in progress.
 
 
-RVNCd v1.8 ( 31-Aug-2023 )
+rVNCd v1.8 ( 31-Aug-2023 )
 
 - Reworked starting and stopping of subprocesses. It should be more robust 
   now. I Hope its will make it more stable running, when users connect and
@@ -114,19 +114,19 @@ RVNCd v1.8 ( 31-Aug-2023 )
 - Added gui to show Pixel Format used with client. WIP.
 
 
-RVNCd v1.9 ( 04-Sep-2023 )
+rVNCd v1.9 ( 04-Sep-2023 )
 
 - Lots of gui work. Internal config change.
 
 
-RVNCd v1.10 ( 09-Sep-2023 )
+rVNCd v1.10 ( 09-Sep-2023 )
 
 - More gui work. Finished Client Info window. Finished the Program page.
 
 - Added Menu to Save 'Default' config file.
 
 
-RVNCd v1.11 ( 15-Sep-2023 )
+rVNCd v1.11 ( 15-Sep-2023 )
 
 - Fixed reading autostart checkmark button. Reading INTEGER_Number instead
   of GA_Selected tag from Gadget resulted it in it always being Zero.
@@ -148,12 +148,12 @@ RVNCd v1.11 ( 15-Sep-2023 )
 - Added SAVEDEFAULTCONFIG ARexx command.
 
 
-RVNCd v1.12 ( 17-Sep-2023 )
+rVNCd v1.12 ( 17-Sep-2023 )
 
 - Added Iconify function to all windows.
 
 
-RVNCd v1.13 ( 18-Sep-2023 )
+rVNCd v1.13 ( 18-Sep-2023 )
 
 - Moved some stack buffers on to temp allocated memory. This fixed a gui 
   crash. If we are lucky it also fixes the random crash on exit.
@@ -169,7 +169,7 @@ RVNCd v1.13 ( 18-Sep-2023 )
 - More gui work .. now you can move entries in the White/Black list. still WIP.
 
 
-RVNCd v1.14 ( 24-Sep-2023 )
+rVNCd v1.14 ( 24-Sep-2023 )
 
 - Changed: In case of failing to open ARexx class, it simply disables ARexx
   prints a warning and continues.
@@ -188,7 +188,7 @@ RVNCd v1.14 ( 24-Sep-2023 )
  - Added more error messages if something goes wrong.
 
 
-RVNCd v1.15 ( 24-Sep-2023 )
+rVNCd v1.15 ( 24-Sep-2023 )
 
 - Added error messages if gui fails to open.
 
@@ -198,28 +198,28 @@ RVNCd v1.15 ( 24-Sep-2023 )
   --nogui flags have been set.
 
 
-RVNCd v1.16 ( 25-Sep-2023 )
+rVNCd v1.16 ( 25-Sep-2023 )
 
 - Reenabled delay at startup, where client can send PixelFormat.
 
 - Reenabled first update is a fullscreen
 
 
-RVNCd v1.17 ( 21-Oct-2023 )
+rVNCd v1.17 ( 21-Oct-2023 )
 
 - When reading from the Net, moved buffers of the Stack and onto a 
   preallocated one that is 4k alligned. I hope this fixes mobaxterm 32bit
   color problem.
 
 
-RVNCd v1.18 ( 29-Oct-2023 )
+rVNCd v1.18 ( 29-Oct-2023 )
 
 - Sending messages now also have a 4k aligned buffer.
 
 - A little gui work trying to make universal function to handle windows.
 
 
-RVNCd v1.19 ( 04-Nov-2023 )
+rVNCd v1.19 ( 04-Nov-2023 )
 
 - Added a memory mugwall, can be activated with --mugwall via shell only.
 
@@ -275,17 +275,17 @@ RVNCd v1.19 ( 04-Nov-2023 )
 - Made a user Accecpt/Reject counter. Not sure its worth keeping. 
 
 
-RVNCd v1.20 ( 04-Nov-2023 )
+rVNCd v1.20 ( 04-Nov-2023 )
 
 - Fixed sending of Raw Tiles
 
 
-RVNCd v1.21 ( 05-Nov-2023 )
+rVNCd v1.21 ( 05-Nov-2023 )
 
 - RealVNC changes the Encoding priority.. we now obay that.
 
 
-RVNCd v1.22 ( 05-Nov-2023 )
+rVNCd v1.22 ( 05-Nov-2023 )
 
 - GUI: Password string did only handle 7+NUL chars.. its now 8.
 
@@ -297,7 +297,7 @@ RVNCd v1.22 ( 05-Nov-2023 )
 - Reading of Client commands now have a simple validation check.
 
 
-RVNCd v1.23 ( 06-Nov-2023 )
+rVNCd v1.23 ( 06-Nov-2023 )
 
 - The NetSend process, now try to sync with GfxRead process in starting
   and stopping.
@@ -307,7 +307,7 @@ RVNCd v1.23 ( 06-Nov-2023 )
 - Removed lots a Serial debug
 
 
-RVNCd v1.24 ( 06-Nov-2023 )
+rVNCd v1.24 ( 06-Nov-2023 )
 
 - Encodings are now sorted. Encoding on top and Features at the bottom,
   not all servers send a correctly sorted list.
@@ -321,14 +321,14 @@ RVNCd v1.24 ( 06-Nov-2023 )
   already running, it will signal the first program and then quit it self.
 
 
-RVNCd v1.25 ( 07-Nov-2023 )
+rVNCd v1.25 ( 07-Nov-2023 )
 
 - Updated the sorting function. Now its sort after, Enabled, EncType and Pos.
 
 - Updated the Pixel Format window.
 
 
-RVNCd v1.26 ( 13-Feb-2024 )
+rVNCd v1.26 ( 13-Feb-2024 )
 
 - The Quit menu item now have a Q shortcut.
 
@@ -344,7 +344,7 @@ RVNCd v1.26 ( 13-Feb-2024 )
 - Windows can be closed with the ESC key now, execpt the main window.
 
 
-RVNCd v1.27 ( 16-Feb-2024 )
+rVNCd v1.27 ( 16-Feb-2024 )
 
 - Fixed: Server settings was only copyed when first User connected and not at 
   Server startup.
@@ -363,13 +363,13 @@ RVNCd v1.27 ( 16-Feb-2024 )
 
 - Added: Implemented ARexx HELP command.
 
-- Fixed: The program DubCheck that made sure only one instance of RVNCd was 
+- Fixed: The program DubCheck that made sure only one instance of rVNCd was 
   running, was broken as it would find it self if run from WB.
 
 - Added: A simple Stats page, were you can see the number of connection.
 
 
-RVNCd v1.28 ( 03-Mar-2024 )
+rVNCd v1.28 ( 03-Mar-2024 )
 
 - Changed: The Server now only send GfxTiles that is asked for by the client.
   This also mean the Faster BufferSync=Off is no longer possible.
@@ -381,14 +381,14 @@ RVNCd v1.28 ( 03-Mar-2024 )
   you stop the server.
 
 
-RVNCd v1.29 ( 03-Mar-2024 )
+rVNCd v1.29 ( 03-Mar-2024 )
 
 - Removed: Before there was a up to 3 sec delay at Client connect, waiting
   for client sending accepted Encoding and requesting buffer. That should
   not be needed anymore.
 
 
-RVNCd v1.30 ( 13-Mar-2024 )
+rVNCd v1.30 ( 13-Mar-2024 )
 
 - Fixed: Raw tile encoding were not enabled on startup, only after client
   send its first Support encodings.
@@ -403,9 +403,9 @@ RVNCd v1.30 ( 13-Mar-2024 )
 - Added: Its now possible to kick a user off via the menus.
 
 
-RVNCd v1.31 ( 07-Sep-2024 )
+rVNCd v1.31 ( 07-Sep-2024 )
 
-- Changed: Created myNetSend() and myNetRead() function to standalize
+- Changed: Created Func_NetSend() and Func_NetRead() function to standalize
   reading and sending network data. Should result in smaller size exe.
 
 - Added: A WatchDog timer for sending.. Incase of Network stalls during
@@ -427,7 +427,7 @@ RVNCd v1.31 ( 07-Sep-2024 )
   is now being printed.
 
 
-RVNCd v1.32 ( 14-Sep-2024 )
+rVNCd v1.32 ( 14-Sep-2024 )
 
 - The license header of all the source files has changed to SPDX. 
   Additionally, the license has changed slightly from "GPL v3" to 
@@ -435,7 +435,7 @@ RVNCd v1.32 ( 14-Sep-2024 )
 
   /*
   ** SPDX-License-Identifier: GPL-3.0-or-later
-  ** Copyright (c) 2023-2024 Rene W. Olsen <renewolsen@gmail.com>
+  ** Copyright (c) 2023-2025 Rene W. Olsen < renewolsen @ gmail . com >
   */
 
 - Added: Mouse Pointer image can now be controlled via GUI.
@@ -454,7 +454,7 @@ RVNCd v1.32 ( 14-Sep-2024 )
   happen if image change. Ie. if you loaded a config file.
 
 
-RVNCd v1.33 ( 15-Sep-2024 )
+rVNCd v1.33 ( 15-Sep-2024 )
 
 - Changed: The showing of "Connected at" and "Duration" code.
   Used in Session Info and Server Stat.
@@ -462,14 +462,14 @@ RVNCd v1.33 ( 15-Sep-2024 )
 - Added: Gadget to control Tile Size for Screen Grabber.
 
 
-RVNCd v1.34 ( 16-Sep-2024 )
+rVNCd v1.34 ( 16-Sep-2024 )
 
 - Fixed: A Crash would happen on exit, if Creating Config structure failed.
 
 - Changed: Rewrote the Loading and Saving of Config files.
 
 
-RVNCd v1.35 ( 17-Sep-2024 )
+rVNCd v1.35 ( 17-Sep-2024 )
 
 - Changed: Streamlining the Quit functions, now they will open a requester
   if there is users connected. Excluding the ForceQuit functions.
@@ -508,7 +508,7 @@ RVNCd v1.35 ( 17-Sep-2024 )
 - Added: Program Icon are now passed too the Windows for iconify.
 
 
-RVNCd v1.36 ( 21-Sep-2024 )
+rVNCd v1.36 ( 21-Sep-2024 )
 
 - Fixed: Trying to login with vnc protocol v3.7 and no password set,
   would fail.
@@ -517,12 +517,13 @@ RVNCd v1.36 ( 21-Sep-2024 )
   restart was needed.
 
 
-RVNCd v1.37 ( 04-Oct-2024 )
+rVNCd v1.37 ( 04-Oct-2024 )
 
 - Changed: In NetRead/NetSend, the server will now retry up to 3 times,
   if it get an EINTR error code.
 
-RVNCd v1.38 ( 28-Oct-2024 ) ## AmiWest Release ##
+
+rVNCd v1.38 ( 28-Oct-2024 ) ## AmiWest Release ##
 
 - Fixed: if starting rvncd and a config file (default: rvncd.config)
   was not found, an error would be trigered.
@@ -534,3 +535,107 @@ RVNCd v1.38 ( 28-Oct-2024 ) ## AmiWest Release ##
 - Updated: config file example.. you can also just start the program
   and then via menu save default to get all settings.
 
+
+rVNCd v1.39 ( 20-May-2025 ) ## Beta version
+
+- Changed: Refactored Source code, so it can be compiled for AOS3/AOS4
+
+- Changed: Refactored Source code, so it can be compiled diffrent gui.
+
+- Changed: Refactored Source code, so it can be compiled diffrent graphics
+  systems, like Picasso96, Cybergraphics or AmigaOS4 graphics (v54) lib.
+
+- Changed: Before verbose was only on/off.. there are now new options
+  -v0 = Output is off (execpt errors)
+  -v1 = Normal ouput.
+  -v2 = Extra output (old Verbose mode)
+  -v3 = Even more output (debug mode)
+
+
+rVNCd v1.40 ( 07-Jun-2025 ) ## Beta version
+
+- Fixed: The config file loader was off by one when retrieving strings, 
+  causing it to retrieve one less character than expected for maximum 
+  string lengths.
+
+
+rVNCd v1.41 ( 29-Jul-2025 ) ## Beta version
+
+- Fixed: If you had Verbose mode on and you typed something into the shell
+  it would stop the server untell you pressed enter (and that was not
+  always possible) this is a feature of Amiga Shell.
+  What I'm doing now is to print into a circular buffer (16KB) and then
+  I created a new process that will read 32 bytes at a time and then try 
+  and print to shell, the server will continue to run but the buffer may 
+  overflow at some point if you do not press enter so the shell can continue,
+  but the server should run uninterrupted... I hope this trick work.
+
+
+rVNCd v1.42 ( 15-Nov-2025 ) ## Beta version
+
+ - Fixed: Config string parsing .. if a String started with ' in the config
+   it would expect a " terminator, changed now so "String" and 'String'
+   should work again. This means you can do "Hello 'World'" or 
+   'Hello "World"'
+
+ - Changed: When Verbose is set to 0, the program header is no longer printed.
+
+ - Changed: Reworked the Save Config routine. It now renames the file first 
+   and attempts to restore the old version if errors occur.
+
+ - Changed: Memory functions no longer print directly to the shell 
+   (to prevent a potential busy loop).
+
+ - Added: RRE Encoding. Good for areas with same color. Like the shell
+   window or you could change WB backdrop too a solid color.
+
+ - Added: LastRect Encoding, it will now always end with LastRect if
+   encoding is supported by Client.
+
+ - Added: Sending Tiles are now buffered. default 64kb but it can be
+   controlled via gui/config file.
+
+ - Added: Patching Intuition's DisplayBeep function so we now can 
+   send Bell/Beeps to client.
+
+ - Fixed: After you have started the Server and shut it down again.
+   I forgot too clear a flag, so you were not able to start it again.
+
+ - Added: Setting -v0-3 from Shell will lock it so Config file can't
+   change it. But you can change it from GUI.
+
+ - Fixed: Internaly when converting ScreenModes sometime R5:G6:B5 would
+   not be supported as there was a typo for R5:G5:B5 format instead.
+
+ - Change: Verbose mode default to Off (v0) for WB Start and Normal (v1)
+   for Shell start.
+
+ - Added: Session Window gui now have some pixel info to help optimize
+   Pixel Speed, have Normalized values for Min/Avr/Max speed.
+   Pixel Send, just counting the Number of updated pixels send.
+   Load: Indicate how much time the NetSend process is idling.
+
+ - Changed: Merge White/Black list into one.. easyer to maintain plus 
+   it gives better control handling IP addreses.
+
+ - Changed: Screen Grabber internal Compare+Copy Tile data function.
+   I do hope I manage to improve speed a little.
+
+ - Changed: Set PixelFormat, Client Encoding plus UpdateRequest are now
+   put into a queue, so its handled one at a time as they are recieved.
+   This should improve compatible with Clients.
+
+
+rVNCd v1.43 ( 15-Nov-2025 ) ## Beta version
+
+- Changed: When pressing Show Interface in Exchange, atleast one Window
+  will now open.. the rest may stay iconifyed.
+
+- Changed: When Server is running in Strict mode, a random tile will be
+  marked dirty for all UpdateRequests, as not all Clients can handle
+  a reply with no gfx tiles changed.
+
+- Fixed: Checking return status of Delete/Rename files were wrong.
+
+- Changed: Improved Text output for Delete/Rename/GetFileSize in
+  verbose mode.
