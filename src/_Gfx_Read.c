@@ -870,11 +870,6 @@ bailout:
 
 // --
 
-#ifdef DEBUG
-static S32 ooooo = 0;
-static U32 oocnt = 0;
-#endif
-
 static void myProcess_Main( struct Config *cfg )
 {
 S32 delay;
@@ -890,23 +885,11 @@ S32 pos;
 	wait = NET_EXIT_SIGNAL;
 
 	#ifdef DEBUG
-	DebugPrintF( "Gfx start\n" );
+	DebugPrintF( "Gfx started\n" );
 	#endif
-
-	// Clear Signals
-	SetSignal( 0L, wait );
 
 	while( TRUE )  
 	{
-		#ifdef DEBUG
-		ooooo--;
-		if ( ooooo < 0 )
-		{
-			ooooo = 1000;
-			DebugPrintF( "gfx tick #%lu\n", ++oocnt );
-		}
-		#endif
-
 		mask = CheckSignal( wait );
 
 		if ((( mask & ( NET_EXIT_SIGNAL )) == ( NET_EXIT_SIGNAL )) && ( cfg->GfxRead_Exit ))
@@ -999,6 +982,10 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
+	#ifdef DEBUG
+	DebugPrintF( "Gfx starting 1/2\n" );
+	#endif
+
 	//--------
 
 	Self = FindTask( NULL );
@@ -1012,8 +999,16 @@ S32 stat;
 			break;
 		}
 
+		#ifdef DEBUG
+		DebugPrintF( "Gfx starting delay\n" );
+		#endif
+
 		Delay( 2 );
 	}
+
+	#ifdef DEBUG
+	DebugPrintF( "Gfx starting 2/2\n" );
+	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -1036,7 +1031,17 @@ S32 stat;
 
 		// --
 
+		#ifdef DEBUG
+		DebugPrintF( "Gfx entering main\n" );
+		#endif
+
+		SetTaskPri( Self, PRI_GFX );
 		myProcess_Main( Config );
+		SetTaskPri( Self, PRI_SHUTDOWN );
+
+		#ifdef DEBUG
+		DebugPrintF( "Gfx exited main\n" );
+		#endif
 
 		// --
 
@@ -1076,6 +1081,10 @@ U32 wait;
 
 	error = TRUE;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStart_Gfx_Read\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
 		SHELLBUF_PRINTF( "myStart_Gfx_Read\n" );
@@ -1098,7 +1107,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : Gfx Read Process",
-			NP_Priority,	-5,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			NP_Child,		TRUE,
 			NP_UserData,	& msg,
@@ -1109,7 +1118,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : Gfx Read Process",
-			NP_Priority,	-5,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			TAG_END
 		);
@@ -1158,21 +1167,24 @@ void myStop_Gfx_Read( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStop_Gfx_Read\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
 		printf( "myStop_Gfx_Read\n" );
 	}
 
-//	#ifdef DEBUG
+	#ifdef DEBUG
 	if ( cfg->UserCount > 0 )
 	{
 		SHELLBUF_PRINTF( "\n##\n## WARNING User(s) %d still connected\n##\n\n", cfg->UserCount );		
 		Delay( 2 );
 	}
-//	#endif
+	#endif
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
-
 	if ( cfg->cfg_GfxReadStatus != PROCESS_Stopped )
 	{
 		while(( cfg->cfg_GfxReadStatus == PROCESS_Starting ) 
@@ -1192,6 +1204,7 @@ S32 cnt;
 
 			// Clear CTRL+F
 			SetSignal( 0L, SIGBREAKF_CTRL_F );
+
 			// Send Break Signal(s)
 			Signal( cfg->GfxRead_Task, NET_EXIT_SIGNAL );
 

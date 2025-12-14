@@ -639,3 +639,10 @@ rVNCd v1.43 ( 15-Nov-2025 ) ## Beta version
 
 - Changed: Improved Text output for Delete/Rename/GetFileSize in
   verbose mode.
+
+
+rVNCd v1.44 ( 14-Dec-2025 )
+
+- Updated rVNCd.doc
+
+- Fixed: a crash when starting/stopping using ARexx's restart cmd.

@@ -15,7 +15,7 @@ static void myProcess_Main( struct Config *cfg )
 U32 mask;
 
 	#ifdef DEBUG
-	DebugPrintF( "watchdog start\n" );
+	DebugPrintF( "WatchDog started\n" );
 	#endif
 
 	while( TRUE )
@@ -49,7 +49,7 @@ U32 mask;
 	}
 
 	#ifdef DEBUG
-	DebugPrintF( "watchdog send stopping\n" );
+	DebugPrintF( "WatchDog stopping\n" );
 	#endif
 }
 
@@ -124,6 +124,10 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
+	#ifdef DEBUG
+	DebugPrintF( "WatchDog starting 1/2\n" );
+	#endif
+
 	//--------
 
 	Self = FindTask( NULL );
@@ -137,8 +141,16 @@ S32 stat;
 			break;
 		}
 
+		#ifdef DEBUG
+		DebugPrintF( "WatchDog starting delay\n" );
+		#endif
+
 		Delay( 2 );
 	}
+
+	#ifdef DEBUG
+	DebugPrintF( "WatchDog starting 2/2\n" );
+	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -161,7 +173,17 @@ S32 stat;
 
 		// --
 
+		#ifdef DEBUG
+		DebugPrintF( "WatchDog entering main\n" );
+		#endif
+
+		SetTaskPri( Self, PRI_WATCHDOG );
 		myProcess_Main( Config );
+		SetTaskPri( Self, PRI_SHUTDOWN );
+
+		#ifdef DEBUG
+		DebugPrintF( "WatchDog exited main\n" );
+		#endif
 
 		// --
 
@@ -179,7 +201,7 @@ S32 stat;
 	//--------
 
 	#ifdef DEBUG
-	DebugPrintF( "watch dog stopped\n" );
+	DebugPrintF( "WatchDog stopped\n" );
 	#endif
 
 	if ( Parent )
@@ -201,9 +223,13 @@ U32 wait;
 
 	error = TRUE;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStart_WatchDog\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
-		SHELLBUF_PRINTF( "myStart_WatchDog\n" );
+		printf( "myStart_WatchDog\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -223,7 +249,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : WatchDog Process",
-			NP_Priority,	1,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			NP_Child,		TRUE,
 			NP_UserData,	& msg,
@@ -234,7 +260,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : WatchDog Process",
-			NP_Priority,	1,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			TAG_END 
 		);
@@ -283,13 +309,16 @@ void myStop_WatchDog( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
-	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
+	#ifdef DEBUG
+	DebugPrintF( "myStop_WatchDog\n" );
+	#endif
 
 	if ( DoVerbose > 2 )
 	{
 		printf( "myStop_WatchDog\n" );
 	}
 
+	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
 	if ( cfg->cfg_WatchDogStatus != PROCESS_Stopped )
 	{
 		while(( cfg->cfg_WatchDogStatus == PROCESS_Starting ) 
@@ -309,6 +338,7 @@ S32 cnt;
 
 			// Clear CTRL+F
 			SetSignal( 0L, SIGBREAKF_CTRL_F );
+
 			// Send Break Signal(s)
 			Signal( cfg->WatchDog_Task, NET_EXIT_SIGNAL );
 

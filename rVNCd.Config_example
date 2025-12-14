@@ -1,0 +1,66 @@
+[RVNC SERVER CONFIG]
+
+[PROGRAM]
+ Verbose = 1
+ DisableGUI = 0
+ DisableARexx = 0
+ DisableCxBroker = 0
+ WinMainStatus = 1
+ WinAboutStatus = 0
+ WinKeyStatus = 0
+ WinPixelStatus = 0
+ WinSessionStatus = 0
+ WinEncodingsStatus = 0
+
+[LOG]
+ Enable = 1
+ LogFile = "Logdata"
+ Infos = 1
+ Errors = 1
+ Warnings = 1
+ ProgramStart = 0
+ ProgramStop = 0
+ ServerStart = 1
+ ServerStop = 1
+ UserConnect = 1
+ UserDisconnect = 1
+
+[SERVER]
+ Port = 5900
+ Name = "Amiga VNC Server"
+ EncRRE = 1
+ EncZLIB = 1
+ SendBell = 0
+ Password = ""
+ TileSize = 64
+ AutoStart = 0
+ Protocol33 = 1
+ Protocol37 = 1
+ ScanMethod = 0
+ PointerFile = ""
+ PointerType = 0
+ SendWatchDog = 0
+ SendClipboard = 1
+ ReadClipboard = 1
+ EncRichCursor = 1
+ SendTileBuffer = 64
+ DisableBlanker = 1
+ DelayFrequency = 150
+
+[ACTIONS]
+ ProgramStopEnable = 0
+ ProgramStopBuffer = ""
+ ProgramStartEnable = 0
+ ProgramStartBuffer = ""
+ ServerStartEnable = 0
+ ServerStartBuffer = ""
+ ServerStopEnable = 0
+ ServerStopBuffer = ""
+ UserConnectEnable = 0
+ UserConnectBuffer = ""
+ UserDisconnectEnable = 0
+ UserDisconnectBuffer = ""
+
+[IP]
+ Allow = 192.168.*.*
+ Block = *.*.*.*

@@ -28,15 +28,9 @@ PTR mem;
 		mem = AllocVec( size, MEMF_ANY );
 
 		#endif
-
-//		if ( DoVerbose > 2 )
-//		{
-//			SHELLBUF_PRINTF( "mem_Alloc( Size: %" PRId32 ", Mem: $%08" PRIX32 " )\n", size, (U32) mem );
-//		}
 	}
 	else
 	{
-//		SHELLBUF_PRINTF( "Error: mem_Alloc( Size: %" PRId32 " )\n", size );
 		mem = NULL;
 	}
 
@@ -63,15 +57,9 @@ PTR mem;
 		mem = AllocVec( size, MEMF_ANY | MEMF_CLEAR );
 
 		#endif
-
-//		if ( DoVerbose > 2 )
-//		{
-//			SHELLBUF_PRINTF( "mem_AllocClr( Size: %" PRId32 ", Mem: $%08" PRIX32 " )\n", size, (U32) mem );
-//		}
 	}
 	else
 	{
-//		SHELLBUF_PRINTF( "Error: mem_AllocClr( Size: %" PRId32 " )\n", size );
 		mem = NULL;
 	}
 
@@ -163,11 +151,6 @@ void mem_Free( PTR mem )
 	{
 		goto bailout;
 	}
-
-//	if ( DoVerbose > 2 )
-//	{
-//		SHELLBUF_PRINTF( "mem_Free( Mem: $%08" PRIX32 " )\n", (U32) mem );
-//	}
 
 	FreeVec( mem );
 

@@ -282,10 +282,6 @@ S32 err;
 
 //	ISocket = cfg->NetRead_ISocket;
 
-	#ifdef DEBUG
-	DebugPrintF( "net read start\n" );
-	#endif
-
 	#ifdef _AOS4_
 	struct SocketIFace *ISocket = cfg->NetRead_ISocket;
 	#else
@@ -318,6 +314,10 @@ S32 err;
 	#endif
 
 	// --
+
+	#ifdef DEBUG
+	DebugPrintF( "NetRead started\n" );
+	#endif
 
 	while( TRUE )
 	{
@@ -406,7 +406,7 @@ S32 err;
 	}
 
 	#ifdef DEBUG
-	DebugPrintF( "net read 1 stopping\n" );
+	DebugPrintF( "NetRead stopping 1/2\n" );
 	#endif
 
 	// --
@@ -433,7 +433,7 @@ S32 err;
 	}
 
 	#ifdef DEBUG
-	DebugPrintF( "net read 2 stopping\n" );
+	DebugPrintF( "NetRead stopping 2/2\n" );
 	#endif
 }
 
@@ -538,6 +538,10 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
+	#ifdef DEBUG
+	DebugPrintF( "NetRead starting 1/2\n" );
+	#endif
+
 	//--------
 
 	Self = FindTask( NULL );
@@ -551,8 +555,16 @@ S32 stat;
 			break;
 		}
 
+		#ifdef DEBUG
+		DebugPrintF( "NetRead starting delay\n" );
+		#endif
+
 		Delay( 2 );
 	}
+
+	#ifdef DEBUG
+	DebugPrintF( "NetRead starting 2/2\n" );
+	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -575,7 +587,17 @@ S32 stat;
 
 		// --
 
+		#ifdef DEBUG
+		DebugPrintF( "NetRead entering main\n" );
+		#endif
+
+		SetTaskPri( Self, PRI_NETREAD );
 		myProcess_Main( Config );
+		SetTaskPri( Self, PRI_SHUTDOWN );
+
+		#ifdef DEBUG
+		DebugPrintF( "NetRead exited main\n" );
+		#endif
 
 		// --
 
@@ -593,7 +615,7 @@ S32 stat;
 	//--------
 
 	#ifdef DEBUG
-	DebugPrintF( "net read stopped\n" );
+	DebugPrintF( "NetRead stopped\n" );
 	#endif
 
 	if ( Parent )
@@ -614,6 +636,10 @@ U32 mask;
 U32 wait;
 
 	error = TRUE;
+
+	#ifdef DEBUG
+	DebugPrintF( "myStart_Net_Read\n" );
+	#endif
 
 	if ( DoVerbose > 2 )
 	{
@@ -637,7 +663,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : Net Read Process",
-			NP_Priority,	5,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			NP_Child,		TRUE,
 			NP_UserData,	& msg,
@@ -648,7 +674,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : Net Read Process",
-			NP_Priority,	5,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			TAG_END 
 		);
@@ -697,13 +723,16 @@ void myStop_Net_Read( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStop_Net_Read\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
 		printf( "myStop_Net_Read\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
-
 	if ( cfg->cfg_NetReadStatus != PROCESS_Stopped )
 	{
 		while(( cfg->cfg_NetReadStatus == PROCESS_Starting ) 
@@ -723,6 +752,7 @@ S32 cnt;
 
 			// Clear CTRL+F
 			SetSignal( 0L, SIGBREAKF_CTRL_F );
+
 			// Send Break Signal(s)
 			Signal( cfg->NetRead_Task, NET_EXIT_SIGNAL );
 

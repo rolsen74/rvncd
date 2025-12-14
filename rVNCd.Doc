@@ -1,0 +1,465 @@
+========================
+ rVNCd – v1.44 Reference
+========================
+
+
+[Shell]
+
+Running from shell you can use the following arguments:
+
+  rVNCd [options]
+
+Options:
+
+  -v0 .. -v3 or --verbose
+    Controls verbosity level.
+      -v0  Output off (except errors)
+      -v1  Normal output
+      -v2  Extra output
+      -v3  Debug output
+
+    NOTE:
+    When set from Shell, verbose level is locked and cannot be changed
+    by the config file (but GUI may still change it).
+
+  -p or --port <port>
+    Set the TCP port to listen on.
+    Overrides config file setting.
+
+  -c or --config <file>
+    Select which config file to use.
+
+  -h or --help
+    Print shell options and exit.
+
+  --noarexx
+    Don't add ARexx port on startup.
+
+  --nocxbroker
+    Don't add Commodities Broker on startup.
+
+Default config file:
+  rVNCd.Config
+
+
+------------------------------------------------------------
+
+[ARexx]
+
+ARexx port name: RVNCD
+
+Commands:
+
+  STARTSERVER
+    Starts the server if not already running.
+    Safe to call multiple times.
+    Result value indicates success.
+
+
+  STOPSERVER
+    Stops the server if running.
+    Safe to call if already stopped.
+
+
+  RESTARTSERVER
+    Stops the server (if running) and starts it again.
+    If not running, it will simply start.
+    Result value indicates success.
+
+
+  SERVERSTATUS
+    Returns whether the server is running or not.
+
+
+  QUIT
+    Stops the server (if running) and exits the program.
+
+
+  LOADCONFIG - "FILE/F"
+
+  SAVECONFIG
+
+  SAVEASCONFIG - "FILE/F"
+
+  SAVEDEFAULTCONFIG
+
+  HELP
+
+  FORCEQUIT
+
+------------------------------------------------------------
+
+[CONFIG]
+
+The config file is divided into sections using [SectionName].
+
+------------------------------------------------------------
+
+[Program]
+
+  Verbose - (U8) 0-3
+    Default verbosity level when not set from Shell.
+
+    Values:
+      0 = Off (errors only)
+      1 = Normal
+      2 = Extra
+      3 = Debug
+
+    Default:
+      0
+
+
+  DisableGUI - (U8) 0-1
+    Don't open GUI libraries on startup to keep resource usage low.
+
+    Values:
+      0 = Alloc/Open gui
+      1 = Don't get gui resources
+
+    Default:
+      0
+
+
+  DisableARexx - (U8) 0-1
+    Don't start ARexx.
+
+    Values:
+      0 = Startup ARexx
+      1 = Don't run ARexx client
+
+    Default:
+      0
+
+
+  DisableCxBroker - (U8) 0-1
+    Don't start CxBroker.
+
+    Values:
+      0 = Startup CxBroker
+      1 = Don't run CxBroker client
+
+    Default:
+      0
+
+------------------------------------------------------------
+
+[Server]
+
+  Name (STR)
+    Server name exchanged during VNC handshake.
+
+    Default:
+      Amiga VNC Server
+
+
+  Port - (U32) 0-65535
+    TCP port to listen on.
+    Can be overridden by Shell option.
+
+    Default:
+      5900
+
+
+  DelayFrequency (S32) 0-500
+    Number of tiles processed before inserting a short pause.
+    Set to 0 for maximum speed.
+
+    Default:
+      150
+
+
+  DisableBlanker (U8) 0-1
+    Prevents screen blanker while a client is connected.
+    Blanker is restored on disconnect.
+
+    Default:
+      1 (True)
+
+
+  SendClipboard (U8) 0-1
+    Send Amiga clipboard text to client.
+    Text only.
+
+    Default:
+      1 (True)
+
+
+  ReadClipboard (U8) 0-1
+    Update Amiga clipboard from client clipboard.
+    Text only.
+
+    Default:
+      1 (True)
+
+
+  AutoStart (U8) 0-1
+    Automatically start server when program launches.
+
+    Default:
+      1 (True)
+
+
+  ScanMethod (U8) 0-1
+    Tile scanning order:
+      0 = Linear
+      1 = Random
+
+    Default:
+      0
+
+
+  Password (STR)
+    Enables VNC authentication (DES-based).
+    Security is weak by protocol design.
+
+    Default:
+      Not set (Disabled)
+
+
+  EncRRE (U8) 0-1
+    Enable RRE encoding.
+    Efficient for areas with large regions of identical color
+    (e.g. Shell windows or solid Workbench backdrops).
+
+    Default:
+      1 (Enabled)
+
+
+  EncZLIB (U8) 0-1
+    Enable ZLIB compressed encoding.
+
+    Default:
+      1 (Enabled)
+
+
+  SendBell (U8) 0-1
+    Forward Intuition DisplayBeep() events to the VNC client
+    as Bell messages.
+
+    Default:
+      1 (Enabled)
+
+
+  TileSize (S32) 16-256
+    Size of a single graphics tile in pixels.
+    Smaller tiles may improve update granularity,
+    larger tiles may reduce protocol overhead.
+
+    Default:
+      64
+
+
+  Protocol33 (U8) 0-1
+    Allow VNC protocol version 3.3.
+
+    Default:
+      1 (Enabled)
+
+
+  Protocol37 (U8) 0-1
+    Allow VNC protocol version 3.7.
+
+    Default:
+      1 (Enabled)
+
+
+  PointerFile (STR)
+    Filename of custom mouse pointer image.
+    Used when PointerType is set to File.
+    Maximum size: 64x64 pixels.
+
+    Default:
+      Not set
+
+
+  PointerType (U8) 0-1
+    Mouse pointer source:
+      0 = System pointer
+      1 = Custom pointer from PointerFile
+
+    Default:
+      0
+
+
+  SendWatchDog (U32) 0-1000
+    Interval (in milliseconds) for sending watchdog keep-alive
+    packets to the client.
+    0 disables watchdog messages.
+
+    Default:
+      0 (Disabled)
+
+
+  EncRichCursor (U8) 0-1
+    Enable RichCursor encoding.
+    Sends cursor image to client so the client draws the pointer.
+
+    Default:
+      1 (Enabled)
+
+
+  SendTileBuffer (U32) 0-1024
+    Size of tile send buffer in kilobytes.
+    Buffers outgoing tile data before sending.
+
+    Default:
+      64
+
+
+------------------------------------------------------------
+
+[Log]
+
+  Enable (U8) 0-1
+    Enable logging to disk.
+
+    Default:
+      1 (True)
+
+
+  LogFile (STR)
+    Base filename for log output.
+    Extension ".txt" is added automatically.
+    Files larger than 1MB are split (.002, .003, ...).
+
+    Default:
+      Logdata
+
+
+  ProgramStart (U8) 0-1
+    Log when program starts.
+
+    Default:
+      0 (False)
+
+
+  ProgramStop (U8) 0-1
+    Log when program exits.
+
+    Default:
+      0 (False)
+
+
+  ServerStart (U8) 0-1
+    Log when server starts.
+
+    Default:
+      1 (True)
+
+
+  ServerStop (U8) 0-1
+    Log when server stops.
+
+    Default:
+      1 (True)
+
+
+  UserConnect (U8) 0-1
+    Log when a client connects.
+
+    Default:
+      1 (True)
+
+
+  Infos (U8) 0-1
+    Log informational messages.
+
+    Default:
+      1 (True)
+
+
+  Errors (U8) 0-1
+    Log error messages.
+
+    Default:
+      1 (True)
+
+
+  Warnings (U8) 0-1
+    Log warning messages.
+
+    Default:
+      1 (True)
+
+
+  UserDisconnect (U8) 0-1
+    Log when a client disconnects.
+
+    Default:
+      1 (True)
+
+------------------------------------------------------------
+
+[IP]
+
+NOTE:
+WhiteList and BlackList were merged into a single list
+for easier maintenance and better control.
+
+  Allow
+    IP addresses allowed to connect.
+    Checked before Deny rules.
+    Wildcards supported (e.g. 192.168.*.*).
+    Unlimited entries.
+
+    Default:
+      none
+
+
+  Block
+    IP addresses blocked from connecting.
+    Wildcards supported.
+    Unlimited entries.
+
+    Default:
+      none
+
+------------------------------------------------------------
+
+[ACTIONS]
+
+Allows execution of ARexx or Shell command strings on specific events.
+
+  ProgramStopEnable (U8) 0-1
+    Execute ProgramStopBuffer when program exits.
+
+  ProgramStopBuffer (STR)
+    Command executed on program shutdown.
+
+
+  ProgramStartEnable (U8) 0-1
+    Execute ProgramStartBuffer when program starts.
+
+  ProgramStartBuffer (STR)
+    Command executed on program startup.
+
+
+  ServerStartEnable (U8) 0-1
+    Execute ServerStartBuffer when server starts.
+
+  ServerStartBuffer (STR)
+    Command executed when VNC server starts listening.
+
+
+  ServerStopEnable (U8) 0-1
+    Execute ServerStopBuffer when server stops.
+
+  ServerStopBuffer (STR)
+    Command executed when VNC server shuts down.
+
+
+  UserConnectEnable (U8) 0-1
+    Execute UserConnectBuffer when a client connects.
+
+  UserConnectBuffer (STR)
+    Command executed on client connect.
+
+
+  UserDisconnectEnable (U8) 0-1
+    Execute UserDisconnectBuffer when a client disconnects.
+
+  UserDisconnectBuffer (STR)
+    Command executed on client disconnect.
+
+------------------------------------------------------------

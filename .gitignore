@@ -55,5 +55,7 @@ dkms.conf
 *.dwo
 
 # Amiga Binary files
+rsync__git_to_svn.sh
+rsync__svn_to_git.sh
 bin/
 obj/

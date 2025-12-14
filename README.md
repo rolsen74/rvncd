@@ -1,54 +1,104 @@
-# Amiga VNC Server
+# rVNCd – Amiga VNC Server
 
-## Protocols:
+rVNCd is a native VNC server for **AmigaOS 4**, with ongoing work to support
+AmigaOS 3 and multiple graphics systems.
 
-- Only v3.3 and v3.7 is supported.
+The goal of rVNCd is to provide a fast, flexible, and Amiga-friendly VNC
+implementation with minimal overhead and good compatibility with existing
+VNC clients.
 
-## Authentications:
+---
 
-- None: No login needed.
+## Supported VNC Protocols
 
-- d3des: Weak 8-byte password, encrypted with DES.
+- VNC protocol **v3.3**
+- VNC protocol **v3.7**
 
-	I suggest using the built-in IP white/black list.
+---
 
-## Tile Encodings:
+## Authentication
 
-- Raw: Raw data is sent without any handling.
+- **None**
+  - No authentication required
 
-- ZLIB: Raw data compressed with zlib before sending.
+- **d3des**
+  - Weak 8-byte DES-based password (VNC compatible)
+  - It is recommended to use the built-in **IP white/black list** for security
 
-## RichCursor Support:
+---
 
--  Mouse cursor image sent to the client to let the client handle drawing of the mouse pointer. A custom image up to 64x64 pixels can also be chosen.
+## Supported Encodings
 
-## Graphics Modes:
+- **Raw**
+  - Uncompressed raw pixel data
 
-- Full TrueColor support.
-- No handling of CLUT modes or pens.
+- **ZLIB**
+  - Raw data compressed using zlib
 
-	The server handles requests for parts or the full screen.
-	It may ask for all the graphics or only the changed parts.
+- **RRE** *(added in v1.42)*
+  - Efficient for areas with large regions of the same color  
+    (e.g. Shell windows, solid Workbench backdrops)
 
-## Clipboard:
+- **LastRect** *(added in v1.42)*
+  - Used to properly terminate framebuffer updates when supported by the client
 
-- Sending of clipboard text both ways is supported.
-	A clipboard hook is installed on Amiga to detect Amiga+C.
+---
 
-## Mouse:
+## Cursor Support
 
-- Left, Middle, and Right mouse buttons are supported.
-- Scroll wheel support.
+- **RichCursor**
+  - Cursor image is sent to the client
+  - Client handles cursor drawing
+  - Custom cursor image up to **64×64 pixels** supported
 
-## Keyboard:
+---
 
-- Keyboard checks for Cold and Icecold reboots.
+## Graphics Support
 
-## GUI, ARexx, and Commodity:
+- Full **TrueColor** support
+- No support for CLUT / pen-based screen modes
 
-- Simple access to control the server.
+The server supports:
+- Full screen updates
+- Partial updates (only changed areas)
 
-## Missing:
+Tile comparison and update logic has been optimized to reduce bandwidth usage.
 
-Well, there are lots... like screen cycling, more tile encodings are two 
-things high on the to-do list.
+---
+
+## Clipboard Support
+
+- Clipboard text transfer **both directions**
+- Uses an Amiga clipboard hook
+- Detects **Amiga + C** automatically
+
+---
+
+## Mouse Support
+
+- Left, Middle, Right mouse buttons
+- Scroll wheel support
+
+---
+
+## Keyboard Handling
+
+- Keyboard input supported
+- Detects **Cold** and **IceCold** reboot key sequences
+
+---
+
+## Audio / Beep Support
+
+- **Bell / Beep forwarding** *(added in v1.42)*
+- Intuition’s `DisplayBeep()` is patched so beeps are sent to the VNC client
+
+---
+
+## GUI, ARexx and Commodity
+
+- Simple GUI for controlling the server
+- ARexx interface
+- Commodity support for easy access and control
+
+---

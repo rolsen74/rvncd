@@ -19,16 +19,13 @@ U32 mask;
 U32 wait;
 S32 len;
 
-	#ifdef DEBUG
-	DebugPrintF( "shell start\n" );
-	#endif
+	ShellBuf_Enable = TRUE;
 
 	wait = NET_EXIT_SIGNAL;
 
-	// Clear Signals
-	SetSignal( 0L, wait );
-
-	ShellBuf_Enable = TRUE;
+	#ifdef DEBUG
+	DebugPrintF( "Shell started\n" );
+	#endif
 
 	while( TRUE )
 	{
@@ -51,11 +48,11 @@ S32 len;
 		}
 	}
 
-	ShellBuf_Enable = FALSE;
-
 	#ifdef DEBUG
-	DebugPrintF( "shell stopping\n" );
+	DebugPrintF( "Shell stopping\n" );
 	#endif
+
+	ShellBuf_Enable = FALSE;
 }
 
 // --
@@ -91,6 +88,10 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
+	#ifdef DEBUG
+	DebugPrintF( "Shell starting 1/2\n" );
+	#endif
+
 	//--------
 
 	Self = FindTask( NULL );
@@ -104,8 +105,16 @@ S32 stat;
 			break;
 		}
 
+		#ifdef DEBUG
+		DebugPrintF( "Shell starting delay\n" );
+		#endif
+
 		Delay( 2 );
 	}
+
+	#ifdef DEBUG
+	DebugPrintF( "Shell starting 2/2\n" );
+	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -127,7 +136,17 @@ S32 stat;
 
 		// --
 
+		#ifdef DEBUG
+		DebugPrintF( "Shell entering main\n" );
+		#endif
+
+		SetTaskPri( Self, PRI_SHELL );
 		myProcess_Main( Config );
+		SetTaskPri( Self, PRI_SHUTDOWN );
+
+		#ifdef DEBUG
+		DebugPrintF( "Shell exited main\n" );
+		#endif
 
 		// --
 
@@ -145,7 +164,7 @@ S32 stat;
 	//--------
 
 	#ifdef DEBUG
-	DebugPrintF( "shell stopped\n" );
+	DebugPrintF( "Shell stopped\n" );
 	#endif
 
 	if ( Parent )
@@ -167,9 +186,13 @@ U32 wait;
 
 	error = TRUE;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStart_ShellBuf\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
-		SHELLBUF_PRINTF( "myStart_ShellBuf\n" );
+		printf( "myStart_ShellBuf\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -189,7 +212,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : ShellBuf Process",
-			NP_Priority,	0,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			NP_Child,		TRUE,
 			NP_UserData,	& msg,
@@ -200,7 +223,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : ShellBuf Process",
-			NP_Priority,	0,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			TAG_END
 		);
@@ -249,6 +272,10 @@ void myStop_ShellBuf( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStop_ShellBuf\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
 		printf( "myStop_ShellBuf\n" );
@@ -274,6 +301,7 @@ S32 cnt;
 
 			// Clear CTRL+F
 			SetSignal( 0L, SIGBREAKF_CTRL_F );
+
 			// Send Break Signal(s)
 			Signal( cfg->ShellBuf_Task, NET_EXIT_SIGNAL );
 

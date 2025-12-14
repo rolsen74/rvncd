@@ -103,11 +103,11 @@ U32 mask;
 
 	// --
 
-	#ifdef DEBUG
-	DebugPrintF( "net send start\n" );
-	#endif
-
 	cfg->cfg_KickUser = 0;
+
+	#ifdef DEBUG
+	DebugPrintF( "NetSend started\n" );
+	#endif
 
 	while(	( cfg->cfg_ClientRunning ) 
 	&&		( ! cfg->cfg_ServerShutdown )
@@ -264,7 +264,7 @@ U32 mask;
 	}
 
 	#ifdef DEBUG
-	DebugPrintF( "net send 1 stopping\n" );
+	DebugPrintF( "NetSend stopping 1/2\n" );
 	#endif
 
 bailout:
@@ -300,7 +300,7 @@ bailout:
 	cfg->cfg_ClientRunning = FALSE;
 
 	#ifdef DEBUG
-	DebugPrintF( "net send 2 stopping\n" );
+	DebugPrintF( "NetSend stopping 2/2\n" );
 	#endif
 }
 
@@ -593,6 +593,10 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
+	#ifdef DEBUG
+	DebugPrintF( "NetSend starting 1/2\n" );
+	#endif
+
 	//--------
 
 	Self = FindTask( NULL );
@@ -606,8 +610,16 @@ S32 stat;
 			break;
 		}
 
+		#ifdef DEBUG
+		DebugPrintF( "NetSend starting delay\n" );
+		#endif
+
 		Delay( 2 );
 	}
+
+	#ifdef DEBUG
+	DebugPrintF( "NetSend starting 2/2\n" );
+	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -652,7 +664,21 @@ S32 stat;
 			Config->cfg_NetReason = NULL;
 		}
 
+		// --
+
+		#ifdef DEBUG
+		DebugPrintF( "NetSend entering main\n" );
+		#endif
+
+		SetTaskPri( Self, PRI_NETSEND );
 		myProcess_Main( Config );
+		SetTaskPri( Self, PRI_SHUTDOWN );
+
+		#ifdef DEBUG
+		DebugPrintF( "NetSend exited main\n" );
+		#endif
+
+		// --
 
 		if ( Config->cfg_NetReason )
 		{
@@ -696,7 +722,7 @@ S32 stat;
 	//--------
 
 	#ifdef DEBUG
-	DebugPrintF( "net send stopped\n" );
+	DebugPrintF( "NetSend stopped\n" );
 	#endif
 
 	if ( Parent )
@@ -717,6 +743,10 @@ U32 mask;
 U32 wait;
 
 	error = TRUE;
+
+	#ifdef DEBUG
+	DebugPrintF( "myStart_Net_Send\n" );
+	#endif
 
 	if ( DoVerbose > 2 )
 	{
@@ -740,7 +770,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : Net Send Process",
-			NP_Priority,	1,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			NP_Child,		TRUE,
 			NP_UserData,	& msg,
@@ -751,7 +781,7 @@ U32 wait;
 
 		process = CreateNewProcTags(
 			NP_Name,		"rVNCd : Net Send Process",
-			NP_Priority,	1,
+			NP_Priority,	PRI_STARTUP,
 			NP_Entry,		myServerProcess,
 			TAG_END 
 		);
@@ -804,13 +834,16 @@ void myStop_Net_Send( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
+	#ifdef DEBUG
+	DebugPrintF( "myStop_Net_Send\n" );
+	#endif
+
 	if ( DoVerbose > 2 )
 	{
 		printf( "myStop_NetSend\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
-
 	if ( cfg->cfg_NetSendStatus != PROCESS_Stopped )
 	{
 		while(( cfg->cfg_NetSendStatus == PROCESS_Starting ) 
@@ -835,6 +868,7 @@ S32 cnt;
 
 			// Clear CTRL+F
 			SetSignal( 0L, SIGBREAKF_CTRL_F );
+
 			// Send Break Signal(s)
 			Signal( cfg->NetSend_Task, NET_EXIT_SIGNAL );
 

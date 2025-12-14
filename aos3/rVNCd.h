@@ -169,6 +169,15 @@ struct Config;
 
 // --
 
+#define PRI_STARTUP				8		// Used for all starting processes
+#define PRI_SHUTDOWN			9		// Used for all stopping processes
+#define PRI_GFX					-5
+#define PRI_NETSEND				1
+#define PRI_NETREAD				5
+#define PRI_WATCHDOG			1
+#define PRI_SERVER				1
+#define PRI_SHELL				0
+
 #define MAX_KeyListNodes		250
 #define MAX_LogListNodes		250
 #define MAX_SERVERS				1

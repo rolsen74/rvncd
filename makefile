@@ -28,7 +28,7 @@
 #
 
 VERSION		:= 1
-REVISION	:= 43
+REVISION	:= 44
 TARGET		:= rVNCd
 MCRT		?= newlib
 
@@ -228,21 +228,6 @@ ifeq ($(GUI), RA)
 
   CFLAGS	+= -Igui_ra
   CFLAGS	+= -DGUI_RA
-
-#  SRCS		+= gui_ra/GUI.c
-#  SRCS		+= gui_ra/GUI_Init.c
-#  SRCS		+= gui_ra/GUI_Free.c
-#  SRCS		+= gui_ra/GUI_Handle.c
-#  SRCS		+= gui_ra/GUI_Default_Config.c
-#  SRCS		+= gui_ra/GUI_Refresh_Settings.c
-#  SRCS		+= gui_ra/win_About/About.c
-#  SRCS		+= gui_ra/win_Encodings/Encodings.c
-#  SRCS		+= gui_ra/win_IPEdit/IPEdit.c
-#  SRCS		+= gui_ra/win_KeyLogger/KeyLogger.c
-#  SRCS		+= gui_ra/win_Main/Main.c
-#  SRCS		+= gui_ra/win_Pixel/Pixel.c
-#  SRCS		+= gui_ra/win_Quit/Quit.c
-#  SRCS		+= gui_ra/win_Session/Session.c
 
   SRCDIRS	+= gui_ra
   SRCDIRS	+= gui_ra/win_About

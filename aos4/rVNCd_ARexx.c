@@ -14,7 +14,7 @@
 
 static Object *			myARexxObject	= NULL;
 static struct Hook		myARexxHook;
-U32					ARexxBit		= 0;
+U32						ARexxBit		= 0;
 struct Library *		ARexxBase		= NULL;
 Class *					ARexxClass		= NULL;
 
@@ -22,7 +22,7 @@ static struct Config *	ActiveConfig	= NULL;
 
 // --
 
-static U32	ARexxCallBack(			struct Hook *h , Object *o, struct RexxMsg *msg );
+static U32		ARexxCallBack(			struct Hook *h , Object *o, struct RexxMsg *msg );
 static void		ARexx_StartServer(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_StopServer(		struct ARexxCmd *ac, struct RexxMsg *msg );
 static void		ARexx_RestartServer(	struct ARexxCmd *ac, struct RexxMsg *msg );
@@ -48,17 +48,17 @@ static void		ARexx_Help(				struct ARexxCmd *ac, struct RexxMsg *msg );
 
 static struct ARexxCmd Commands[] =
 {
-{		"STARTSERVER",	1,	ARexx_StartServer,			NULL,		0,	NULL, 0, 0, NULL },
-{		 "STOPSERVER",	2,	ARexx_StopServer,			NULL,		0,	NULL, 0, 0, NULL },
-{	  "RESTARTSERVER",	3,	ARexx_RestartServer,		NULL,		0,	NULL, 0, 0, NULL },
-{	   "SERVERSTATUS",	4,	ARexx_ServerStatus,			NULL,		0,	NULL, 0, 0, NULL },
-{		       "QUIT",	5,	ARexx_Quit,					NULL,		0,	NULL, 0, 0, NULL },
-{		 "LOADCONFIG",	6,	ARexx_LoadConfig,			"FILE/F",	0,	NULL, 0, 0, NULL },
-{		 "SAVECONFIG",	7,	ARexx_SaveConfig,			NULL,		0,	NULL, 0, 0, NULL },
-{	   "SAVEASCONFIG",	8,	ARexx_SaveASConfig,			"FILE/F",	0,	NULL, 0, 0, NULL },
+{       "STARTSERVER",	1,	ARexx_StartServer,			NULL,		0,	NULL, 0, 0, NULL },
+{        "STOPSERVER",	2,	ARexx_StopServer,			NULL,		0,	NULL, 0, 0, NULL },
+{     "RESTARTSERVER",	3,	ARexx_RestartServer,		NULL,		0,	NULL, 0, 0, NULL },
+{      "SERVERSTATUS",	4,	ARexx_ServerStatus,			NULL,		0,	NULL, 0, 0, NULL },
+{              "QUIT",	5,	ARexx_Quit,					NULL,		0,	NULL, 0, 0, NULL },
+{        "LOADCONFIG",	6,	ARexx_LoadConfig,			"FILE/F",	0,	NULL, 0, 0, NULL },
+{        "SAVECONFIG",	7,	ARexx_SaveConfig,			NULL,		0,	NULL, 0, 0, NULL },
+{      "SAVEASCONFIG",	8,	ARexx_SaveASConfig,			"FILE/F",	0,	NULL, 0, 0, NULL },
 { "SAVEDEFAULTCONFIG",	9,	ARexx_SaveDefaultConfig,	NULL,		0,	NULL, 0, 0, NULL },
-{		       "HELP", 10,	ARexx_Help,					NULL,		0,	NULL, 0, 0, NULL },
-{		  "FORCEQUIT", 11,	ARexx_ForceQuit,			NULL,		0,	NULL, 0, 0, NULL },
+{              "HELP", 10,	ARexx_Help,					NULL,		0,	NULL, 0, 0, NULL },
+{         "FORCEQUIT", 11,	ARexx_ForceQuit,			NULL,		0,	NULL, 0, 0, NULL },
 {                NULL,	0,	NULL,						NULL,		0,	NULL, 0, 0, NULL },
 };
 
@@ -68,6 +68,10 @@ S32 ARexx_Init( struct Config *cfg )
 {
 U32 err;
 S32 retval;
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_Init\n" );
+	#endif
 
 	// --
 
@@ -97,7 +101,7 @@ S32 retval;
 	myARexxObject = NewObject( ARexxClass, NULL,
 		AREXX_ReplyHook, & myARexxHook,
 		AREXX_ErrorCode, & err,
-		AREXX_HostName, "rVNCd",
+		AREXX_HostName, "RVNCD",
 		AREXX_Commands, Commands,
 		AREXX_NoSlot, TRUE,
 		TAG_END
@@ -127,6 +131,10 @@ bailout:
 
 void ARexx_Free( struct Config *cfg UNUSED )
 {
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_Free\n" );
+	#endif
+
 	if ( myARexxObject )
 	{
 		DisposeObject( myARexxObject );
@@ -145,6 +153,10 @@ void ARexx_Free( struct Config *cfg UNUSED )
 
 void ARexx_Handle( struct Config *cfg UNUSED )
 {
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_Handle\n" );
+	#endif
+
 	IDoMethod( myARexxObject, AM_HANDLEEVENT );
 }
 
@@ -152,6 +164,10 @@ void ARexx_Handle( struct Config *cfg UNUSED )
 
 static U32 ARexxCallBack( struct Hook *h UNUSED, Object *o UNUSED, struct RexxMsg *msg UNUSED )
 {
+	#ifdef DEBUG
+	DebugPrintF( "ARexxCallBack\n" );
+	#endif
+
 	return( 0 );
 }
 
@@ -160,6 +176,10 @@ static U32 ARexxCallBack( struct Hook *h UNUSED, Object *o UNUSED, struct RexxMs
 static void ARexx_StartServer( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
 S32 err;
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_StartServer\n" );
+	#endif
 
 	err = StartServer( ActiveConfig );
 
@@ -179,6 +199,10 @@ static void ARexx_StopServer( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
 S32 err;
 
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_StopServer\n" );
+	#endif
+
 	err = StopServer( ActiveConfig );
 
 	if ( err )
@@ -197,6 +221,10 @@ static void ARexx_RestartServer( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED
 {
 S32 err;
 
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_RestartServer\n" );
+	#endif
+
 	err = RestartServer( ActiveConfig );
 
 	if ( err )
@@ -214,6 +242,10 @@ S32 err;
 static void ARexx_ServerStatus( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
 STR txt;
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_ServerStatus\n" );
+	#endif
 
 	/**/ if ( ActiveConfig->cfg_ServerStatus == PROCESS_Stopped )
 	{
@@ -243,6 +275,10 @@ STR txt;
 
 static void ARexx_Quit( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_Quit\n" );
+	#endif
+
 	ac->ac_Result = "Exiting Program";
 
 	Func_Quit( ActiveConfig );
@@ -252,6 +288,10 @@ static void ARexx_Quit( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 
 static void ARexx_ForceQuit( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_ForceQuit\n" );
+	#endif
+
 	ac->ac_Result = "Exiting Program";
 
 	Func_ForceQuit( ActiveConfig );
@@ -265,6 +305,10 @@ struct CommandMessage *cmsg;
 STR file;
 STR str;
 S32 err;
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_LoadConfig\n" );
+	#endif
 
 	file = (PTR) ac->ac_ArgList[0];
 	str = "Failed";
@@ -319,6 +363,10 @@ S32 err;
 
 static void ARexx_SaveConfig( struct ARexxCmd *ac UNUSED, struct RexxMsg *msg UNUSED )
 {
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_SaveConfig\n" );
+	#endif
+
 	Config_Save( ActiveConfig, ActiveConfig->cfg_Config_Filename );
 }
 
@@ -327,6 +375,10 @@ static void ARexx_SaveConfig( struct ARexxCmd *ac UNUSED, struct RexxMsg *msg UN
 static void ARexx_SaveASConfig( struct ARexxCmd *ac, struct RexxMsg *msg UNUSED )
 {
 STR file;
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_SaveASConfig\n" );
+	#endif
 
 	file = (PTR) ac->ac_ArgList[0];
 
@@ -340,6 +392,11 @@ STR file;
 
 static void ARexx_SaveDefaultConfig( struct ARexxCmd *ac UNUSED, struct RexxMsg *msg UNUSED )
 {
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_SaveDefaultConfig\n" );
+	#endif
+
 	Config_Save( ActiveConfig, NULL );
 }
 
@@ -360,6 +417,10 @@ STR str =
 	" SAVEDEFAULTCONFIG"
 	" HELP"
 	;
+
+	#ifdef DEBUG
+	DebugPrintF( "ARexx_Help\n" );
+	#endif
 
 	ac->ac_Result = str;
 }
