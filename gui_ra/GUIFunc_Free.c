@@ -10,17 +10,8 @@
 
 // --
 
-// Make sure only One GUI is included, so reuse name
-#ifndef __HAVE__RVNCD__GUI__
-#define __HAVE__RVNCD__GUI__
-#ifdef GUI_RA
-
-// --
-
 void GUIFunc_Free( struct Config *cfg UNUSED )
 {
-//	DebugPrintF( "RA: GUIFunc_Free\n" );
-
 	ActiveGUI.gui_SignalBits = 0;
 
 	if ( ProgramIcon )
@@ -148,6 +139,3 @@ void GUIFunc_Free( struct Config *cfg UNUSED )
 }
 
 // --
-
-#endif // GUI_RA
-#endif // __HAVE__RVNCD__GUI__

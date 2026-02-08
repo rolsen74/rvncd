@@ -64,19 +64,12 @@ S32 ah;
 		goto bailout;
 	}
 
-//	DebugPrintF( "NewBuffer_Cursor_Soft : TileNr #%lu\n", tilenr );
-//	DebugPrintF( "Tx: %04lu, Ty %04lu, Tw %02lu, Th %02lu\n", tx, ty, tw, th );
-//	DebugPrintF( "Mx: %04lu, My %04lu, Mw %02lu, Mh %02lu\n", mx, my, mw, mh );
-
 	ax = MAX( tx, mx );
 	ay = MAX( ty, my );
 	aw = MIN( tx + tw, mx + mw ) - ax;
 	ah = MIN( ty + th, my + mh ) - ay;
 
-//	DebugPrintF( "Ax: %04lu, Ay %04lu, Aw %02lu, Ah %02lu\n", ax, ay, aw, ah );
-//	DebugPrintF( "GfxRead FormatSize %lu\n", cfg->GfxRead_Encode_FormatSize );
 	bytes = ( cfg->GfxRead_Encode_ActivePixel.pm_BitsPerPixel + 7 ) / 8 ;
-//	DebugPrintF( "GfxRead BitsPerPixel %lu\n", bytes );
 
 	// -- Update Gfx
 
@@ -115,8 +108,6 @@ S32 ah;
 		delta	= my - ty;
 		tpos	+= delta * cfg->GfxRead_Screen_TileSize;
 	}
-
-//	DebugPrintF( "mpos %04lu, tpos %04lu, ppos %04lu\n", mpos, tpos, ppos );
 
 	/**/ if ( bytes == 1 )
 	{
@@ -204,7 +195,7 @@ S32 ah;
 	}
 	else
 	{
-		SHELLBUF_PRINTF( "Pointer: FormatSize error (%ld)\n", bytes );
+		SHELLBUF_PRINTF1( "Pointer: FormatSize error (%ld)\n", bytes );
 	}
 
 	// --

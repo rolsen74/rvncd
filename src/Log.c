@@ -367,7 +367,7 @@ S32 t;
 	if ( DoVerbose > 0 )
 	{
 		// Shell test
-		SHELLBUF_PRINTF( "%s\n", buf );
+		SHELLBUF_PRINTF1( "%s\n", buf );
 //		ShellBuf_Insert( buf, size );
 //		ShellBuf_Insert( "\n", 1 );
 	}

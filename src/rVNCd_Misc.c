@@ -18,7 +18,7 @@ void PrintProgramHeader( void )
 	{
 		ProgramInfo = TRUE;
 		SHELLBUF_PRINTF( "\n" );
-		SHELLBUF_PRINTF( "  %s (%s)\n", VERS, DATE );
+		SHELLBUF_PRINTF2( "  %s (%s)\n", VERS, DATE );
 		SHELLBUF_PRINTF( "    by Rene W. Olsen\n" );
 		SHELLBUF_PRINTF( "\n" );
 	}
@@ -29,6 +29,8 @@ void PrintProgramHeader( void )
 S32 StopServer( struct Config *cfg )
 {
 S32 error;
+
+	SHELLBUF_PRINTF( "StopServer\n" );
 
 	error = FALSE;
 
@@ -43,6 +45,8 @@ S32 StartServer( struct Config *cfg )
 {
 S32 error;
 
+	SHELLBUF_PRINTF( "StartServer\n" );
+
 	error = myStart_Server( cfg );
 
 	return( error );
@@ -53,6 +57,8 @@ S32 error;
 S32 RestartServer( struct Config *cfg )
 {
 S32 error;
+
+	SHELLBUF_PRINTF( "RestartServer\n" );
 
 	myStop_Server( cfg );
 
@@ -71,6 +77,11 @@ void Func_Quit( struct Config *cfg )
 	// also check if last user disconnect
 	// but only if a User is connected
 
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "Func_Quit\n" );
+	}
+
 	if ( cfg->UserCount )
 	{
 		//
@@ -85,8 +96,8 @@ void Func_Quit( struct Config *cfg )
 		//			TDR_Arg1, cfg->UserCount,
 		//			TAG_END ) == 0 )
 		//		{
-		//			Signal( ProgramTask, SIGBREAKF_CTRL_C );
-		//			ProgramRunning = FALSE;
+		//			Signal( Program_Task, SIGBREAKF_CTRL_C );
+		//			Program_Running = FALSE;
 		//		}
 		//	}
 		//
@@ -104,24 +115,34 @@ void Func_Quit( struct Config *cfg )
 		#warning fix me
 		#endif
 		{
-			Signal( ProgramTask, SIGBREAKF_CTRL_C );
-			ProgramRunning = FALSE;
+			#ifndef _AOS3_
+			Signal( Program_Task, SIGBREAKF_CTRL_C );
+			#endif
+			Program_Running = FALSE;
 		}
 	}
 	else
 	{
-		Signal( ProgramTask, SIGBREAKF_CTRL_C );
-		ProgramRunning = FALSE;
+		#ifndef _AOS3_
+		Signal( Program_Task, SIGBREAKF_CTRL_C );
+		#endif
+		Program_Running = FALSE;
 	}
-
 }
 
 // --
 
 void Func_ForceQuit( struct Config *cfg UNUSED )
 {
-	Signal( ProgramTask, SIGBREAKF_CTRL_C );
-	ProgramRunning = FALSE;
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "Func_ForceQuit\n" );
+	}
+
+	#ifndef _AOS3_
+	Signal( Program_Task, SIGBREAKF_CTRL_C );
+	#endif
+	Program_Running = FALSE;
 }
 
 // --
@@ -130,7 +151,6 @@ void Func_ForceQuit( struct Config *cfg UNUSED )
 void Func_Blanker_Enable( struct Config *cfg )
 {
 	Log_PrintF( cfg, LOGTYPE_Info, "Enabling Blanker" );
-
 
 	#ifdef HAVE_APPLIB
 
@@ -162,7 +182,7 @@ void Func_Blanker_Disable( struct Config *cfg )
 }
 
 // -- Get a Temp Filename
-// Get a temp filenamw in same path,
+// Get a temp filename in same path,
 // that is not in use.
 
 STR Func_GetTempFilename( STR path )
@@ -309,11 +329,11 @@ bailout:
 	{
 		if ( retval )
 		{
-			SHELLBUF_PRINTF( "FileSize %s, %ld Bytes\n", name, (S32) fs );
+			SHELLBUF_PRINTF2( "FileSize %s, %ld Bytes\n", name, (S32) fs );
 		}
 		else
 		{
-			SHELLBUF_PRINTF( "FileSize %s not found (%d)\n", name, (S32) fs, (S32) IoErr() );
+			SHELLBUF_PRINTF2( "FileSize %s not found (%d)\n", name, (S32) IoErr() );
 		}
 	}
 

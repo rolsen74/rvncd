@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_Server( struct Config *cfg UNUSED )
@@ -489,5 +487,3 @@ U32 val;
 }
 
 // --
-
-#endif // GUI_RA

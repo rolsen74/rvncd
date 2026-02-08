@@ -24,12 +24,6 @@ S32 lastrect;
 U32 tilesend;
 U32 total;
 U32 tiles;
-// S32 rc;
-
-	#ifdef SHOW_WORK_TILE
-	TileOOO = 0;
-	DebugPrintF( "NewUpdateReq_Msg\n" );
-	#endif
 
 	tilesend = 0;
 	lastrect = 0;
@@ -145,13 +139,6 @@ U32 tiles;
 
 bailout:
 
-	#ifdef SHOW_WORK_TILE
-	if ( TileOOO )
-	{
-		DebugPrintF( "\n" );
-	}
-	#endif
-
 	if ( lastrect )
 	{
 		stat = NewBuffer_LastRect( cfg );
@@ -163,8 +150,6 @@ bailout:
 	}
 
 	Tile_SendBuffer_Flush( cfg );
-
-//	DebugPrintF( ":: Tiles %ld :: Rich %ld :: Last %ld :: Total %ld :: TileSend %ld ::\n", tiles, doCursor, lastrect, total, tilesend );
 
 	return( stat );
 }

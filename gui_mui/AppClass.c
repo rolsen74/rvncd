@@ -10,10 +10,6 @@
 
 // --
 
-#ifdef GUI_MUI
-
-// --
-
 struct MUI_CustomClass *AppClass;
 
 // --
@@ -58,6 +54,15 @@ S32 AppClass_Init( struct Config *cfg UNUSED )
 {
 S32 retval;
 
+	// --
+
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "AppClass_Init\n" );
+	}
+
+	// --
+
 	retval = FALSE;
 
 	AppClass = MUI_CreateCustomClass( 
@@ -79,6 +84,15 @@ S32 retval;
 
 void AppClass_Free( struct Config *cfg UNUSED )
 {
+	// --
+
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "AppClass_Free\n" );
+	}
+
+	// --
+
 	if ( AppClass )
 	{
 		MUI_DeleteCustomClass( AppClass );
@@ -87,5 +101,3 @@ void AppClass_Free( struct Config *cfg UNUSED )
 }
 
 // --
-
-#endif // GUI_MUI

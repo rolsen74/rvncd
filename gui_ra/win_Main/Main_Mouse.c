@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 static const STR MouseType[] =
@@ -158,5 +156,3 @@ void Page_Refresh_Mouse( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

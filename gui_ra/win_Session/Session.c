@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 void myGUI_SessionRefresh( struct Config *cfg );
@@ -299,7 +297,7 @@ S32 error;
 
 	error = FALSE;
 
-	if ( cfg->cfg_ProgramDisableGUI )
+	if ( cfg->cfg_Program_DisableGUI )
 	{
 		Log_PrintF( cfg, LOGTYPE_Warning, "Program: GUI Disabled can't open" );
 		goto bailout;
@@ -832,8 +830,6 @@ void myGUI_SessionRefresh( struct Config *cfg )
 
 void GUIFunc_SessionMessage( struct Config *cfg, struct CommandSession *msg UNUSED )
 {
-//	DebugPrintF( "RA: GUIFunc_SessionMessage\n" );
-
 	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
@@ -857,5 +853,3 @@ void RAGUI_TimerTick_Session( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

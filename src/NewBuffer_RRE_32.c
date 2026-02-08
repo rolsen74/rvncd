@@ -75,8 +75,6 @@ S32 y;
 S32 w;
 S32 h;
 
-//	DebugPrintF( "myEnc_RRE_32\n" );
-
 	// Default error
 	datalen = -1;
 
@@ -111,24 +109,6 @@ S32 h;
 	{
 		h -= (( ti->Y + ti->H ) - ( un->un_Data.update.urm_YPos + un->un_Data.update.urm_Height ));
 	}
-
-	#ifdef DEBUG
-	if (( x < 0 )
-	||	( y < 0 )
-	||	( w <= 0 )
-	||	( h <= 0 )
-	||	(( x + w ) > ( ti->X + ti->W ))
-	||	(( y + h ) > ( ti->Y + ti->H )))
-	{
-		if ( ! cfg->cfg_NetReason )
-		{
-			cfg->cfg_NetReason = mem_ASPrintF( "Internal: Data Length error" );
-		}
-
-		SHELLBUF_PRINTF( "raw data error : x %ld : y %ld : w %ld : h %ld :\n", x, y, w, h );
-		goto bailout;
-	}
-	#endif
 
 	// Setup output buffers
 	header	= (PTR) & cfg->NetSend_SendBuffer[ 0 ];

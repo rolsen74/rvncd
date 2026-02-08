@@ -1,18 +1,18 @@
 VERSION		EQU	1
-REVISION	EQU	44
+REVISION	EQU	45
 
 DATE	MACRO
-		dc.b '14.12.2025'
+		dc.b '08.02.2026'
 		ENDM
 
 VERS	MACRO
-		dc.b 'rVNCd 1.44'
+		dc.b 'rVNCd 1.45'
 		ENDM
 
 VSTRING	MACRO
-		dc.b 'rVNCd 1.44 (14.12.2025)',13,10,0
+		dc.b 'rVNCd 1.45 (08.02.2026)',13,10,0
 		ENDM
 
 VERSTAG	MACRO
-		dc.b 0,'$VER: rVNCd 1.44 (14.12.2025)',0
+		dc.b 0,'$VER: rVNCd 1.45 (08.02.2026)',0
 		ENDM

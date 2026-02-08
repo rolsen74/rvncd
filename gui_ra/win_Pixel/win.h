@@ -8,11 +8,6 @@
 
 #include "rVNCd.h"
 
-#ifdef GUI_RA
-
-#ifndef WIN_H
-#define WIN_H
-
 // --
 
 enum
@@ -48,14 +43,5 @@ void VARARGS68K Pixel_SetTags( struct Config *cfg, PTR object, ... );
 
 extern Object *Pixel_GUIObjects[GID_LAST];
 #define GUIObjects Pixel_GUIObjects
-
-// --
-
-
-
-// --
-
-#endif // WIN_H
-#endif // GUI_RA
 
 // --

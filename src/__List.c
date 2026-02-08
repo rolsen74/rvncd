@@ -27,7 +27,7 @@ S32 retval;
 
 		if ( DoVerbose > 2 )
 		{
-			SHELLBUF_PRINTF( "Setup List %p\n", (PTR) l );
+			SHELLBUF_PRINTF1( "Setup List %p\n", (PTR) l );
 		}
 
 		retval = TRUE;
@@ -53,7 +53,7 @@ void List_Free( struct VNCList *l )
 
 	if ( l->vl_StructID != ID_VNCLIST )
 	{
-		SHELLBUF_PRINTF( "Invalid VNC List (%p)\n", l );
+		SHELLBUF_PRINTF1( "Invalid VNC List (%p)\n", l );
 		return;
 	}
 
@@ -61,7 +61,7 @@ void List_Free( struct VNCList *l )
 
 	if ( DoVerbose > 2 )
 	{
-		SHELLBUF_PRINTF( "Clear List %p\n", (PTR) l );
+		SHELLBUF_PRINTF1( "Clear List %p\n", (PTR) l );
 	}
 }
 
@@ -135,7 +135,7 @@ void List_AddTail( struct VNCList *l, PTR node )
 
 	if ( l->vl_StructID != ID_VNCLIST )
 	{
-		SHELLBUF_PRINTF( "Invalid VNC List (%p)\n", l );
+		SHELLBUF_PRINTF1( "Invalid VNC List (%p)\n", l );
 		return;
 	}
 
@@ -159,7 +159,7 @@ PTR node;
 
 	if ( l->vl_StructID != ID_VNCLIST )
 	{
-		SHELLBUF_PRINTF( "Invalid VNC List (%p)\n", l );
+		SHELLBUF_PRINTF1( "Invalid VNC List (%p)\n", l );
 		goto bailout;
 	}
 
@@ -190,7 +190,7 @@ void List_Insert( struct VNCList *l, PTR n1, PTR n2 )
 
 	if ( l->vl_StructID != ID_VNCLIST )
 	{
-		SHELLBUF_PRINTF( "Invalid VNC List (%p)\n", l );
+		SHELLBUF_PRINTF1( "Invalid VNC List (%p)\n", l );
 		return;
 	}
 

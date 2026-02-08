@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 static const STR ActionPages[] =
@@ -48,5 +46,3 @@ Object *o;
 }
 
 // --
-
-#endif // GUI_RA

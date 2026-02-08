@@ -102,10 +102,6 @@ U32 tilenr;
 
 	tilenr = myMarkDirty( cfg, (( y & 0xffff ) << 16 ) | ( x & 0xffff ));
 
-//	#ifdef DEBUG
-//	DebugPrintF( "Marked Tilenr #%lu (dirty)\n", tilenr );
-//	#endif
-
 	return( tilenr );
 }
 

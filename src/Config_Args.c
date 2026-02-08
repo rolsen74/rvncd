@@ -166,7 +166,7 @@ bailout:
 
 static S32 ArgFunc_NoGUI( struct Config *cfg, STR arg UNUSED )
 {
-	cfg->cfg_ProgramDisableGUI = TRUE;
+	cfg->cfg_Program_DisableGUI = TRUE;
 
 	return( RC_Okay );
 }
@@ -179,7 +179,7 @@ static S32 ArgFunc_NoGUI( struct Config *cfg, STR arg UNUSED )
 
 static S32 ArgFunc_NoARexx( struct Config *cfg, STR arg UNUSED )
 {
-	cfg->cfg_ProgramDisableARexx = TRUE;
+	cfg->cfg_Program_DisableARexx = TRUE;
 
 	return( RC_Okay );
 }
@@ -192,7 +192,7 @@ static S32 ArgFunc_NoARexx( struct Config *cfg, STR arg UNUSED )
 
 static S32 ArgFunc_NoBroker( struct Config *cfg, STR arg UNUSED )
 {
-	cfg->cfg_ProgramDisableCxBroker = TRUE;
+	cfg->cfg_Program_DisableCxBroker = TRUE;
 
 	return( RC_Okay );
 }
@@ -267,7 +267,7 @@ S32 cnt;
 			{
 				if ( cnt+myOptions[pos].Options >= argc )
 				{
-					SHELLBUF_PRINTF( "\nMissing argument for %s\n", argv[cnt] );
+					SHELLBUF_PRINTF1( "\nMissing argument for %s\n", argv[cnt] );
 					Config_Usage();
 					goto bailout;
 				}					
@@ -293,7 +293,7 @@ S32 cnt;
 		if (( ! myOptions[pos].Name1 )
 		&&	( ! myOptions[pos].Name2 ))
 		{
-			SHELLBUF_PRINTF( "\nUnknown argument : %s\n", argv[cnt] );
+			SHELLBUF_PRINTF1( "\nUnknown argument : %s\n", argv[cnt] );
 			Config_Usage();
 			goto bailout;
 		}

@@ -8,11 +8,6 @@
 
 #include "rVNCd.h"
 
-#ifdef GUI_RA
-
-#ifndef WIN_H
-#define WIN_H
-
 // --
 
 enum
@@ -36,14 +31,5 @@ void VARARGS68K IPEdit_SetTags( struct Config *cfg, PTR object, ... );
 
 extern Object *IPEdit_GUIObjects[GID_LAST];
 #define GUIObjects IPEdit_GUIObjects
-
-// --
-
-
-
-// --
-
-#endif // WIN_H
-#endif // GUI_RA
 
 // --

@@ -101,19 +101,19 @@ void myPrintSessionInfo( struct Config *cfg )
 	SHELLBUF_PRINTF( "\n" );
 	SHELLBUF_PRINTF( "Session Infomation\n" );
 	SHELLBUF_PRINTF( "\n" );
-	SHELLBUF_PRINTF( "IP Address ..... : %d.%d.%d.%d\n", cfg->SessionStatus.si_IPAddr[0], cfg->SessionStatus.si_IPAddr[1], cfg->SessionStatus.si_IPAddr[2], cfg->SessionStatus.si_IPAddr[3] );
-	SHELLBUF_PRINTF( "Connected at ... : %s\n", Buf_Connect );
-	SHELLBUF_PRINTF( "Duration ....... : %s\n", Buf_Duration );
+	SHELLBUF_PRINTF4( "IP Address ..... : %d.%d.%d.%d\n", cfg->SessionStatus.si_IPAddr[0], cfg->SessionStatus.si_IPAddr[1], cfg->SessionStatus.si_IPAddr[2], cfg->SessionStatus.si_IPAddr[3] );
+	SHELLBUF_PRINTF1( "Connected at ... : %s\n", Buf_Connect );
+	SHELLBUF_PRINTF1( "Duration ....... : %s\n", Buf_Duration );
 	SHELLBUF_PRINTF( "\n" );
-	SHELLBUF_PRINTF( "Pixel Send ..... : %llu\n", cfg->SessionStatus.si_Pixels_Send );
-	SHELLBUF_PRINTF( "Bytes Read ..... : %s\n", Buf_Read );
-	SHELLBUF_PRINTF( "Bytes Send ..... : %s\n", Buf_Send );
+	SHELLBUF_PRINTF1( "Pixel Send ..... : %llu\n", cfg->SessionStatus.si_Pixels_Send );
+	SHELLBUF_PRINTF1( "Bytes Read ..... : %s\n", Buf_Read );
+	SHELLBUF_PRINTF1( "Bytes Send ..... : %s\n", Buf_Send );
 	SHELLBUF_PRINTF( "\n" );
-	SHELLBUF_PRINTF( "Tiles .......... : %s\n", Buf_Tiles_Total );
-	SHELLBUF_PRINTF( "Rich Tiles ..... : %s\n", Buf_Tiles_Rich );
-	SHELLBUF_PRINTF( "Raw Tiles ...... : %s\n", Buf_Tiles_Raw );
-	SHELLBUF_PRINTF( "RRE Tiles ...... : %s\n", Buf_Tiles_RRE );
-	SHELLBUF_PRINTF( "ZLib Tiles ..... : %s\n", Buf_Tiles_ZLib );
+	SHELLBUF_PRINTF1( "Tiles .......... : %s\n", Buf_Tiles_Total );
+	SHELLBUF_PRINTF1( "Rich Tiles ..... : %s\n", Buf_Tiles_Rich );
+	SHELLBUF_PRINTF1( "Raw Tiles ...... : %s\n", Buf_Tiles_Raw );
+	SHELLBUF_PRINTF1( "RRE Tiles ...... : %s\n", Buf_Tiles_RRE );
+	SHELLBUF_PRINTF1( "ZLib Tiles ..... : %s\n", Buf_Tiles_ZLib );
 	SHELLBUF_PRINTF( "\n" );
 
 bailout:

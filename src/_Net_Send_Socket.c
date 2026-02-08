@@ -57,7 +57,7 @@ S32 s;
 
 	if ( DoVerbose > 1 )
 	{
-		SHELLBUF_PRINTF( "NetSend: Set BreakMask returned %d\n", stat );
+		SHELLBUF_PRINTF1( "NetSend: Set BreakMask returned %d\n", stat );
 	}
 
 	// --

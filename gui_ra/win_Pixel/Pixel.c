@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Pixel_GUIObjects[GID_LAST];
@@ -286,7 +284,7 @@ S32 error;
 
 	error = FALSE;
 
-	if ( cfg->cfg_ProgramDisableGUI )
+	if ( cfg->cfg_Program_DisableGUI )
 	{
 		Log_PrintF( cfg, LOGTYPE_Warning, "Program: GUI Disabled can't open" );
 		goto bailout;
@@ -608,8 +606,6 @@ void myGUI_PixelRefresh( struct Config *cfg )
 
 void GUIFunc_PxlFmtMessage( struct Config *cfg, struct CommandPxlFmt *msg )
 {
-//	DebugPrintF( "RA: GUIFunc_PxlFmtMessage\n" );
-
 	PxlFormat = *msg;
 
 	if ( ! GUIObjects[ GID_Window ] )
@@ -631,5 +627,3 @@ void myGUI_PxlFmtRefresh( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

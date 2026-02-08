@@ -75,8 +75,6 @@ S32 y;
 S32 w;
 S32 h;
 
-//	DebugPrintF( "myEnc_RRE_16\n" );
-
 	// Default error
 	datalen = -1;
 

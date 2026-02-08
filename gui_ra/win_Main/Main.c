@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 static struct VNCList			MainListHeader;
@@ -287,7 +285,7 @@ S32 pos;
 
 	error = FALSE;
 
-	if ( cfg->cfg_ProgramDisableGUI )
+	if ( cfg->cfg_Program_DisableGUI )
 	{
 		Log_PrintF( cfg, LOGTYPE_Warning, "Program: GUI Disabled can't open" );
 		goto bailout;
@@ -580,10 +578,6 @@ void GUIFunc_UpdateServerStatus( struct Config *cfg, enum ProcessStat pstat )
 {
 S32 stat;
 
-//	#ifdef DEBUG
-//	DebugPrintF( "GUIFunc_UpdateServerStatus : %s : %ld :\n", file, line );
-//	#endif
-
 	if ( ! GUIObjects[ GID_Window ] )
 	{
 		goto bailout;
@@ -610,17 +604,6 @@ S32 stat;
 		GA_Disabled, stat,
 		TAG_END
 	);
-
-	// --
-
-//	if ( ActiveGUI.Check_Settings )
-//	{
-//		#ifdef DEBUG
-//		ActiveGUI.Check_Settings( cfg, __FILE__, __LINE__ );
-//		#else
-//		ActiveGUI.Check_Settings( cfg );
-//		#endif
-//	}
 
 	// --
 
@@ -717,17 +700,17 @@ void GUIFunc_RefreshSettings( struct Config *cfg )
 	);
 
 	mySetTags( cfg, GUIObjects[ GID_Program_Disable_ARexx ],
-		GA_Selected, ( cfg->cfg_ProgramDisableARexx ) ? 1 : 0,
+		GA_Selected, ( cfg->cfg_Program_DisableARexx ) ? 1 : 0,
 		TAG_END
 	);
 
 	mySetTags( cfg, GUIObjects[ GID_Program_Disable_CxBroker ],
-		GA_Selected, ( cfg->cfg_ProgramDisableCxBroker ) ? 1 : 0,
+		GA_Selected, ( cfg->cfg_Program_DisableCxBroker ) ? 1 : 0,
 		TAG_END
 	);
 
 	mySetTags( cfg, GUIObjects[ GID_Program_Disable_GUI ],
-		GA_Selected, ( cfg->cfg_ProgramDisableGUI ) ? 1 : 0,
+		GA_Selected, ( cfg->cfg_Program_DisableGUI ) ? 1 : 0,
 		TAG_END
 	);
 
@@ -861,8 +844,6 @@ void GUIFunc_AddLogMsg( struct Config *cfg, struct CommandLogString *msg )
 STR str;
 PTR n;
 
-//	DebugPrintF( "RA: GUIFunc_AddLogMsg\n" );
-
 	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
@@ -921,8 +902,6 @@ PTR n;
 
 void GUIFunc_RefreshMessage( struct Config *cfg, struct CommandRefresh *msg UNUSED )
 {
-	DebugPrintF( "RA: GUIFunc_RefreshMessage\n" );
-
 	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
@@ -938,8 +917,6 @@ void GUIFunc_RefreshMessage( struct Config *cfg, struct CommandRefresh *msg UNUS
 
 void GUIFunc_RefreshStats( struct Config *cfg, struct CommandRefresh *msg UNUSED )
 {
-//	DebugPrintF( "RA: GUIFunc_RefreshStats\n" );
-
 	if ( ! GUIObjects[ GID_Window ] )
 	{
 		return;
@@ -1072,8 +1049,6 @@ S32 GUIFunc_CheckSettings( struct Config *cfg )
 #endif
 {
 S32 changed;
-
-//	DebugPrintF( "GUIFunc_CheckSettings :\n" );
 
 	if (( cfg->cfg_ServerStatus == PROCESS_Starting )
 	||	( cfg->cfg_ServerStatus == PROCESS_Running  ))
@@ -1225,8 +1200,6 @@ S32 theend;
 U16 code;
 S32 id;
 
-//	DebugPrintF( "RAGUI_HandleMainWindow\n" );
-
 	theend = FALSE;
 
 	while( GUIObjects[ GID_Window ] )
@@ -1318,5 +1291,3 @@ void RAGUI_TimerTick_Main( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

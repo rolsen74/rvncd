@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 static const STR ServerPages[] =
@@ -46,5 +44,3 @@ Object *o;
 }
 
 // --
-
-#endif // GUI_RA

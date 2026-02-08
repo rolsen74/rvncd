@@ -22,8 +22,6 @@ void (*func)(struct IntuitionIFace *self, struct Screen *);
 
 	func = oldFunc;
 
-//	DebugPrintF( "newFunc : DisplayBeep : Func %p : Screen %p :\n", oldFunc, scr );
-
 	// --
 	// Only send Message, if enabled and Client connected
 

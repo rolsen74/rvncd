@@ -195,14 +195,14 @@ S32 doFree;
 
 	ActiveEncoding = msgptr;
 
-	#ifdef __RVNCD_GUI_H__
+	#ifdef WIN_Encodings
 
 	if ( cfg->cfg_WinData[WIN_Encodings].Status == WINSTAT_Open )
 	{
 		myGUI_EncodingMessage( cfg, msgptr );
 	}
 
-	#endif // __RVNCD_GUI_H__
+	#endif // WIN_Encodings
 
 	doFree = FALSE;
 

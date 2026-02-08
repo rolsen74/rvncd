@@ -201,7 +201,7 @@ S32 stat;
 
 	if ( DoVerbose > 1 )
 	{
-		SHELLBUF_PRINTF( "Server: Set BreakMask returned %d\n", stat );
+		SHELLBUF_PRINTF1( "Server: Set BreakMask returned %d\n", stat );
 	}
 
 	// --
@@ -352,10 +352,6 @@ S32 a, b, c, d, s;
 
 	Log_PrintF( cfg, LOGTYPE_Info, "Listening on port %ld.", cfg->cfg_Active_Settings.Port );
 
-	#ifdef DEBUG
-	DebugPrintF( "Server started\n" );
-	#endif
-
 	while( ! cfg->cfg_ServerShutdown )
 	{
 		if ( cfg->Server_DuplicateSendSocket != -1 )
@@ -442,10 +438,6 @@ S32 a, b, c, d, s;
 
 		myStart_Net_Send( cfg );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "Server stopping\n" );
-	#endif
 }
 
 // --
@@ -595,10 +587,6 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
-	#ifdef DEBUG
-	DebugPrintF( "Server starting 1/2\n" );
-	#endif
-
 	//--------
 
 	Self = FindTask( NULL );
@@ -612,16 +600,8 @@ S32 stat;
 			break;
 		}
 
-		#ifdef DEBUG
-		DebugPrintF( "Server starting delay\n" );
-		#endif
-
 		Delay( 2 );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "Server starting 2/2\n" );
-	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -632,41 +612,20 @@ S32 stat;
 	Config->Server_Exit = NULL;
 	Config->cfg_ServerStatus = PROCESS_Starting;
 
-	if ( ActiveGUI.Server_Status_Change )
-	{
-		#ifdef DEBUG
-		ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus, __FILE__, __LINE__ );
-		#else
-		ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus );
-		#endif
-	}
+	// Refresh GUI
+	Program_SigFlags |= PRGFLAG_Refresh_Status;
+	Signal( Program_Task, Program_SigMask );
 
 	stat = myProcess_Init( Config );
 
 	if ( stat )
 	{
 		Config->Server_Task = Self;
-	
-		// 0 = off, 1 = starting, 2 = running, 3 = shutting down
 		Config->cfg_ServerStatus = PROCESS_Running;
 
-		if ( ActiveGUI.Server_Status_Change )
-		{
-			#ifdef DEBUG
-			ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus, __FILE__, __LINE__ );
-			#else
-			ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus );
-			#endif
-		}
-
-		if ( ActiveGUI.Check_Settings )
-		{
-			#ifdef DEBUG
-			ActiveGUI.Check_Settings( Config, __FILE__, __LINE__ );
-			#else
-			ActiveGUI.Check_Settings( Config );
-			#endif
-		}
+		// Refresh GUI
+		Program_SigFlags |= PRGFLAG_Refresh_Status;
+		Signal( Program_Task, Program_SigMask );
 
 		// Set signal after Status
 		Signal( Parent, SIGBREAKF_CTRL_E );
@@ -680,17 +639,9 @@ S32 stat;
 
 		// --
 
-		#ifdef DEBUG
-		DebugPrintF( "Server entering main\n" );
-		#endif
-
 		SetTaskPri( Self, PRI_SERVER );
 		myProcess_Main( Config );
 		SetTaskPri( Self, PRI_SHUTDOWN );
-
-		#ifdef DEBUG
-		DebugPrintF( "Server exited main\n" );
-		#endif
 
 		// --
 
@@ -704,15 +655,9 @@ S32 stat;
 		// 0 = off, 1 = starting, 2 = running, 3 = shutting down
 		Config->cfg_ServerStatus = PROCESS_Stopping;
 
-		if ( ActiveGUI.Server_Status_Change )
-		{
-			#ifdef DEBUG
-			ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus, __FILE__, __LINE__ );
-			#else
-			ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus );
-			#endif
-		}
-//		GUIFunc_UpdateServerStatus( Config );
+		// Refresh GUI
+		Program_SigFlags |= PRGFLAG_Refresh_Status;
+		Signal( Program_Task, Program_SigMask );
 
 		// --
 
@@ -723,34 +668,11 @@ S32 stat;
 
 	myProcess_Free( Config );
 
-	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
-	Config->cfg_ServerStatus = PROCESS_Stopped;
-
-	if ( ActiveGUI.Server_Status_Change )
-	{
-		#ifdef DEBUG
-		ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus, __FILE__, __LINE__ );
-		#else
-		ActiveGUI.Server_Status_Change( Config, Config->cfg_ServerStatus );
-		#endif
-	}
-
-	if ( ActiveGUI.Check_Settings )
-	{
-		#ifdef DEBUG
-		ActiveGUI.Check_Settings( Config, __FILE__, __LINE__ );
-		#else
-		ActiveGUI.Check_Settings( Config );
-		#endif
-	}
-
-	//	GUIFunc_UpdateServerStatus( Config );
+	// Refresh GUI
+	Program_SigFlags |= PRGFLAG_Refresh_Status;
+	Signal( Program_Task, Program_SigMask );
 
 	//--------
-
-	#ifdef DEBUG
-	DebugPrintF( "Server stopped\n" );
-	#endif
 
 	if ( Parent )
 	{
@@ -771,13 +693,9 @@ U32 wait;
 
 	error = TRUE;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStart_Server\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStart_Server\n" );
+		SHELLBUF_PRINTF( "myStart_Server\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -857,13 +775,9 @@ void myStop_Server( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStop_Server\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStop_Server\n" );
+		SHELLBUF_PRINTF( "myStop_Server\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -908,14 +822,14 @@ S32 cnt;
 					if ( ! ( ++cnt % 50 ))
 					{
 						Signal( cfg->Server_Task, NET_EXIT_SIGNAL );
-						printf( "myStop_Server still waiting : %d\n", cnt );
+						SHELLBUF_PRINTF1( "myStop_Server still waiting : %d\n", cnt );
 					}
 				}
 			}
 
 			if ( cnt >= 50 )
 			{
-				printf( "\n" );
+				SHELLBUF_PRINTF( "\n" );
 			}
 		}
 	}

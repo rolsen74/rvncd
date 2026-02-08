@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_IP_List( struct Config *cfg UNUSED )
@@ -565,5 +563,3 @@ struct Node *n;
 }
 
 // --
-
-#endif // GUI_RA

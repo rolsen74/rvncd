@@ -43,7 +43,7 @@ S8 sig;
 
 		if ( DoVerbose > 2 )
 		{
-			SHELLBUF_PRINTF( "Setup MsgPort %p, Signal %d\n", (PTR) mp, sig );
+			SHELLBUF_PRINTF2( "Setup MsgPort %p, Signal %d\n", (PTR) mp, sig );
 		}
 
 		retval = TRUE;
@@ -79,7 +79,7 @@ void MsgPort_Free( struct VNCMsgPort *mp )
 
 	if ( DoVerbose > 2 )
 	{
-		SHELLBUF_PRINTF( "Clear MsgPort %p, Signal %d\n", (PTR) mp, mp->vmp_MsgPort.mp_SigBit );
+		SHELLBUF_PRINTF2( "Clear MsgPort %p, Signal %d\n", (PTR) mp, mp->vmp_MsgPort.mp_SigBit );
 	}
 
 	// should proberly free any message in mp_MsgList

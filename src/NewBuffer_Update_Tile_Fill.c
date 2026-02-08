@@ -10,28 +10,11 @@
 
 // --
 
-#ifdef SHOW_WORK_TILE
-extern U32 TileOOO;
-#endif
-
 S32 NewBuffer_Update_Tile_Fill( struct Config *cfg, struct UpdateNode *un, U32 tilenr, S32 hardcursor )
 {
 enum VNCEncoding t;
 S32 datalen;
 S32 cnt;
-
-	#ifdef SHOW_WORK_TILE
-	TileOOO++;
-	if ( TileOOO >= 20 )
-	{
-		DebugPrintF( "%4ld\n", tilenr );
-		TileOOO = 0;
-	}
-	else
-	{
-		DebugPrintF( "%4ld ", tilenr );
-	}
-	#endif
 
 	/*
 	** Handle 1 Tile
@@ -125,8 +108,7 @@ S32 cnt;
 
 			default:
 			{
-//				DebugPrintF( "Unknown Encoding (%ld)\n", t );
-				SHELLBUF_PRINTF( "Unknown Encoding : (%ld) :\n", t );
+				SHELLBUF_PRINTF1( "Unknown Encoding : (%ld) :\n", t );
 				break;
 			}
 		}

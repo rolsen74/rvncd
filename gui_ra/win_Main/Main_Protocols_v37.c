@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_Protocols_v37( struct Config *cfg UNUSED )
@@ -85,6 +83,4 @@ void Page_Refresh_Protocol_37( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA
 

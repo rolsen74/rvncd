@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_Action_Programs( struct Config *cfg UNUSED )
@@ -237,5 +235,3 @@ void Page_Refresh_Action_Program( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

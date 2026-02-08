@@ -14,10 +14,6 @@ static void myProcess_Main( struct Config *cfg )
 {
 U32 mask;
 
-	#ifdef DEBUG
-	DebugPrintF( "WatchDog started\n" );
-	#endif
-
 	while( TRUE )
 	{
 		// Note: CTRL+C used by Timer, it should be ignored
@@ -47,10 +43,6 @@ U32 mask;
 			}
 		}
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "WatchDog stopping\n" );
-	#endif
 }
 
 // --
@@ -124,10 +116,6 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
-	#ifdef DEBUG
-	DebugPrintF( "WatchDog starting 1/2\n" );
-	#endif
-
 	//--------
 
 	Self = FindTask( NULL );
@@ -141,16 +129,8 @@ S32 stat;
 			break;
 		}
 
-		#ifdef DEBUG
-		DebugPrintF( "WatchDog starting delay\n" );
-		#endif
-
 		Delay( 2 );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "WatchDog starting 2/2\n" );
-	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -165,7 +145,6 @@ S32 stat;
 	if ( stat )
 	{
 		Config->WatchDog_Task = Self;
-
 		Config->cfg_WatchDogStatus = PROCESS_Running;
 
 		// Set signal after Status
@@ -173,17 +152,9 @@ S32 stat;
 
 		// --
 
-		#ifdef DEBUG
-		DebugPrintF( "WatchDog entering main\n" );
-		#endif
-
 		SetTaskPri( Self, PRI_WATCHDOG );
 		myProcess_Main( Config );
 		SetTaskPri( Self, PRI_SHUTDOWN );
-
-		#ifdef DEBUG
-		DebugPrintF( "WatchDog exited main\n" );
-		#endif
 
 		// --
 
@@ -199,10 +170,6 @@ S32 stat;
 	Config->cfg_WatchDogStatus = PROCESS_Stopped;
 
 	//--------
-
-	#ifdef DEBUG
-	DebugPrintF( "WatchDog stopped\n" );
-	#endif
 
 	if ( Parent )
 	{
@@ -223,13 +190,9 @@ U32 wait;
 
 	error = TRUE;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStart_WatchDog\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStart_WatchDog\n" );
+		SHELLBUF_PRINTF( "myStart_WatchDog\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -309,13 +272,9 @@ void myStop_WatchDog( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStop_WatchDog\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStop_WatchDog\n" );
+		SHELLBUF_PRINTF( "myStop_WatchDog\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -359,16 +318,14 @@ S32 cnt;
 					if ( ! ( ++cnt % 50 ))
 					{
 						Signal( cfg->WatchDog_Task, NET_EXIT_SIGNAL );
-//						printf( "myStop_WatchDog still waiting : %d\n", cnt );
-						SHELLBUF_PRINTF( "\rmyStop_WatchDog still waiting : %d", cnt );
-//						fflush( stdout );
+						SHELLBUF_PRINTF1( "\rmyStop_WatchDog still waiting : %d", cnt );
 					}
 				}
 			}
 
 			if ( cnt >= 50 )
 			{
-				printf( "\n" );
+				SHELLBUF_PRINTF( "\n" );
 			}
 		}
 	}

@@ -11,9 +11,12 @@
 // --
 
 STR							OrgTaskName			= NULL;
-struct Task *				ProgramTask			= NULL;
+struct Task *				Program_Task		= NULL;
 
-S32							ProgramRunning		= FALSE;
+S32							Program_Running		= FALSE;
+U32							Program_SigFlags	= 0;
+U32							Program_SigMask		= 0;
+S32							Program_Signal		= 0;
 
 static const USED STR		MyVersion			= VERSTAG;
 
@@ -22,6 +25,7 @@ struct VNCList 				KeyLoggerList;
 struct CommandEncoding *	ActiveEncoding		= NULL;
 
 // --
+
 
 int main( S32 argc, STR *argv )
 {
@@ -37,15 +41,15 @@ BPTR newdir;
 
 	Forbid();
 
-	ProgramTask = FindTask( NULL );
-	OrgTaskName = ProgramTask->tc_Node.ln_Name;
-	ProgramTask->tc_Node.ln_Name = "<NULL>";
+	Program_Task = FindTask( NULL );
+	OrgTaskName = Program_Task->tc_Node.ln_Name;
+	Program_Task->tc_Node.ln_Name = "<NULL>";
 
 	task = FindTask( "rVNCd" );
 
 	if ( task )
 	{
-		ProgramTask->tc_Node.ln_Name = OrgTaskName;
+		Program_Task->tc_Node.ln_Name = OrgTaskName;
 		Signal( task, SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E );
 		Permit();
 		// Can't use SHELLPRINT here
@@ -53,7 +57,7 @@ BPTR newdir;
 		return( 0 );
 	}
 
-	ProgramTask->tc_Node.ln_Name = "rVNCd";
+	Program_Task->tc_Node.ln_Name = "rVNCd";
 
 	Permit();
 
@@ -61,10 +65,15 @@ BPTR newdir;
 	// If running from CLI, DoVerbose defaults to 1
 	// so WB don't get the 'Loading '%s' config..' message pr default
 
-	if ( ((struct Process *)ProgramTask)->pr_CLI )
+	if ( ((struct Process *)Program_Task)->pr_CLI )
 	{
 		DoVerbose = 1;
 	}
+
+	// --
+
+	Program_Signal = AllocSignal( -1 );
+	Program_SigMask = 1UL << Program_Signal;
 
 	// --
 
@@ -118,9 +127,9 @@ BPTR newdir;
 	// ----
 	// Basic System
 
-	if ( ! System_Init( cfg ))
+	if ( ! System_Startup( cfg ))
 	{
-		SHELLBUF_PRINTF( "System_Init() failed\n" );
+		SHELLBUF_PRINTF( "System_Startup() failed\n" );
 		goto bailout;
 	}
 
@@ -154,7 +163,7 @@ BPTR newdir;
 	// ----
 	// GUI
 
-	if (( ! cfg->cfg_ProgramDisableGUI ) && ( ActiveGUI.GUI_Init ))
+	if (( ! cfg->cfg_Program_DisableGUI ) && ( ActiveGUI.GUI_Init ))
 	{
 		if ( ! ActiveGUI.GUI_Init( cfg ))
 		{
@@ -163,13 +172,14 @@ BPTR newdir;
 		}
 	}
 
+	#ifndef GUI_MUI
+	// MUI have ARexx+Cx buildin
 
 	// ----
 	// ARexx
-
 	#ifdef HAVE_AREXX
 
-	if ( ! cfg->cfg_ProgramDisableARexx )
+	if ( ! cfg->cfg_Program_DisableARexx )
 	{
 		if ( ! ARexx_Init( cfg ))
 		{
@@ -180,13 +190,11 @@ BPTR newdir;
 
 	#endif // HAVE_AREXX
 
-
 	// ----
 	// CxBroker
-
 	#ifdef HAVE_CXBROKER
 
-	if ( ! cfg->cfg_ProgramDisableCxBroker )
+	if ( ! cfg->cfg_Program_DisableCxBroker )
 	{
 		if ( ! CxBroker_Init( cfg ))
 		{
@@ -196,6 +204,8 @@ BPTR newdir;
 	}
 
 	#endif // HAVE_CXBROKER
+	// --
+	#endif // GUI_MUI
 
 	// -- 
 	// Patch Beep
@@ -212,12 +222,14 @@ BPTR newdir;
 		DoAction_ProgramStart( cfg );
 	}
 
-	#ifdef __RVNCD_GUI_H__
-
-	if ( ! cfg->cfg_ProgramDisableGUI )
+	#ifdef WIN_LAST
+	if ( ! cfg->cfg_Program_DisableGUI )
 	{
-		cfg->cfg_WinData[WIN_Main].Status = cfg->MainWinState;
 
+		#ifdef WIN_Main
+		cfg->cfg_WinData[WIN_Main].Status = cfg->MainWinState;
+		#endif
+	
 		for( S32 cnt=0 ; cnt<WIN_LAST ; cnt++ )
 		{
 			if (( cfg->cfg_WinData[cnt].OpenWin ) 
@@ -227,18 +239,20 @@ BPTR newdir;
 			}
 		}
 	}
-
-	#endif // __RVNCD_GUI_H__
-
+	#endif
 
 	// ----
 	// Start Server
 
 	if ( cfg->AutoStart )
 	{
+		SHELLBUF_PRINTF( "Start Server\n" );
 		StartServer( cfg );
 	}
-
+	else
+	{
+		SHELLBUF_PRINTF( "Skip Server AutoStart\n" );
+	}
 
 	// ----
 	// Start Timer
@@ -249,49 +263,74 @@ BPTR newdir;
 	// ----
 	// Main Loop
 
-	ProgramRunning = TRUE;
+	Program_Running = TRUE;
 
-	while( ProgramRunning )
+	SHELLBUF_PRINTF( "MainLoop\n" );
+
+	while( Program_Running )
 	{
-		mask =	SIGBREAKF_CTRL_C |
-				SIGBREAKF_CTRL_D |
+		mask =	SIGBREAKF_CTRL_D |
 				SIGBREAKF_CTRL_E |
+				SIGBREAKF_CTRL_C |
 
 				#ifdef HAVE_APPLIB
 				AppBit | 
 				#endif // HAVE_APPLIB
 
+				#ifndef GUI_MUI
 				#ifdef HAVE_AREXX
 				ARexxBit | 
 				#endif // HAVE_AREXX
-
 				#ifdef HAVE_CXBROKER
 				CxBrokerMsgPort.vmp_SignalBit |
 				#endif // HAVE_CXBROKER
+				#endif // GUI_MUI
 
+				Program_SigMask |
 				ActiveGUI.gui_SignalBits |
 				CmdMsgPort.vmp_SignalBit |
 				TimerMsgPort.vmp_SignalBit;
 
 		mask = Wait( mask );
 
+		#ifndef _AOS3_
+		// VBCC's clib do not like we use CTRL+C
+		// disabling it for now, use gui/cx too quit
 		if ( mask & SIGBREAKF_CTRL_C )
 		{
 			Func_Quit( cfg );
 		}
+		#endif
 
 		if (( mask & ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E )) == ( SIGBREAKF_CTRL_D | SIGBREAKF_CTRL_E ))
 		{
 			// Someone tryed to start us again.
 
-			#ifdef __RVNCD_GUI_H__
+			#ifdef WIN_Main
 			cfg->cfg_WinData[WIN_Main].Status = WINSTAT_Open;
 
 			if ( cfg->cfg_WinData[WIN_Main].OpenWin )
 			{
 				 cfg->cfg_WinData[WIN_Main].OpenWin( cfg );
 			}
-			#endif // __RVNCD_GUI_H__
+			#endif // WIN_Main
+		}
+
+		if ( mask & Program_SigMask )
+		{
+			U32 flags = Program_SigFlags;
+			Program_SigFlags = 0;
+
+			if (( flags & PRGFLAG_Refresh_Settings ) && ( ActiveGUI.Check_Settings )) 
+			{
+				ActiveGUI.Check_Settings( cfg );
+			}
+
+			if (( flags & PRGFLAG_Refresh_Status ) && ( ActiveGUI.Server_Status_Change ))
+			{
+				ActiveGUI.Server_Status_Change( cfg, cfg->cfg_ServerStatus );
+			}
+
 		}
 
 		#ifdef HAVE_APPLIB
@@ -301,19 +340,20 @@ BPTR newdir;
 		}
 		#endif // HAVE_APPLIB
 
+		#ifndef GUI_MUI
 		#ifdef HAVE_AREXX
 		if ( mask & ARexxBit )
 		{
 			ARexx_Handle( cfg );
 		}
 		#endif // HAVE_AREXX
-
 		#ifdef HAVE_CXBROKER
 		if ( mask & CxBrokerMsgPort.vmp_SignalBit )
 		{
 			CxBroker_Handle( cfg );
 		}
 		#endif // HAVE_CXBROKER
+		#endif // GUI_MUI
 
 		if ( mask & ActiveGUI.gui_SignalBits )
 		{
@@ -332,19 +372,30 @@ BPTR newdir;
 		{
 			Timer_Handle( cfg );
 		}
-
-//		break;
 	}
+
+	// --
+
+	SHELLBUF_PRINTF( "Stop 0\n" );
+	SHELLBUF_FLUSH();
 
 	Timer_Stop();
 
 	// -- --
+
+	SHELLBUF_PRINTF( "Stop 1\n" );
+	SHELLBUF_FLUSH();
 
 	StopServer( cfg );
 
 	// -- --
 
 bailout:
+
+	SHELLBUF_PRINTF( "Stop 2\n" );
+	SHELLBUF_FLUSH();
+
+	// --
 
 	if ( cfg )
 	{
@@ -360,7 +411,6 @@ bailout:
 			Log_PrintF( cfg, LOGTYPE_Info|LOGTYPE_Event, "Program : Shutting down .." );
 		}
 
-		#ifdef __RVNCD_GUI_H__
 		for( S32 cnt=0 ; cnt<WIN_LAST ; cnt++ )
 		{
 			if (( cfg->cfg_WinData[cnt].CloseWin )
@@ -369,15 +419,15 @@ bailout:
 				cfg->cfg_WinData[cnt].CloseWin( cfg );
 			}
 		}
-		#endif // __RVNCD_GUI_H__
 
+		#ifndef GUI_MUI
 		#ifdef HAVE_CXBROKER
 		CxBroker_Free( cfg );
 		#endif // HAVE_CXBROKER
-
 		#ifdef HAVE_AREXX
 		ARexx_Free( cfg );
 		#endif // HAVE_AREXX
+		#endif // GUI_MUI
 
 		if ( ActiveEncoding )
 		{
@@ -400,9 +450,8 @@ bailout:
 		// Stop Shell Buffer Process
 		myStop_ShellBuf( cfg );
 
-		System_Free( cfg );
-
-		Config_Free( cfg );
+		// Also Free's config
+		System_Shutdown( cfg );
 	}
 
 	// ----
@@ -411,10 +460,14 @@ bailout:
 
 	// --
 
+	FreeSignal( Program_Signal );
+
+	// --
+
 	SETCURRENTDIR( olddir );
 	UnLock( newdir );
 
-	ProgramTask->tc_Node.ln_Name = OrgTaskName;
+	Program_Task->tc_Node.ln_Name = OrgTaskName;
 
 	return( 0 );
 }

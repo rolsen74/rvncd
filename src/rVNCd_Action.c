@@ -149,10 +149,6 @@ BPTR o;
 
 void DoAction_ProgramStart( struct Config *cfg UNUSED )
 {
-	#ifdef DEBUG
-	SHELLBUF_PRINTF( "DoAction_ProgramStart\n" );
-	#endif
-
 	ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ProgramStart );
@@ -164,10 +160,6 @@ void DoAction_ProgramStart( struct Config *cfg UNUSED )
 
 void DoAction_ProgramStop( struct Config *cfg UNUSED )
 {
-	#ifdef DEBUG
-	SHELLBUF_PRINTF( "DoAction_ProgramStop\n" );
-	#endif
-
 	ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ProgramStop );
@@ -179,10 +171,6 @@ void DoAction_ProgramStop( struct Config *cfg UNUSED )
 
 void DoAction_ServerStart( struct Config *cfg UNUSED )
 {
-	#ifdef DEBUG
-	SHELLBUF_PRINTF( "DoAction_ServerStart\n" );
-	#endif
-
 	ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ServerStart );
@@ -194,10 +182,6 @@ void DoAction_ServerStart( struct Config *cfg UNUSED )
 
 void DoAction_ServerStop( struct Config *cfg UNUSED )
 {
-	#ifdef DEBUG
-	SHELLBUF_PRINTF( "DoAction_ServerStop\n" );
-	#endif
-
 	ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_ServerStop );
@@ -209,10 +193,6 @@ void DoAction_ServerStop( struct Config *cfg UNUSED )
 
 void DoAction_UserConnect( struct Config *cfg UNUSED )
 {
-	#ifdef DEBUG
-	SHELLBUF_PRINTF( "DoAction_UserConnect\n" );
-	#endif
-
 	ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_UserConnect );
@@ -224,10 +204,6 @@ void DoAction_UserConnect( struct Config *cfg UNUSED )
 
 void DoAction_UserDisconnect( struct Config *cfg UNUSED )
 {
-	#ifdef DEBUG
-	SHELLBUF_PRINTF( "DoAction_UserDisconnect\n" );
-	#endif
-
 	ObtainSemaphore( & ActionSema );
 
 	myDoCmd( ActionBuffer_UserDisconnect );

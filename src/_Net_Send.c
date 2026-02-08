@@ -15,7 +15,6 @@ static void myProcess_Main( struct Config *cfg )
 struct UpdateNode *un;
 enum UpdateStat stat;
 U32 mask;
-//S32 delay;
 
 	// -- Exchange VNC Info
 
@@ -105,10 +104,6 @@ U32 mask;
 
 	cfg->cfg_KickUser = 0;
 
-	#ifdef DEBUG
-	DebugPrintF( "NetSend started\n" );
-	#endif
-
 	while(	( cfg->cfg_ClientRunning ) 
 	&&		( ! cfg->cfg_ServerShutdown )
 	&&		( ! cfg->cfg_KickUser ))
@@ -130,27 +125,18 @@ U32 mask;
 			{
 				case UT_UpdateRequest:
 				{
-//					DebugPrintF( "Handle UN : NewUpdateReq_Msg : %s : Rect %ldx%ld %ldx%ld :\n", un->un_Data.update.urm_Incremental ? "Update only" : "Full update" ,
-//						un->un_Data.update.urm_XPos,
-//						un->un_Data.update.urm_YPos,
-//						un->un_Data.update.urm_Width,
-//						un->un_Data.update.urm_Height
-//					);
-
 					stat = NewUpdateReq_Msg( cfg, un );
 					break;
 				}
 
 				case UT_PixelMessage:
 				{
-//					DebugPrintF( "Handle UN : NewPixelFmt_Msg\n" );
 					stat = NewPixelFmt_Msg( cfg, un );
 					break;
 				}
 
 				case UT_EncodingMsg:
 				{
-//					DebugPrintF( "Handle UN : NewEncoding_Msg\n" );
 					stat = NewEncoding_Msg( cfg, un );
 					break;
 				}
@@ -163,10 +149,6 @@ U32 mask;
 
 				default:
 				{
-					#ifdef DEBUG
-					DebugPrintF( "Unknown Message type : %ld\n", un->un_Type );
-					#endif
-
 					stat = US_Wait;
 //					stat = US_Error;
 					break;
@@ -178,8 +160,6 @@ U32 mask;
 
 			if ( stat == US_Handled )
 			{
-//				DebugPrintF( "Handle UN : Handled\n" );
-
 				if ( un->un_Buffer )
 				{
 					mem_Free( un->un_Buffer );
@@ -193,14 +173,9 @@ U32 mask;
 
 				ReleaseSemaphore( & cfg->Server_UpdateSema );
 			}
-//			else
-//			{
-//				DebugPrintF( "Handle UN : NOT Handled\n" );
-//			}
 		}
 		else
 		{
-//			DebugPrintF( "Handle UN : No msg\n" );
 			stat = US_Wait;
 		}
 
@@ -211,10 +186,6 @@ U32 mask;
 
 		/**/ if ( stat == US_Error ) // Error
 		{
-			#ifdef DEBUG
-			DebugPrintF( "Handle UN : Error\n" );
-			#endif
-
 			if ( ! cfg->cfg_NetReason )
 			{
 				cfg->cfg_NetReason = mem_ASPrintF( "Internal: NewBufferUpdate Failed" );
@@ -226,8 +197,6 @@ U32 mask;
 			struct VNCTimeVal start;
 			struct VNCTimeVal stop;
 
-//			DebugPrintF( "Handle UN : Delay\n" );
-
 			GetSysTime( (PTR) & start );
 			Delay( 2 );
 			GetSysTime( (PTR) & stop );
@@ -237,14 +206,6 @@ U32 mask;
 			Disable();
 			AddTime( (PTR) & cfg->SessionStatus.si_Pixel_Time_Wait, (PTR) & stop );
 			Enable();
-		}
-		else if ( stat == US_Okay )
-		{
-//			DebugPrintF( "Handle UN : Okay Handled\n" );
-		}
-		else
-		{
-			DebugPrintF( "Handle UN : Unknown Stat %ld\n", stat );
 		}
 
 		// --
@@ -262,10 +223,6 @@ U32 mask;
 			Send_Handle_ClipBoard( cfg );
 		}
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "NetSend stopping 1/2\n" );
-	#endif
 
 bailout:
 
@@ -298,10 +255,6 @@ bailout:
 	myPrintSessionInfo( cfg );
 
 	cfg->cfg_ClientRunning = FALSE;
-
-	#ifdef DEBUG
-	DebugPrintF( "NetSend stopping 2/2\n" );
-	#endif
 }
 
 // --
@@ -593,10 +546,6 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
-	#ifdef DEBUG
-	DebugPrintF( "NetSend starting 1/2\n" );
-	#endif
-
 	//--------
 
 	Self = FindTask( NULL );
@@ -610,16 +559,8 @@ S32 stat;
 			break;
 		}
 
-		#ifdef DEBUG
-		DebugPrintF( "NetSend starting delay\n" );
-		#endif
-
 		Delay( 2 );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "NetSend starting 2/2\n" );
-	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -666,17 +607,9 @@ S32 stat;
 
 		// --
 
-		#ifdef DEBUG
-		DebugPrintF( "NetSend entering main\n" );
-		#endif
-
 		SetTaskPri( Self, PRI_NETSEND );
 		myProcess_Main( Config );
 		SetTaskPri( Self, PRI_SHUTDOWN );
-
-		#ifdef DEBUG
-		DebugPrintF( "NetSend exited main\n" );
-		#endif
 
 		// --
 
@@ -721,10 +654,6 @@ S32 stat;
 
 	//--------
 
-	#ifdef DEBUG
-	DebugPrintF( "NetSend stopped\n" );
-	#endif
-
 	if ( Parent )
 	{
 		Forbid();
@@ -743,10 +672,6 @@ U32 mask;
 U32 wait;
 
 	error = TRUE;
-
-	#ifdef DEBUG
-	DebugPrintF( "myStart_Net_Send\n" );
-	#endif
 
 	if ( DoVerbose > 2 )
 	{
@@ -834,13 +759,9 @@ void myStop_Net_Send( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStop_Net_Send\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStop_NetSend\n" );
+		SHELLBUF_PRINTF( "myStop_NetSend\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -889,16 +810,14 @@ S32 cnt;
 					if ( ! ( ++cnt % 50 ))
 					{
 						Signal( cfg->NetSend_Task, NET_EXIT_SIGNAL );
-						printf( "myStop_Net_Send still waiting : %d\n", cnt );
-//						SHELLBUF_PRINTF( "\rmyStop_Net_Send still waiting : %d", cnt );
-//						fflush( stdout );
+						SHELLBUF_PRINTF1( "myStop_Net_Send still waiting : %" PRId32 "\n", cnt );
 					}
 				}
 			}
 
 			if ( cnt >= 50 )
 			{
-				printf( "\n" );
+				SHELLBUF_PRINTF( "\n" );
 			}
 		}
 	}

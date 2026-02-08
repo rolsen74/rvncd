@@ -10,20 +10,20 @@
 
 // --
 
-// Make sure only One GUI is included, so reuse name
-#ifndef __HAVE__RVNCD__GUI__
-#define __HAVE__RVNCD__GUI__
-#ifdef GUI_RA
-
-// --
-
 S32 GUIFunc_Init( struct Config *cfg )
 {
 S32 retval;
 
-//	DebugPrintF( "RA: GUIFunc_Init\n" );
-
 	retval = FALSE;
+
+	// --
+
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "GUIFunc_Init : RA\n" );
+	}
+
+	// --
 
 	if ( ! MsgPort_Init( & WinMsgPort ))
 	{
@@ -199,6 +199,3 @@ bailout:
 }
 
 // --
-
-#endif // GUI_RA
-#endif // __HAVE__RVNCD__GUI__

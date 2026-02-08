@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 static void myMenu_Reset( struct Config *cfg )
@@ -396,63 +394,23 @@ S32 retval;
 S32 myGUI_CreateMenus( struct Config *cfg UNUSED )
 {
 	MainMenuStrip = NewObject( NULL, "menuclass",
-		MA_Type,				T_ROOT,
+		MA_Type,						T_ROOT,
 
-		MA_AddChild,			NewObject( NULL, "menuclass",
-			MA_Type,			T_MENU,
-			MA_Label,			"Project",
+		MA_AddChild,					NewObject( NULL, "menuclass",
+			MA_Type,					T_MENU,
+			MA_Label,					"Project",
 
-// -- 			  MA_AddChild,		  NewObject( NULL, "menuclass",
-// -- 				  MA_ID,		  MENUID_SaveDefaultLog,
-// -- 				  MA_Type,		  T_ITEM,
-// -- 				  MA_Label,		  GSTR(STR_MENU_PROJECT_SAVE_LOG),
-// -- 				  MA_Key,		  GSTR(STR_MENU_PROJECT_SAVE_LOG_SHORTCUT),
-// -- 			  End,
-
+			#if 0
 			MA_AddChild,				NewObject( NULL, "menuclass",
 				MA_Type,				T_ITEM,
 				MA_Separator,			TRUE,
-			End,
-
- 			MA_AddChild,				NewObject( NULL, "menuclass",
- 				MA_Type,				T_ITEM,
- 				MA_Label,				"Debug",
-
- 				MA_AddChild,			NewObject( NULL, "menuclass",
- 					MA_ID,				MENUID_Encodings,
- 					MA_Type,			T_ITEM,
-					MA_Label,			"Encodings",
-//					MA_Key,				GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
- 				End,
-
- 				MA_AddChild,			NewObject( NULL, "menuclass",
- 					MA_ID,				MENUID_KeyLogger,
- 					MA_Type,			T_ITEM,
-					MA_Label,			"Key Logger",
-//					MA_Key,				GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
- 				End,
-
- 				MA_AddChild,			NewObject( NULL, "menuclass",
- 					MA_ID,				MENUID_PixelFormat,
- 					MA_Type,			T_ITEM,
-					MA_Label,			"Pixel Format",
-//					MA_Key,				GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
- 				End,
-
- 				MA_AddChild,			NewObject( NULL, "menuclass",
- 					MA_ID,				MENUID_Session,
- 					MA_Type,			T_ITEM,
-					MA_Label,			"Session Info",
-//					MA_Key,				GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
- 				End,
-
-
 			End,
 
 			MA_AddChild,				NewObject( NULL, "menuclass",
 				MA_Type,				T_ITEM,
 				MA_Separator,			TRUE,
 			End,
+			#endif
 
  			MA_AddChild,				NewObject( NULL, "menuclass",
  				MA_Type,				T_ITEM,
@@ -505,17 +463,50 @@ S32 myGUI_CreateMenus( struct Config *cfg UNUSED )
 
 		MA_AddChild,					NewObject( NULL, "menuclass",
 			MA_Type,					T_MENU,
-			MA_Label,					"Preferences",
+			MA_Label,					"Windows",
 
 			MA_AddChild,				NewObject( NULL, "menuclass",
-				MA_Type,				T_ITEM,
-				MA_Separator,			TRUE,
+ 				MA_ID,					MENUID_Encodings,
+ 				MA_Type,				T_ITEM,
+				MA_Label,				"Encodings",
+//				MA_Key,					GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
+ 			End,
+
+ 			MA_AddChild,				NewObject( NULL, "menuclass",
+ 				MA_ID,					MENUID_KeyLogger,
+ 				MA_Type,				T_ITEM,
+				MA_Label,				"Key Logger",
+//				MA_Key,					GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
+ 			End,
+
+ 			MA_AddChild,				NewObject( NULL, "menuclass",
+ 				MA_ID,					MENUID_PixelFormat,
+ 				MA_Type,				T_ITEM,
+				MA_Label,				"Pixel Format",
+//				MA_Key,					GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
+ 			End,
+
+ 			MA_AddChild,				NewObject( NULL, "menuclass",
+ 				MA_ID,					MENUID_Session,
+ 				MA_Type,				T_ITEM,
+				MA_Label,				"Session Info",
+//				MA_Key,					GSTR(STR_MENU_VIEW_ALL_SHORTCUT),
 			End,
+		End,
+
+		MA_AddChild,					NewObject( NULL, "menuclass",
+			MA_Type,					T_MENU,
+			MA_Label,					"Settings",
 
 			MA_AddChild,				NewObject( NULL, "menuclass",
 				MA_ID,					MENUID_Load,
 				MA_Type,				T_ITEM,
 				MA_Label,				"Load Settings",
+			End,
+
+			MA_AddChild,				NewObject( NULL, "menuclass",
+				MA_Type,				T_ITEM,
+				MA_Separator,			TRUE,
 			End,
 
 			MA_AddChild,				NewObject( NULL, "menuclass",
@@ -569,5 +560,3 @@ void myGUI_DeleteMenus( struct Config *cfg UNUSED )
 }
 
 // --
-
-#endif // GUI_RA

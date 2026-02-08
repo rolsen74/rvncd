@@ -64,7 +64,7 @@ U8 sb;
 
 static void myCheckTile( struct Config *cfg, U32 pos )
 {
-struct TileInfo *ti;
+//struct TileInfo *ti;
 struct Screen *scr;
 struct Screen *cur;
 U8 *buf1;
@@ -88,17 +88,11 @@ S32 ts;
 	// --
 
 	ts		= cfg->GfxRead_Screen_TileSize;
-	ti		= cfg->GfxRead_Screen_TileInfoBuffer;
+//	ti		= cfg->GfxRead_Screen_TileInfoBuffer;
 	tilenr	= cfg->GfxRead_Screen_TileRandomBuffer[pos];
 	buf1	= cfg->GfxRead_Screen_TileCheckBuffer;
 	size	= cfg->GfxRead_Encode_FormatSize * ts * ts;
 	buf2	= & cfg->GfxRead_Screen_ChunkyBuffer[ size * tilenr ];
-
-	if ( ti[tilenr].C )
-	{
-		// We need to clear the tile first
-		memset( buf1, 0, size );
-	}
 
 	// -- Atleast try too see if the Screen still is there
 
@@ -122,98 +116,15 @@ S32 ts;
 
 	UnlockIBase( lock );
 
-	if ( cur == NULL )
+	if ( ! cur )
 	{
 		mySetScreen( cfg, NULL );
 		goto bailout;
 	}
 
-	S32 sx = ti[tilenr].X;
-	S32 sy = ti[tilenr].Y;
+	// --
 
-	if ( cfg->GfxRead_Screen_ViewMode == VIEWMODE_View )
-	{
-		if ( cfg->GfxRead_Screen_Adr->ViewPort.DxOffset < 0 )
-		{
-			sx -= cfg->GfxRead_Screen_Adr->ViewPort.DxOffset;
-		}
-
-		if ( cfg->GfxRead_Screen_Adr->ViewPort.DyOffset < 0 )
-		{
-			sy -= cfg->GfxRead_Screen_Adr->ViewPort.DyOffset;
-		}
-	}
-
-	// ############################################
-
-	#if defined(HAVE_CGFX)
- 
-	{
-		// cgfx
-		ReadPixelArray( 
-			buf1,				// DestRect .. Chunky
-			0,					// DestX
-			0,					// DestY
-			cfg->GfxRead_Encode_FormatSize * ts,	// DestMod (Bytes per row)
-			& scr->RastPort,	// RastPort
-			sx,					// SrcX
-			sy,					// SrcY
-			ti[tilenr].W,		// SizeX (Width)
-			ti[tilenr].H,		// SizeY (Height)
-			cfg->GfxRead_Encode_Format2				// DestFormat
-		);
-	}
-
-	// ############################################
-
-	#elif defined(HAVE_P96)
-	{
-		struct RenderInfo ri;
-
-		ri.Memory		= buf1;
-		ri.BytesPerRow	= cfg->GfxRead_Encode_FormatSize * ts;
-		ri.RGBFormat	= cfg->GfxRead_Encode_Format2;
-
-		p96ReadPixelArray(
-			& ri, 				// ri
-			0,					// DestX, 
-			0,					// DestY, 
-			& scr->RastPort,	// rp 
-			sx,					// SrcX, 
-			sy,					// SrcY, 
-			ti[tilenr].W,		// SizeX (Width)
-			ti[tilenr].H		// SizeY (Height)
-		);
-	}
-
-	// ############################################
-
-	#elif defined(HAVE_GFX54)
-	{
-		// gfx v54
-		ReadPixelArray( 
-			& scr->RastPort,
-			sx,				// srcx
-			sy,				// srcy
-			buf1,			// Chunky
-			0,				// dstx
-			0,				// dsty
-			cfg->GfxRead_Encode_FormatSize * ts,	// Bytes per row
-			cfg->GfxRead_Encode_Format2,			// Format
-			ti[tilenr].W,	// Width
-			ti[tilenr].H	// Height
-		);
-	}
-
-	// ############################################
-
-	#else
-
-	#error Unknown Graphics System
-
-	#endif
-
-	// ############################################
+	myGet_Screen_Tile( cfg, scr, tilenr, buf1, size );
 
 	// --
 {
@@ -258,7 +169,7 @@ S32 ts;
 //	__aa += stop.Microseconds;
 //	__bb += 1;
 
-//	DebugPrintF( "GfxRipper : %06lld : %06ld : %ld\n", __aa/__bb, stop.Microseconds, stat );
+//	DEBUGPRINTF( DebugPrintF( "GfxRipper : %06lld : %06ld : %ld\n", __aa/__bb, stop.Microseconds, stat );
 }
 
 
@@ -666,81 +577,17 @@ S32 err;
 	}
 	else
 	{
-		cfg->GfxRead_Screen_Adr			= scr;
-		cfg->GfxRead_Screen_PageWidth	= scr->Width;
-		cfg->GfxRead_Screen_PageHeight	= scr->Height;
-
-
-		// ############################################
-
-		#if defined(HAVE_CGFX)
-		{
-			// GfxBase : GetVPModeID v36
-			U32 modeid = GetVPModeID( & scr->ViewPort );
-
-			// CyberGfx
-			U32 pixfmt = GetCyberIDAttr( CYBRIDATTR_PIXFMT,	modeid );
-
-			cfg->GfxRead_Screen_ModeID		= modeid;
-			cfg->GfxRead_Screen_Format		= myConvert_CGFX_2_VNC_Mode( pixfmt );
-			cfg->GfxRead_Screen_ViewWidth	= GetCyberIDAttr( CYBRIDATTR_WIDTH, modeid );
-			cfg->GfxRead_Screen_ViewHeight	= GetCyberIDAttr( CYBRIDATTR_HEIGHT, modeid );
-		}
+		// Sets:
+		//  cfg->GfxRead_Screen_Adr
+		//  cfg->GfxRead_Screen_PageWidth
+		//  cfg->GfxRead_Screen_PageHeight
+		//  cfg->GfxRead_Screen_ModeID
+		//  cfg->GfxRead_Screen_Format
+		//  cfg->GfxRead_Screen_ViewWidth
+		//  cfg->GfxRead_Screen_ViewHeight
+		myUpdate_Screen_Info( cfg, scr );
 
 		// ############################################
-
-		#elif defined(HAVE_P96)
-		{
-			// GFX v39
-			U32 modeid = BestModeID( BIDTAG_ViewPort, & scr->ViewPort, TAG_END );
-
-			// P96 
-			RGBFTYPE pixfmt = p96GetBitMapAttr( scr->RastPort.BitMap, P96BMA_RGBFORMAT );
-
-			// P96
-			cfg->GfxRead_Screen_ModeID		= modeid;
-			cfg->GfxRead_Screen_Format		= myConvert_P96_2_VNC_Mode( pixfmt );
-			cfg->GfxRead_Screen_ViewWidth	= p96GetModeIDAttr( modeid, P96IDA_WIDTH );
-			cfg->GfxRead_Screen_ViewHeight	= p96GetModeIDAttr( modeid, P96IDA_HEIGHT );
-		}
-
-		// ############################################
-
-		#elif defined(HAVE_GFX54)
-		{
-			// GFX v39
-			U32 modeid = BestModeID( BIDTAG_ViewPort, & scr->ViewPort, TAG_END );
-
-			// GFX : GetBitMapAttr (v39/v54)
-			enum enPixelFormat pixfmt = GetBitMapAttr( scr->RastPort.BitMap, BMA_PIXELFORMAT );
-
-			// GFX v36
-			struct DimensionInfo di;
-			GetDisplayInfoData( NULL, (PTR) & di, sizeof( di ), DTAG_DIMS, modeid );
-
-			// GFX
-			cfg->GfxRead_Screen_ModeID		= modeid;
-			cfg->GfxRead_Screen_Format		= myConvert_GFX54_2_VNC_Mode( pixfmt );
-			cfg->GfxRead_Screen_ViewWidth	= di.Nominal.MaxX - di.Nominal.MinX + 1;
-			cfg->GfxRead_Screen_ViewHeight	= di.Nominal.MaxY - di.Nominal.MinY + 1;
-		}
-
-		// ############################################
-
-		#else
-
-		#error Unknown Graphics System
- 
-		#endif
-
-		// ############################################
-
-
-//SHELLBUF_PRINTF( "isCGFX: %d\n", IsCyberModeID( cfg->GfxRead_Screen_ModeID ) ? TRUE : FALSE );
-//SHELLBUF_PRINTF( "ModeID: %08" PRIx32 "\n", cfg->GfxRead_Screen_ModeID );
-//SHELLBUF_PRINTF( "PixFmt: %08" PRIx32 "\n", cfg->GfxRead_Screen_Format );
-//SHELLBUF_PRINTF( "Width : %" PRId32 "\n", cfg->GfxRead_Screen_ViewWidth );
-//SHELLBUF_PRINTF( "Height: %" PRId32 "\n", cfg->GfxRead_Screen_ViewHeight );
 
 		cfg->GfxRead_Screen_ViewMode	= cfg->cfg_Active_Settings.ScreenViewMode;
 
@@ -884,10 +731,6 @@ S32 pos;
 
 	wait = NET_EXIT_SIGNAL;
 
-	#ifdef DEBUG
-	DebugPrintF( "Gfx started\n" );
-	#endif
-
 	while( TRUE )  
 	{
 		mask = CheckSignal( wait );
@@ -941,10 +784,6 @@ S32 pos;
 			pos = 0;
 		}
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "Gfx stopping\n" );
-	#endif
 }
 
 // --
@@ -982,10 +821,6 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
-	#ifdef DEBUG
-	DebugPrintF( "Gfx starting 1/2\n" );
-	#endif
-
 	//--------
 
 	Self = FindTask( NULL );
@@ -999,16 +834,8 @@ S32 stat;
 			break;
 		}
 
-		#ifdef DEBUG
-		DebugPrintF( "Gfx starting delay\n" );
-		#endif
-
 		Delay( 2 );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "Gfx starting 2/2\n" );
-	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -1023,7 +850,6 @@ S32 stat;
 	if ( stat )
 	{
 		Config->GfxRead_Task = Self;
-
 		Config->cfg_GfxReadStatus = PROCESS_Running;
 
 		// Set signal after Status
@@ -1031,17 +857,9 @@ S32 stat;
 
 		// --
 
-		#ifdef DEBUG
-		DebugPrintF( "Gfx entering main\n" );
-		#endif
-
 		SetTaskPri( Self, PRI_GFX );
 		myProcess_Main( Config );
 		SetTaskPri( Self, PRI_SHUTDOWN );
-
-		#ifdef DEBUG
-		DebugPrintF( "Gfx exited main\n" );
-		#endif
 
 		// --
 
@@ -1057,10 +875,6 @@ S32 stat;
 	Config->cfg_GfxReadStatus = PROCESS_Stopped;
 
 	//--------
-
-	#ifdef DEBUG
-	DebugPrintF( "Gfx stopped\n" );
-	#endif
 
 	if ( Parent )
 	{
@@ -1080,10 +894,6 @@ U32 mask;
 U32 wait;
 
 	error = TRUE;
-
-	#ifdef DEBUG
-	DebugPrintF( "myStart_Gfx_Read\n" );
-	#endif
 
 	if ( DoVerbose > 2 )
 	{
@@ -1167,13 +977,9 @@ void myStop_Gfx_Read( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStop_Gfx_Read\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStop_Gfx_Read\n" );
+		SHELLBUF_PRINTF( "myStop_Gfx_Read\n" );
 	}
 
 	#ifdef DEBUG
@@ -1225,14 +1031,14 @@ S32 cnt;
 					if ( ! ( ++cnt % 50 ))
 					{
 						Signal( cfg->GfxRead_Task, NET_EXIT_SIGNAL );
-						printf( "myStop_Gfx_Read still waiting : %d\n", cnt );
+						SHELLBUF_PRINTF1( "myStop_Gfx_Read still waiting : %" PRId32 "\n", cnt );
 					}
 				}
 			}
 
 			if ( cnt >= 50 )
 			{
-				printf( "\n" );
+				SHELLBUF_PRINTF( "\n" );
 			}
 		}
 	}

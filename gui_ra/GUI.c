@@ -10,14 +10,6 @@
 
 // --
 
-// Make sure only One GUI is included, so reuse name
-#ifndef __HAVE__RVNCD__GUI__
-#define __HAVE__RVNCD__GUI__
-
-#ifdef GUI_RA
-
-// --
-
 struct VNCMsgPort			WinAppPort;
 struct VNCMsgPort			WinMsgPort;
 
@@ -55,14 +47,8 @@ struct Library *			SliderBase			= NULL;
 struct Library *			StringBase			= NULL;
 struct Library *			WindowBase			= NULL;
 
-
-#ifdef DEBUG
-void 	GUIFunc_UpdateServerStatus(		struct Config *cfg, enum ProcessStat pstat, STR file, U32 line );
-S32		GUIFunc_CheckSettings(			struct Config *cfg, STR file, U32 line );
-#else
 void 	GUIFunc_UpdateServerStatus(		struct Config *cfg, enum ProcessStat pstat );
 S32		GUIFunc_CheckSettings(			struct Config *cfg );
-#endif
 void 	GUIFunc_Default_Config(			struct Config *cfg );
 void	GUIFunc_RefreshSettings(		struct Config *cfg );
 S32		GUIFunc_Init(					struct Config *cfg );
@@ -91,6 +77,3 @@ struct GUIFunctions ActiveGUI =
 };
 
 // --
-
-#endif // GUI_RA
-#endif // __HAVE__RVNCD__GUI__

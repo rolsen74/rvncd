@@ -9,6 +9,7 @@
 #include "rVNCd.h"
 
 // --
+#if 0
 
 static S32 myType_gstr( struct Config *cfg UNUSED, STR buf UNUSED, BPTR h, const struct Cfg_Label *Cmd )
 {
@@ -311,7 +312,7 @@ S32 pos;
 
 			default:
 			{
-				SHELLBUF_PRINTF( "%s:%04d: Error unknown type (%d) for '%s'\n", __FILE__, __LINE__, label[pos].Type, label[pos].Name );
+				SHELLBUF_PRINTF4( "%s:%04d: Error unknown type (%d) for '%s'\n", __FILE__, __LINE__, label[pos].Type, label[pos].Name );
 				goto bailout;
 			}
 		}
@@ -319,6 +320,76 @@ S32 pos;
 		if ( func( cfg, buf, h, & label[pos] ))
 		{
 			goto bailout;
+		}
+
+		pos++;
+	}
+
+	error = FALSE;
+
+bailout:
+
+	return( error );
+}
+
+#endif
+// --
+
+S32 Config_Save_IP(  struct Config *cfg, STR buf, BPTR h, const struct CFGNODE *Cmd );
+S32 Config_Save_STR( struct Config *cfg, STR buf, BPTR h, const struct CFGNODE *Cmd );
+S32 Config_Save_VAL( struct Config *cfg, STR buf, BPTR h, const struct CFGNODE *Cmd );
+
+static S32 myGroup2( struct Config *cfg, BPTR h, STR buf, const STR grpname, const struct CFGNODE *Cmds )
+{
+S32 error;
+S32 stat;
+S32 len;
+S32 pos;
+
+	error = TRUE;
+
+	// -- Write Header
+
+	sprintf( buf, "\n%s\n", grpname );
+
+	len = strlen( buf );
+
+	stat = Write( h, buf, len );
+
+	if ( stat != len )
+	{
+		goto bailout;
+	}
+
+	pos = 0;
+
+	while( Cmds[pos].Name )
+	{
+		switch( Cmds[pos].Type )
+		{
+			case CFGTYPE_VAL:
+			{
+				if ( ! Config_Save_VAL( cfg, buf, h, & Cmds[pos] ))
+				{
+					goto bailout;
+				}
+				break;
+			}
+
+			case CFGTYPE_STR:
+			{
+				if ( ! Config_Save_STR( cfg, buf, h, & Cmds[pos] ))
+				{
+					goto bailout;
+				}
+				break;
+			}
+
+			default:
+			{
+				SHELLBUF_PRINTF4( "%s:%04d: Error unknown type (%d) for '%s'\n", __FILE__, __LINE__, Cmds[pos].Type, Cmds[pos].Name );
+				goto bailout;
+			}
 		}
 
 		pos++;
@@ -344,7 +415,7 @@ S32 pos;
 
 	while( TRUE )
 	{
-		str = (PTR) ConfigGroups[pos].Name;
+		str = (PTR) ConfigGroups2[pos].Name;
 
 		if ( ! str )
 		{
@@ -354,7 +425,7 @@ S32 pos;
 		// Exclude IP group
 		if ( strcmp( str, "[IP]" ))
 		{
-			if ( myGroup( cfg, h, buf, str, ConfigGroups[pos].Cmds ))
+			if ( myGroup2( cfg, h, buf, str, ConfigGroups2[pos].Cmds ))
 			{
 				goto bailout;
 			}
@@ -531,11 +602,11 @@ S32 stat;
 	{
 		if ( retval )
 		{
-			SHELLBUF_PRINTF( "Deleted %s\n", filename );
+			SHELLBUF_PRINTF1( "Deleted %s\n", filename );
 		}
 		else
 		{
-			SHELLBUF_PRINTF( "Failed to delete %s (%d)\n", filename, (S32) IoErr() );
+			SHELLBUF_PRINTF2( "Failed to delete %s (%d)\n", filename, (S32) IoErr() );
 		}
 	}
 
@@ -603,15 +674,15 @@ S32 err;
 	{
 		/**/ if ( retval == RenStat_Okay )
 		{
-			SHELLBUF_PRINTF( "Renamed %s -> %s\n", oldname, newname );
+			SHELLBUF_PRINTF2( "Renamed %s -> %s\n", oldname, newname );
 		}
 		else if ( retval == RenStat_NotFound )
 		{
-			SHELLBUF_PRINTF( "Failed %s not found\n", oldname );
+			SHELLBUF_PRINTF1( "Failed %s not found\n", oldname );
 		}
 		else
 		{
-			SHELLBUF_PRINTF( "Failed to renamed %s -> %s (%d)\n", oldname, newname, (S32) IoErr() );
+			SHELLBUF_PRINTF3( "Failed to renamed %s -> %s (%d)\n", oldname, newname, (S32) IoErr() );
 		}
 	}
 

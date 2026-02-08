@@ -73,12 +73,14 @@ U32 cur;
 		if ( DoVerbose > 0 )
 		{
 			#if 1
-			#define DO_PRT	SHELLBUF_PRINTF
+			#define DO_PRT		SHELLBUF_PRINTF
+			#define DO_PRT1		SHELLBUF_PRINTF1
 			#else
-			#define DO_PRT	DebugPrintF
+			#define DO_PRT		DEBUGPRINTF
+			#define DO_PRT1		DEBUGPRINTF
 			#endif
 
-			DO_PRT( " Encoding: %08" PRIx32 "", enc[cnt] );
+			DO_PRT1( " Encoding: %08" PRIx32 "", enc[cnt] );
 			/**/ if ( enc[cnt] == 0 )			{ DO_PRT( " - Raw" ); }
 			else if ( enc[cnt] == 1 )			{ DO_PRT( " - Copy Rect" ); }
 			else if ( enc[cnt] == 2 )			{ DO_PRT( " - RRE" ); }

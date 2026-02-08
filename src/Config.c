@@ -14,123 +14,108 @@ const STR ConfigHeaderStr = "[RVNC SERVER CONFIG]\n";
 
 // --
 
-#ifdef __RVNCD_GUI_H__
-
-#endif // __RVNCD_GUI_H__
-
-static const struct Cfg_Label myIPList[] =
+static const struct CFGNODE myIP2[] =
 {
-{  5, "Allow",	CLT_Config_in_ip4,	0,	0,	0, NULL },
-{  5, "Block",	CLT_Config_ex_ip4,	0,	0,	0, NULL },
-{  0, NULL, 0, 0, 0, 0, NULL },
+	CFG_IP(  "Allow",				CFGID_IP_Allow ),
+	CFG_IP(  "Block",				CFGID_IP_Block ),
+	CFG_END(),
 };
 
-// yes, vbcc's offsetof macro do not like ..  offsetof( struct Config, cfg_Disk_Settings.Port )
-#define DoSettingOffset(member)		( offsetof( struct Config, cfg_Disk_Settings ) + offsetof( struct Settings, member ))
-
-// yes, vbcc's offsetof macro do not like ..  offsetof( struct Config, cfg_Disk_Settings.Port )
-#define DoSettingOffset2(xx,yy)		( offsetof( struct Config, cfg_WinData ) + ( sizeof( struct WinNode ) * xx ) + offsetof( struct WinNode, yy ))
-
-static const struct Cfg_Label myProgram[] =
+static const struct CFGNODE myProgram2[] =
 {
-{  7, "Verbose",				CLT_Config_vb,		0,		3,					0, NULL },
-// --
-{ 10, "DisableGUI",				CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ProgramDisableGUI ), NULL },
-{ 12, "DisableARexx",			CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ProgramDisableARexx ), NULL },
-{ 15, "DisableCxBroker",		CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ProgramDisableCxBroker ), NULL },
-
-#ifdef __RVNCD_GUI_H__
-{ 13, "WinMainStatus",			CLT_Config_u8,		0,		WINSTAT_LAST,		offsetof( struct Config, MainWinState ), NULL },
-{ 14, "WinAboutStatus",			CLT_Config_s32,		0,		WINSTAT_LAST,		DoSettingOffset2( WIN_About, Status ), NULL },
-{ 12, "WinKeyStatus",			CLT_Config_s32,		0,		WINSTAT_LAST,		DoSettingOffset2( WIN_KeyLogger, Status ), NULL },
-{ 14, "WinPixelStatus",			CLT_Config_s32,		0,		WINSTAT_LAST,		DoSettingOffset2( WIN_PixelFormat, Status ), NULL },
-{ 16, "WinSessionStatus",		CLT_Config_s32,		0,		WINSTAT_LAST,		DoSettingOffset2( WIN_Session, Status ), NULL },
-{ 18, "WinEncodingsStatus",		CLT_Config_s32,		0,		WINSTAT_LAST,		DoSettingOffset2( WIN_Encodings, Status ), NULL },
-//{ 14, "WinAboutStatus",		CLT_Config_s32,		0,		WINSTAT_LAST,		offsetof( struct Config, cfg_WinData[WIN_About].Status ), NULL },
-//{ 12, "WinKeyStatus",			CLT_Config_s32,		0,		WINSTAT_LAST,		offsetof( struct Config, cfg_WinData[WIN_KeyLogger].Status ), NULL },
-//{ 14, "WinPixelStatus",		CLT_Config_s32,		0,		WINSTAT_LAST,		offsetof( struct Config, cfg_WinData[WIN_PixelFormat].Status ), NULL },
-//{ 16, "WinSessionStatus",		CLT_Config_s32,		0,		WINSTAT_LAST,		offsetof( struct Config, cfg_WinData[WIN_Session].Status ), NULL },
-//{ 18, "WinEncodingsStatus",	CLT_Config_s32,		0,		WINSTAT_LAST,		offsetof( struct Config, cfg_WinData[WIN_Encodings].Status ), NULL },
-#endif // __RVNCD_GUI_H__
-
-{  0, NULL, 0, 0, 0, 0, NULL },
+	CFG_VAL( "Verbose",				CFGID_Verbose, 0, 3 ),
+	// --
+	CFG_VAL( "DisableGUI",			CFGID_Program_DisableGUI, 0, 1 ),
+	CFG_VAL( "DisableARexx",		CFGID_Program_DisableARexx, 0, 1 ),
+	CFG_VAL( "DisableCxBroker",		CFGID_Program_DisableCxBroker, 0, 1 ),
+	CFG_END(),
 };
 
-static const struct Cfg_Label myActions[] =
+static const struct CFGNODE myServer2[] =
 {
-{ 17, "ProgramStopEnable",		CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ActionsProgramStopEnable ), NULL },
-{ 17, "ProgramStopBuffer",		CLT_Config_gstr,	0,		MAX_ACTIONBUFFER,	0, ActionBuffer_ProgramStop },
-{ 18, "ProgramStartEnable",		CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ActionsProgramStartEnable ), NULL },
-{ 18, "ProgramStartBuffer",		CLT_Config_gstr,	0,		MAX_ACTIONBUFFER,	0, ActionBuffer_ProgramStart },
+	CFG_VAL( "AutoStart",			CFGID_Server_AutoStart, 0, 1 ),
+	CFG_VAL( "Port",				CFGID_Server_Port, 0, 65535 ),
+	CFG_STR( "Name",				CFGID_Server_Name, MAX_SERVERNAME ),
+	CFG_STR( "Password",			CFGID_Server_Password, MAX_SERVERPASSWORD ),
 
-{ 17, "ServerStartEnable",		CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ActionsServerStartEnable ), NULL },
-{ 17, "ServerStartBuffer",		CLT_Config_gstr,	0,		MAX_ACTIONBUFFER,	0, ActionBuffer_ServerStart },
-{ 16, "ServerStopEnable",		CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ActionsServerStopEnable ), NULL },
-{ 16, "ServerStopBuffer",		CLT_Config_gstr,	0,		MAX_ACTIONBUFFER,	0, ActionBuffer_ServerStop },
+	CFG_VAL( "EncRRE",				CFGID_Server_EncRRE, 0, 1 ),
+	CFG_VAL( "EncZLIB",				CFGID_Server_EncZLIB, 0, 1 ),
+	CFG_VAL( "EncRichCursor",		CFGID_Server_EncRichCursor, 0, 1 ),
 
-{ 17, "UserConnectEnable",		CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ActionsUserConnectEnable ), NULL },
-{ 17, "UserConnectBuffer",		CLT_Config_gstr,	0,		MAX_ACTIONBUFFER,	0, ActionBuffer_UserConnect },
-{ 20, "UserDisconnectEnable",	CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ActionsUserDisconnectEnable ), NULL },
-{ 20, "UserDisconnectBuffer",	CLT_Config_gstr,	0,		MAX_ACTIONBUFFER,	0, ActionBuffer_UserDisconnect },
+	CFG_VAL( "Protocol33",			CFGID_Server_Protocol33, 0, 1 ),
+	CFG_VAL( "Protocol37",			CFGID_Server_Protocol37, 0, 1 ),
 
-{  0, NULL, 0, 0, 0, 0, NULL },
+	CFG_VAL( "SendBell",			CFGID_Server_SendBell, 0, 1 ),
+	CFG_VAL( "SendWatchDog",		CFGID_Server_SendWatchDog, 0, 1000 ),
+	CFG_VAL( "SendTileBuffer",		CFGID_Server_SendTileBuffer, 0, 1024 ),
+
+	CFG_VAL( "DisableBlanker",		CFGID_Server_DisableBlanker, 0, 1 ),
+
+	CFG_VAL( "SendClipboard",		CFGID_Server_SendClipboard, 0, 1 ),
+	CFG_VAL( "ReadClipboard",		CFGID_Server_ReadClipboard, 0, 1 ),
+
+	CFG_VAL( "PointerType",			CFGID_Server_PointerType, 0, 1 ),
+	CFG_STR( "PointerFile",			CFGID_Server_PointerFile, 0 ),
+
+	CFG_VAL( "TileSize",			CFGID_Server_TileSize, 16, 256 ),
+	CFG_VAL( "ScanMethod",			CFGID_Server_ScanMethod, 0, SCANMethod_Last ),
+	CFG_VAL( "DelayFrequency",		CFGID_Server_DelayFrequency, 0, 500 ),
+
+	CFG_END(),
 };
 
-static const struct Cfg_Label myServer[] =
+static const struct CFGNODE myLog2[] =
 {
-{  4, "Port",					CLT_Config_u32,		0,		65535,				DoSettingOffset( Port ), NULL },
-{  4, "Name",					CLT_Config_bstr,	0,		MAX_SERVERNAME,		DoSettingOffset( Name ), NULL },
-{  6, "EncRRE",					CLT_Config_u8,		0,		1,					DoSettingOffset( RRE ), NULL },
-{  7, "EncZLIB",				CLT_Config_u8,		0,		1,					DoSettingOffset( ZLib ), NULL },
-{  8, "SendBell",				CLT_Config_u8,		0,		1,					DoSettingOffset( SendBell ), NULL },
-{  8, "Password",				CLT_Config_bstr,	0,		MAX_SERVERPASSWORD,	DoSettingOffset( Password ), NULL },
-{  8, "TileSize",				CLT_Config_s32,		16,		256,				DoSettingOffset( TileSize ), NULL },
-{  9, "AutoStart",				CLT_Config_u8,		0,		1,					offsetof( struct Config, AutoStart ), NULL },
-{ 10, "Protocol33",				CLT_Config_u8,		0,		1,					DoSettingOffset( Protocol33 ), NULL },
-{ 10, "Protocol37",				CLT_Config_u8,		0,		1,					DoSettingOffset( Protocol37 ), NULL },
-{ 10, "ScanMethod",				CLT_Config_u8,		0,		SCANMethod_Last,	DoSettingOffset( TileScanMethod ), NULL },
-{ 11, "PointerFile",			CLT_Config_pstr,	0,		0,					offsetof( struct Config, cfg_PointerFilename ), NULL },
-{ 11, "PointerType",			CLT_Config_u8,		0,		1,					DoSettingOffset( PointerType ), NULL },
-{ 12, "SendWatchDog",			CLT_Config_u32,		0,		1000,				DoSettingOffset( SendWatchDog ), NULL },
-{ 13, "SendClipboard",			CLT_Config_u8,		0,		1,					DoSettingOffset( SendClipboard ), NULL },
-{ 13, "ReadClipboard",			CLT_Config_u8,		0,		1,					DoSettingOffset( ReadClipboard ), NULL },
-{ 13, "EncRichCursor",			CLT_Config_u8,		0,		1,					DoSettingOffset( RichCursor ), NULL },
-{ 14, "SendTileBuffer",			CLT_Config_u32,		0,		1024,				DoSettingOffset( TileBufferKB ), NULL },
-{ 14, "DisableBlanker",			CLT_Config_u8,		0,		1,					DoSettingOffset( DisableBlanker ), NULL },
-{ 14, "DelayFrequency",			CLT_Config_s32,		0,		500,				offsetof( struct Config, GfxRead_DelayFrequency ), NULL },
-{  0, NULL, 0, 0, 0, 0, NULL },
+	CFG_VAL( "Enable",				CFGID_Log_Enable, 0, 1 ),
+	CFG_STR( "LogFile",				CFGID_Log_File, 0 ),
+	
+	CFG_VAL( "Infos",				CFGID_Log_Infos, 0, 1 ),
+	CFG_VAL( "Errors",				CFGID_Log_Errors, 0, 1 ),
+	CFG_VAL( "Warnings",			CFGID_Log_Warnings, 0, 1 ),
+	
+	CFG_VAL( "ProgramStart",		CFGID_Log_ProgramStart, 0, 1 ),
+	CFG_VAL( "ProgramStop",			CFGID_Log_ProgramStop, 0, 1 ),
+	
+	CFG_VAL( "ServerStart",			CFGID_Log_ServerStart, 0, 1 ),
+	CFG_VAL( "ServerStop",			CFGID_Log_ServerStop, 0, 1 ),
+	
+	CFG_VAL( "UserConnect",			CFGID_Log_UserConnect, 0, 1 ),
+	CFG_VAL( "UserDisconnect",		CFGID_Log_UserDisconnect, 0, 1 ),
+
+	CFG_END(),
 };
 
-static const struct Cfg_Label myLog[] =
+static const struct CFGNODE myActions2[] =
 {
-{  6, "Enable",					CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogEnable ), NULL },
-{  7, "LogFile",				CLT_Config_pstr,	0,		0,					offsetof( struct Config, cfg_LogFilename ), NULL },
-// --
-{  5, "Infos",					CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ProgramLogInfos ), NULL },
-{  6, "Errors",					CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ProgramLogWarnings ), NULL },
-{  8, "Warnings",				CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_ProgramLogErrors ), NULL },
+	CFG_VAL( "ProgramStartEnable",		CFGID_Action_ProgramStartEnable, 0, 1 ),
+	CFG_STR( "ProgramStartBuffer",		CFGID_Action_ProgramStart, MAX_ACTIONBUFFER ),
 
-{ 12, "ProgramStart",			CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogProgramStart ), NULL },
-{ 11, "ProgramStop",			CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogProgramStop ), NULL },
+	CFG_VAL( "ProgramStopEnable",		CFGID_Action_ProgramStopEnable, 0, 1 ),
+	CFG_STR( "ProgramStopBuffer",		CFGID_Action_ProgramStop, MAX_ACTIONBUFFER ),
 
-{ 11, "ServerStart",			CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogServerStart ), NULL },
-{ 10, "ServerStop",				CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogServerStop ), NULL },
+	CFG_VAL( "ServerStartEnable",		CFGID_Action_ServerStartEnable, 0, 1 ),
+	CFG_STR( "ServerStartBuffer",		CFGID_Action_ServerStart, MAX_ACTIONBUFFER ),
 
-{ 11, "UserConnect",			CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogUserConnect ), NULL },
-{ 14, "UserDisconnect",			CLT_Config_u8,		0,		1,					offsetof( struct Config, cfg_LogUserDisconnect ), NULL },
+	CFG_VAL( "ServerStopEnable",		CFGID_Action_ServerStopEnable, 0, 1 ),
+	CFG_STR( "ServerStopBuffer",		CFGID_Action_ServerStop, MAX_ACTIONBUFFER ),
 
-{  0, NULL, 0, 0, 0, 0, NULL },
+	CFG_VAL( "UserConnectEnable",		CFGID_Action_UserConnectEnable, 0, 1 ),
+	CFG_STR( "UserConnectBuffer",		CFGID_Action_UserConnect, MAX_ACTIONBUFFER ),
+
+	CFG_VAL( "UserDisconnectEnable",	CFGID_Action_UserDisconnectEnable, 0, 1 ),
+	CFG_STR( "UserDisconnectBuffer",	CFGID_Action_UserDisconnect, MAX_ACTIONBUFFER ),
+	CFG_END(),
 };
 
-const struct Cfg_Group ConfigGroups[] =
+const struct GPRNODE ConfigGroups2[] =
 {
-{  9, "[PROGRAM]",		myProgram },	// Should be first.. to handle Verbose
-// --
-{  4, "[IP]",			myIPList },
-{  5, "[LOG]",			myLog },
-{  8, "[SERVER]",		myServer },
-{  9, "[ACTIONS]",		myActions },
-{  0, NULL,				NULL }
+	GPR_STR( "[PROGRAM]",	myProgram2 ),
+	// --
+	GPR_STR( "[SERVER]",	myServer2 ),
+	GPR_STR( "[LOG]",		myLog2 ),
+	GPR_STR( "[ACTIONS]",	myActions2 ),
+	GPR_STR( "[IP]",		myIP2 ),
+	GPR_END()
 };
 
 // --
@@ -192,7 +177,7 @@ PTR node;
 	cfg->GfxRead_DelayFrequency = 150;
 
 	// --
-	cfg->AutoStart = FALSE;
+	cfg->AutoStart = TRUE;
 	cfg->cfg_Disk_Settings.Port = 5900;
 	cfg->cfg_Disk_Settings.RRE = TRUE;
 	cfg->cfg_Disk_Settings.ZLib = TRUE;
@@ -399,7 +384,7 @@ S32 len;
 
 	if ( len == 0 )
 	{
-		DebugPrintF( "Zero length string not allowed\n" );
+		DEBUGPRINTF( DebugPrintF( "Zero length string not allowed\n" );
 		goto bailout;
 	}
 
@@ -409,7 +394,7 @@ S32 len;
 
 	if ( str == NULL )
 	{
-		SHELLBUF_PRINTF( "Error allocating %d bytes\n", len + 1 );
+		SHELLBUF_PRINTF1( "Error allocating %d bytes\n", len + 1 );
 		goto bailout;
 	}
 

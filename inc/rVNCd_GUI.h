@@ -41,11 +41,7 @@ struct GUIFunctions
 
 	// ---
 	// Called when Server, Start/Stops
-	#ifdef DEBUG
-	void	(*Server_Status_Change)(struct Config *,enum ProcessStat, STR file, U32 line );
-	#else
 	void	(*Server_Status_Change)(struct Config *,enum ProcessStat );
-	#endif
 
 	// Set Default Config values.. like Windows functions, open status
 	void	(*Set_Default_Config)(struct Config *);

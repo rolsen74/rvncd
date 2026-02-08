@@ -134,8 +134,6 @@ bailout:
 
 static void mySetEncoding_RGB888( struct Config *cfg, struct PixelMessage *msg UNUSED )
 {
-//	DebugPrintF( "mySetEncoding_RGB888\n" );
-
 	if ( DoVerbose > 1 )
 	{
 		SHELLBUF_PRINTF( "mySetEncoding_RGB888\n" );
@@ -150,8 +148,6 @@ static void mySetEncoding_RGB888( struct Config *cfg, struct PixelMessage *msg U
 
 static void mySetEncoding_RGB888PC( struct Config *cfg, struct PixelMessage *msg UNUSED )
 {
-//	DebugPrintF( "mySetEncoding_RGB888PC\n" );
-
 	if ( DoVerbose > 1 )
 	{
 		SHELLBUF_PRINTF( "mySetEncoding_RGB888PC\n" );
@@ -166,8 +162,6 @@ static void mySetEncoding_RGB888PC( struct Config *cfg, struct PixelMessage *msg
 
 static void mySetEncoding_RGB565PC( struct Config *cfg, struct PixelMessage *msg UNUSED )
 {
-//	DebugPrintF( "mySetEncoding_RGB565PC\n" );
-
 	if ( DoVerbose > 1 )
 	{
 		SHELLBUF_PRINTF( "mySetEncoding_RGB565PC\n" );
@@ -182,8 +176,6 @@ static void mySetEncoding_RGB565PC( struct Config *cfg, struct PixelMessage *msg
 
 static void mySetEncoding_RGB565( struct Config *cfg, struct PixelMessage *msg UNUSED )
 {
-//	DebugPrintF( "mySetEncoding_RGB565\n" );
-
 	if ( DoVerbose > 1 )
 	{
 		SHELLBUF_PRINTF( "mySetEncoding_RGB565\n" );
@@ -473,7 +465,7 @@ void mySetEncoding_Format( struct Config *cfg, enum VNCPix Format )
 {
 	if ( DoVerbose > 2 )
 	{
-		SHELLBUF_PRINTF( "mySetEncoding_Format (VNCPix %ld)\n", Format );
+		SHELLBUF_PRINTF1( "mySetEncoding_Format (VNCPix %ld)\n", Format );
 	}
 
 	// This Stops Reading from Screen

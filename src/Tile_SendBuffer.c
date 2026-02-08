@@ -101,8 +101,6 @@ S32 rc;
 			#endif
 			goto bailout;
 		}
-
-//		DebugPrintF( "Tile_SendBuffer_Send 1 : %lu bytes\n", len );
 	}
 	else
 	{
@@ -129,8 +127,6 @@ S32 rc;
 				#endif
 				goto bailout;
 			}
-
-//			DebugPrintF( "Tile_SendBuffer_Send 2 : %lu bytes\n", len );
 		}
 		else if ( cfg->NetSend_TileBufferSize <= cfg->NetSend_TileBufferUsed + len )
 		{
@@ -178,13 +174,10 @@ S32 rc;
 
 		if ( rc <= 0 )
 		{
-			#ifdef DEBUG
 			SHELLBUF_PRINTF( "Tile_SendBuffer_Send : Error 5\n" );
-			#endif
 			goto bailout;
 		}
 
-//		DebugPrintF( "Tile_SendBuffer_Flush : %lu bytes\n", cfg->NetSend_TileBufferUsed );
 		cfg->NetSend_TileBufferUsed = 0;
 	}	
 

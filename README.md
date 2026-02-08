@@ -23,7 +23,7 @@ VNC clients.
 
 - **d3des**
   - Weak 8-byte DES-based password (VNC compatible)
-  - It is recommended to use the built-in **IP white/black list** for security
+  - It is recommended to use the built-in **IP list** for security
 
 ---
 

@@ -9,19 +9,10 @@
 #include "rVNCd.h"
 
 // --
-
-// Make sure only One GUI is included, so reuse name
-#ifndef __HAVE__RVNCD__GUI__
-#define __HAVE__RVNCD__GUI__
-#ifdef GUI_RA
-
-// --
 // Set Default Config
 
 void GUIFunc_Default_Config( struct Config *cfg )
 {
-//	DebugPrintF( "RA: GUIFunc_Default_Config\n" );
-
 	cfg->MainWinState = WINSTAT_Open;
 	cfg->cfg_WinData[WIN_Main].Status = WINSTAT_Open;
 	cfg->cfg_WinData[WIN_Main].BusyWin = RAGUI_BusyMainWindow;
@@ -75,6 +66,3 @@ void GUIFunc_Default_Config( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA
-#endif // __HAVE__RVNCD__GUI__

@@ -637,8 +637,6 @@ S32 rc;
 		{
 			// I have seen a 000000a4 key
 
-// DebugPrintF( "Key Event: 0x%08lx\n", km->km_Key );
-
 			rawkey[0] = km->km_Key;
 			rawkey[1] = 0;
 

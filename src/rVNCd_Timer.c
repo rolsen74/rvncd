@@ -23,6 +23,11 @@ struct TimerIFace *			ITimer				= NULL;
 
 void Timer_Start( void )
 {
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "Timer_Start\n" );
+	}
+
 	if ( TimerActive )
 	{
 		SHELLBUF_PRINTF( "Timer allready active\n" );
@@ -44,6 +49,11 @@ void Timer_Start( void )
 
 void Timer_Stop( void )
 {
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "Timer_Stop\n" );
+	}
+
 	if ( ! TimerActive )
 	{
 		SHELLBUF_PRINTF( "Timer not active\n" );
@@ -67,6 +77,11 @@ void Timer_Stop( void )
 S32 Timer_Init( void )
 {
 S32 retval;
+
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "Timer_Init\n" );
+	}
 
 	retval = FALSE;
 
@@ -123,6 +138,11 @@ bailout:
 
 void Timer_Free( void )
 {
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "Timer_Free\n" );
+	}
+
 	if ( TimerActive )
 	{
 		Timer_Stop();
@@ -164,10 +184,8 @@ void Timer_Free( void )
 
 // --
 
-void Timer_Handle( struct Config *cfg )
+void Timer_Handle( struct Config *cfg UNUSED )
 {
-U32 cnt;
-
 	// -- Remove Request
 
 	MsgPort_WaitPort( & TimerMsgPort );
@@ -176,16 +194,21 @@ U32 cnt;
 
 	// -- Restart Timer
 
+	#if 0
 	TimerIOReq->Request.io_Command = TR_ADDREQUEST;
-	TimerIOReq->Time.Seconds = 1;
 	TimerIOReq->Time.Microseconds = 0;
-//	TimerIOReq->Time.Seconds = 0;
-//	TimerIOReq->Time.Microseconds = 250000;
+	TimerIOReq->Time.Seconds = 2;
+	#else
+	TimerIOReq->Request.io_Command = TR_ADDREQUEST;
+	TimerIOReq->Time.Microseconds = 250000;
+	TimerIOReq->Time.Seconds = 0;
+	#endif
 	SendIO( (PTR) TimerIOReq );
 
 	// -- 
+	#ifdef WIN_LAST
 
-	for( cnt=0 ; cnt<WIN_LAST ; cnt++ )
+	for( U32 cnt=0 ; cnt<WIN_LAST ; cnt++ )
 	{
 		if ( cfg->cfg_WinData[cnt].TimerTick )
 		{
@@ -193,6 +216,7 @@ U32 cnt;
 		}
 	}
 
+	#endif
 	// --
 }
 

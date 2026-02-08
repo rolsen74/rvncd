@@ -67,9 +67,6 @@ S32 rc;
 
 		case 0: // Set Pixel Format
 		{
-//			DebugPrintF( "VNC_SetPixelFormat\n\n" );
-//			SHELLBUF_PRINTF( "VNC_SetPixelFormat\n" );
-
 			if ( DoVerbose > 2 )
 			{
 				SHELLBUF_PRINTF( "VNC_SetPixelFormat\n" );
@@ -83,9 +80,6 @@ S32 rc;
 
 		case 2: // Set Encoding
 		{
-//			DebugPrintF( "VNC_SetEncoding\n\n" );
-//			SHELLBUF_PRINTF( "VNC_SetEncoding\n" );
-
 			if ( DoVerbose > 2 )
 			{
 				SHELLBUF_PRINTF( "VNC_SetEncoding\n" );
@@ -97,13 +91,10 @@ S32 rc;
 
 		case 3: // Update Request
 		{
-//			DebugPrintF( "VNC_UpdateRequest\n\n" );
-//			SHELLBUF_PRINTF( "VNC_UpdateRequest\n" );
-
-			if ( DoVerbose > 2 )
-			{
-				SHELLBUF_PRINTF( "VNC_UpdateRequest\n" );
-			}
+//			if ( DoVerbose > 2 )
+//			{
+//				SHELLBUF_PRINTF( "VNC_UpdateRequest\n" );
+//			}
 
 			stat = VNC_UpdateRequest( cfg );
 			break;
@@ -111,9 +102,6 @@ S32 rc;
 
 		case 4:	// Key
 		{
-//			DebugPrintF( "VNC_Keyboard\n\n" );
-//			SHELLBUF_PRINTF( "VNC_Keyboard\n" );
-
 			if ( DoVerbose > 2 )
 			{
 				SHELLBUF_PRINTF( "VNC_Keyboard\n" );
@@ -125,9 +113,6 @@ S32 rc;
 
 		case 5:	// Mouse
 		{
-//			DebugPrintF( "VNC_Mouse\n\n" );
-//			SHELLBUF_PRINTF( "VNC_Mouse\n" );
-
 			if ( DoVerbose > 2 )
 			{
 				SHELLBUF_PRINTF( "VNC_Mouse\n" );
@@ -139,9 +124,6 @@ S32 rc;
 
 		case 6: // Clipboard
 		{
-//			DebugPrintF( "VNC_Clipboard\n\n" );
-//			SHELLBUF_PRINTF( "VNC_Clipboard\n" );
-
 			if ( DoVerbose > 2 )
 			{
 				SHELLBUF_PRINTF( "VNC_Clipboard\n" );
@@ -160,7 +142,6 @@ S32 rc;
 
 	if ( stat )
 	{
-//	DebugPrintF( "Stat error %d\n", stat );
 		error = TRUE;
 		Log_PrintF( cfg, LOGTYPE_Error, "Error Stat : %ld\n", stat );
 		goto bailout;

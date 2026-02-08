@@ -10,10 +10,6 @@
 
 // --
 
-#ifdef GUI_MUI
-
-// --
-
 S32 MUIGUI_OpenQuitWindow( struct Config *cfg UNUSED )
 {
 S32 error;
@@ -36,5 +32,3 @@ void MUIGUI_CloseQuitWindow( struct Config *cfg UNUSED )
 }
 
 // --
-
-#endif // GUI_MUI

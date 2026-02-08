@@ -98,49 +98,32 @@ struct VNCTimeRequest
 // Shell Buffer
 extern U32 ShellBuf_Enable;
 
-#ifdef DEBUG
-
-S32		_ShellBuf_Init(		void );
-void	_ShellBuf_Free(		void );
-void	_ShellBuf_Flush(	void );
-void	_ShellBuf_PrintF(	STR file, STR fmt, ... );
-U32		_ShellBuf_GetBytes(	STR buf, U32 max );
-void	_ShellBuf_Lock(		void );
-void	_ShellBuf_Unlock(	void );
-void	_ShellBuf_Insert(	STR data, S32 len, STR file );
+S32		_ShellBuf_Init(			void );
+void	_ShellBuf_Free(			void );
+void	_ShellBuf_Flush(		void );
+void	_ShellBuf_PrintF(		STR fmt, ... );
+U32		_ShellBuf_GetBytes(		STR buf, U32 max );
+void	_ShellBuf_Lock(			void );
+void	_ShellBuf_Unlock(		void );
+void	_ShellBuf_Insert(		STR data, S32 len );
 
 #define	SHELLBUF_INIT()			_ShellBuf_Init()
 #define	SHELLBUF_FREE()			_ShellBuf_Free()
 #define	SHELLBUF_FLUSH()		_ShellBuf_Flush()
-#define	SHELLBUF_PRINTF(x,...)	_ShellBuf_PrintF(__FILE__,x,##__VA_ARGS__)
-#define	SHELLBUF_GETBYTES(x,y)	_ShellBuf_GetBytes(x,y)
-#define	SHELLBUF_LOCK()			_ShellBuf_Lock()
-#define	SHELLBUF_UNLOCK()		_ShellBuf_Unlock()
-#define SHELLBUF_INSERT(x,y)	_ShellBuf_Insert(x,y,__FILE__)
-
-#else
-
-S32		_ShellBuf_Init(		void );
-void	_ShellBuf_Free(		void );
-void	_ShellBuf_Flush(	void );
-void	_ShellBuf_PrintF(	STR fmt, ... );
-U32		_ShellBuf_GetBytes(	STR buf, U32 max );
-void	_ShellBuf_Lock(		void );
-void	_ShellBuf_Unlock(	void );
-void	_ShellBuf_Insert(	STR data, S32 len );
-
-#define	SHELLBUF_INIT()			_ShellBuf_Init()
-#define	SHELLBUF_FREE()			_ShellBuf_Free()
-#define	SHELLBUF_FLUSH()		_ShellBuf_Flush()
-#define	SHELLBUF_PRINTF(x,...)	_ShellBuf_PrintF(x,##__VA_ARGS__)
 #define	SHELLBUF_GETBYTES(x,y)	_ShellBuf_GetBytes(x,y)
 #define	SHELLBUF_LOCK()			_ShellBuf_Lock()
 #define	SHELLBUF_UNLOCK()		_ShellBuf_Unlock()
 #define SHELLBUF_INSERT(x,y)	_ShellBuf_Insert(x,y)
 
-#endif
+#define	SHELLBUF_PRINTF(fmt)				_ShellBuf_PrintF(fmt)
+#define	SHELLBUF_PRINTF1(fmt,x)				_ShellBuf_PrintF(fmt,x)
+#define	SHELLBUF_PRINTF2(fmt,x,y)			_ShellBuf_PrintF(fmt,x,y)
+#define	SHELLBUF_PRINTF3(fmt,x,y,z)			_ShellBuf_PrintF(fmt,x,y,z)
+#define	SHELLBUF_PRINTF4(fmt,x,y,z,aa)		_ShellBuf_PrintF(fmt,x,y,z,aa)
+#define	SHELLBUF_PRINTF5(fmt,x,y,z,aa,bb)	_ShellBuf_PrintF(fmt,x,y,z,aa,bb)
+//#define	SHELLBUF_PRINTF(fmt,...)		_ShellBuf_PrintF(fmt,##__VA_ARGS__)
 
-
+// --
 
 // Shell Buffer Process
 S32		myStart_ShellBuf(			struct Config *cfg );
@@ -209,26 +192,18 @@ S32		myEnc_ZLib_16(				struct Config *cfg, struct UpdateNode *un, U32 tilenr );
 S32		myEnc_ZLib_32(				struct Config *cfg, struct UpdateNode *un, U32 tilenr );
 #endif // HAVE_ZLIB
 
-#ifdef HAVE_GFX54
-enum VNCPix			myConvert_GFX54_2_VNC_Mode( enum enPixelFormat gfx_mode );
-enum enPixelFormat	myConvert_VNC_2_GFX54_Mode( enum VNCPix vnc_mode );
-#endif // HAVE_GFX54
-
-#ifdef HAVE_P96
-enum VNCPix			myConvert_P96_2_VNC_Mode( RGBFTYPE p96_mode );
-RGBFTYPE			myConvert_VNC_2_P96_Mode( enum VNCPix vnc_mode );
-#endif // HAVE_P96
-
-#ifdef HAVE_CGFX
-enum VNCPix			myConvert_CGFX_2_VNC_Mode( U32 cgfx_mode );
-U32					myConvert_VNC_2_CGFX_Mode( enum VNCPix vnc_mode );
-#endif // HAVE_CGFX
-
 
 void Beep_Patch_Install( struct Config *cfg );
 void Beep_Patch_Remove( struct Config *cfg );
 
 U32 myMarkDirtyXY( struct Config *cfg, S32 x, S32 y );
+
+// --
+
+S32		System_Init( struct Config *cfg );
+void	System_Free( void );
+S32		GFX_Init( struct Config *cfg );
+void	GFX_Free( struct Config *cfg );
 
 // --
 

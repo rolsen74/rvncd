@@ -10,20 +10,23 @@
 
 // --
 
-#ifdef GUI_MUI
-
-// --
-
-static Object *Main_Win;
+Object *Main_Win;
+static Object *StatusList;
 static Object *PageList;
 static Object *PagePage;
 static Object *StatList;
-static Object *btn_off;
-static Object *btn_on;
+Object *btn_Server_Off;
+Object *btn_Server_On;
 
 // --
 
-static STR PageTitles[] =
+static const STR NeededLibs[] =
+{
+	"NList.mcc",
+	NULL
+};
+
+static const STR PageTitles[] =
 {
 	"Main",
 	"Program",
@@ -34,28 +37,35 @@ static STR PageTitles[] =
 	"Log",
 	"Mouse",
 	"Protocols",
-	"Black List",
-	"White List",
+	"IP List",
 	NULL
 };
 
 // --
 
-Object *GUI_Main_Action_Page( struct Config *cfg );
-Object *GUI_Main_BlackList_Page( struct Config *cfg );
-Object *GUI_Main_Log_Page( struct Config *cfg );
-Object *GUI_Main_Main_Page( struct Config *cfg );
-Object *GUI_Main_Mouse_Page( struct Config *cfg );
-Object *GUI_Main_Program_Page( struct Config *cfg );
-Object *GUI_Main_Protocol_Page( struct Config *cfg );
-Object *GUI_Main_Screen_Page( struct Config *cfg );
-Object *GUI_Main_Server_Page( struct Config *cfg );
-Object *GUI_Main_ServerStat_Page( struct Config *cfg );
-Object *GUI_Main_WhiteList_Page( struct Config *cfg );
+Object *GUI_Main_01_Main_Page( struct Config *cfg );
+Object *GUI_Main_02_Program_Page( struct Config *cfg );
+Object *GUI_Main_03_Action_Page( struct Config *cfg );
+Object *GUI_Main_04_Screen_Page( struct Config *cfg );
+Object *GUI_Main_05_Server_Page( struct Config *cfg );
+Object *GUI_Main_06_ServerStat_Page( struct Config *cfg );
+Object *GUI_Main_07_Log_Page( struct Config *cfg );
+Object *GUI_Main_08_Mouse_Page( struct Config *cfg );
+Object *GUI_Main_09_Protocol_Page( struct Config *cfg );
+Object *GUI_Main_10_IPs_Page( struct Config *cfg );
 
-S32 MUIGUI_OpenMainWindow( struct Config *cfg UNUSED )
+// --
+
+S32 MUIGUI_OpenMainWindow( struct Config *cfg )
 {
 S32 error;
+
+	// --
+
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "MUIGUI_OpenMainWindow\n" );
+	}
 
 	// --
 
@@ -73,17 +83,15 @@ S32 error;
 		MUIA_Window_ID,						MAKE_ID('W','I','N','A'),
 		MUIA_Window_Width,					800,
 		MUIA_Window_Height,					600,
-
 		MUIA_Window_RootObject,				MUI_NewObject( MUIC_Group,
 			MUIA_Group_Horiz,				FALSE,
 
-			#if 0
 			MUIA_Group_Child,				MUI_NewObject( MUIC_Group,
 				MUIA_Group_Horiz,			TRUE,
-//				MUIA_Weight,				900,
 
 				MUIA_Group_Child,			PageList = MUI_NewObject( MUIC_NList,
-//					MUIA_Weight,			150,
+					MUIA_NList_SourceArray,	PageTitles,
+					MUIA_Weight,			150,
 				End,
 
 				MUIA_Group_Child,			MUI_NewObject( MUIC_Balance,
@@ -93,36 +101,33 @@ S32 error;
 					MUIA_Group_PageMode,	TRUE,
 					MUIA_Frame,				MUIV_Frame_Group,
 					MUIA_Background,		MUII_BACKGROUND,
-//					MUIA_Weight,			850,
+					MUIA_Weight,			850,
 
-					MUIA_Group_Child,		GUI_Main_Main_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Program_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Action_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Screen_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Server_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_ServerStat_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Log_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Mouse_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_Protocol_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_BlackList_Page(cfg),
-					MUIA_Group_Child,		GUI_Main_WhiteList_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_01_Main_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_02_Program_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_03_Action_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_04_Screen_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_05_Server_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_06_ServerStat_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_07_Log_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_08_Mouse_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_09_Protocol_Page(cfg),
+					MUIA_Group_Child,		GUI_Main_10_IPs_Page(cfg),
 				End,
 			End,
 
 			MUIA_Group_Child,				MUI_NewObject( MUIC_Balance,
 			End,
-			#endif
 
-//			MUIA_Group_Child,				StatList = MUI_NewObject( MUIC_NList,
-			MUIA_Group_Child,				StatList = MUI_NewObject( MUIC_Group,
-//				MUIA_Weight,				100,
+			MUIA_Group_Child,				StatusList = MUI_NewObject( MUIC_NList,
+//				MUIA_NList_SourceArray,		PageTitles,
+				MUIA_Weight,				0,
 			End,
 
 			MUIA_Group_Child,				MUI_NewObject( MUIC_Group,
 				MUIA_Group_Horiz,			TRUE,
 
-//				MUIA_Group_Child,			SimpleButton( "Online" ),
-				MUIA_Group_Child,			btn_on = MUI_NewObject( MUIC_Text,
+				MUIA_Group_Child,			btn_Server_On = MUI_NewObject( MUIC_Text,
 					MUIA_Frame,				MUIV_Frame_Button,
 					MUIA_Text_Contents,		"Online",
 					MUIA_Text_PreParse,		"\33c",
@@ -133,11 +138,10 @@ S32 error;
 					MUIA_Disabled,			( cfg->cfg_ServerStatus == PROCESS_Stopped ) ? FALSE : TRUE,
 				End,
 
-				MUIA_Group_Child,			MUI_NewObject( MUIC_Group,
+				MUIA_Group_Child,			MUI_NewObject( MUIC_Rectangle,
 				End,
 
-//				MUIA_Group_Child,			SimpleButton( "Offline" ),
-				MUIA_Group_Child,			btn_off = MUI_NewObject( MUIC_Text,
+				MUIA_Group_Child,			btn_Server_Off = MUI_NewObject( MUIC_Text,
 					MUIA_Frame,				MUIV_Frame_Button,
 					MUIA_Text_Contents,		"Offline",
 					MUIA_Text_PreParse,		"\33c",
@@ -148,22 +152,47 @@ S32 error;
 					MUIA_Disabled,			( cfg->cfg_ServerStatus == PROCESS_Running ) ? FALSE : TRUE,
 				End,
 			End,
+
 		End,
 	End;
 
 	if ( ! Main_Win )
 	{
 		SHELLBUF_PRINTF( "Error creating Main_Win object\n" );
+		PTR base;
+
+		// -- Check for library, and tell user if missing
+		for( U32 cnt=0 ; NeededLibs[cnt] ; cnt++ )
+		{
+			if (( base = OpenLibrary( NeededLibs[cnt], 0 )))
+			{
+				CloseLibrary( base );
+			}
+			else
+			{
+				SHELLBUF_PRINTF1( "Missing '%s'\n", NeededLibs[cnt] );
+			}
+		}
+
+		// --
+
 		goto bailout;
 	}
 
-	DoMethod( PageList, MUIM_NList_Insert, PageTitles, -1, MUIV_NList_Insert_Bottom, 0 );
+//	DoMethod( PageList, MUIM_NList_Insert, PageTitles, -1, MUIV_NList_Insert_Bottom, 0 );
 	DoMethod( App, OM_ADDMEMBER, Main_Win );
 
 	DoMethod( PageList, MUIM_Notify, MUIA_NList_Active, MUIV_EveryTime, 
 		PagePage, 3, MUIM_NoNotifySet, MUIA_Group_ActivePage, MUIV_TriggerValue );
 
-//	DoMethod( tmp.BT_Jump   ,MUIM_Notify,MUIA_Pressed,FALSE,obj,1,MUIM_ScreenPanel_Jump  );
+	DoMethod( Main_Win, MUIM_Notify, MUIA_Window_CloseRequest, TRUE,
+		App, 2, MUIM_Application_ReturnID, MUIV_Application_ReturnID_Quit );
+
+	DoMethod( btn_Server_On, MUIM_Notify, MUIA_Pressed, FALSE, 
+		App, 2, MUIM_Application_ReturnID, GID_StartServer );
+
+	DoMethod( btn_Server_Off, MUIM_Notify, MUIA_Pressed, FALSE, 
+		App, 2, MUIM_Application_ReturnID, GID_StopServer );
 
 	set( Main_Win, MUIA_Window_Open, TRUE );
 
@@ -178,8 +207,14 @@ bailout:
 
 void MUIGUI_CloseMainWindow( struct Config *cfg UNUSED )
 {
+	// --
+
+	if ( DoVerbose > 2 )
+	{
+		SHELLBUF_PRINTF( "MUIGUI_CloseMainWindow\n" );
+	}
+
+	// --
 }
 
 // --
-
-#endif // GUI_MUI

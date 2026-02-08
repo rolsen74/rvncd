@@ -12,19 +12,108 @@
 #define __INC__RVNCD_CONFIG_H__
 
 // --
-// -- Config
 
-//enum Cfg_LabelType
-//{
-//	CLT_Config_ip,		//  0 : IP
-//	CLT_Config_vb,		//  1 : Verbose
-//	CLT_Config_bstr,	//  2 : String (Buffer) - snprintf
-//	CLT_Config_gstr,	//  3 : String (Global) - snprintf
-//	CLT_Config_pstr,	//  4 : String (Pointer) - strdup
-//	CLT_Config_u8,		//  5 : U8  - With range check
-//	CLT_Config_u32,		//  6 : U32 - With range check
-//	CLT_Config_s32,		//  7 : S32 - With range check
-//};
+enum CFGTYPE
+{
+	CFGTYPE_Dummy,
+	CFGTYPE_IP,
+	CFGTYPE_VAL,
+	CFGTYPE_STR,
+	CFGTYPE_Last
+};
+
+enum CFGID
+{
+	CFGID_Dummy,
+	CFGID_Verbose,
+	CFGID_Program_DisableGUI,
+	CFGID_Program_DisableARexx,
+	CFGID_Program_DisableCxBroker,
+
+	// Server
+	CFGID_Server_Port,
+	CFGID_Server_Name,
+	CFGID_Server_EncRRE,
+	CFGID_Server_EncZLIB,
+	CFGID_Server_SendBell,
+	CFGID_Server_TileSize,
+	CFGID_Server_Password,
+	CFGID_Server_AutoStart,
+	CFGID_Server_Protocol33,
+	CFGID_Server_Protocol37,
+	CFGID_Server_ScanMethod,
+	CFGID_Server_PointerType,
+	CFGID_Server_PointerFile,
+	CFGID_Server_SendWatchDog,
+	CFGID_Server_SendClipboard,
+	CFGID_Server_ReadClipboard,
+	CFGID_Server_EncRichCursor,
+	CFGID_Server_SendTileBuffer,
+	CFGID_Server_DisableBlanker,
+	CFGID_Server_DelayFrequency,
+
+	// Log
+	CFGID_Log_Enable,
+	CFGID_Log_File,
+	CFGID_Log_Infos,
+	CFGID_Log_Errors,
+	CFGID_Log_Warnings,
+	CFGID_Log_ProgramStart,
+	CFGID_Log_ProgramStop,
+	CFGID_Log_ServerStart,
+	CFGID_Log_ServerStop,
+	CFGID_Log_UserConnect,
+	CFGID_Log_UserDisconnect,
+
+	// Actions
+	CFGID_Action_ProgramStopEnable,
+	CFGID_Action_ProgramStartEnable,
+	CFGID_Action_ServerStartEnable,
+	CFGID_Action_ServerStopEnable,
+	CFGID_Action_UserConnectEnable,
+	CFGID_Action_UserDisconnectEnable,
+	CFGID_Action_ProgramStop,
+	CFGID_Action_ProgramStart,
+	CFGID_Action_ServerStart,
+	CFGID_Action_ServerStop,
+	CFGID_Action_UserConnect,
+	CFGID_Action_UserDisconnect,
+
+	// IP
+	CFGID_IP_Allow,
+	CFGID_IP_Block,
+
+	CFGID_Last
+};
+
+struct CFGNODE
+{
+	STR				Name;
+	S32				NameLen;
+	enum CFGTYPE	Type;
+	enum CFGID		ID;
+	S32				MinVal;
+	S32				MaxVal;
+	STR				String;
+};
+
+struct GPRNODE
+{
+	STR				Name;
+	S32				NameLen;
+	const struct CFGNODE *Cmds;
+};
+
+#define CFG_VAL(name,id,min,max)		{ name, sizeof(name)-1, CFGTYPE_VAL, id, min, max, NULL }
+#define CFG_STR(name,id,max)			{ name, sizeof(name)-1, CFGTYPE_STR, id, 0, max, NULL }
+#define CFG_IP( name,id)				{ name, sizeof(name)-1, CFGTYPE_IP, id, 0, 0, NULL }
+#define CFG_END()						{ NULL, 0, CFGTYPE_Dummy, CFGID_Dummy, 0, 0, NULL }
+
+#define GPR_STR(name,grp)				{ name, sizeof(name)-1, grp }
+#define GPR_END()						{ NULL, 0, NULL }
+
+// --
+// -- Config
 
 //#define CLT_Config_ip		0	//  0 : IP
 #define CLT_Config_vb		1	//  1 : Verbose
@@ -165,9 +254,9 @@ struct Config
 	U8						cfg_LogServerStop;					// Save
 	U8						cfg_LogUserConnect;					// Save
 	U8						cfg_LogUserDisconnect;				// Save
-	U8						cfg_ProgramDisableARexx;			// Save
-	U8						cfg_ProgramDisableGUI;				// Save
-	U8						cfg_ProgramDisableCxBroker;			// Save
+	U8						cfg_Program_DisableARexx;			// Save
+	U8						cfg_Program_DisableGUI;				// Save
+	U8						cfg_Program_DisableCxBroker;		// Save
 	U8						cfg_ProgramLogInfos;				// Save
 	U8						cfg_ProgramLogErrors;				// Save
 	U8						cfg_ProgramLogWarnings;				// Save
@@ -209,10 +298,7 @@ struct Config
 
 	struct VNCList			IPList;
 	struct SignalSemaphore	IPSema;
-
-	#ifdef __RVNCD_GUI_H__
 	struct WinNode			cfg_WinData[ WIN_LAST ];
-	#endif // __RVNCD_GUI_H__
 
 	struct SessionInfo		SessionStatus;						// Status about User connections
 
@@ -343,6 +429,7 @@ S32				Config_Read(			struct Config *cfg, STR Filename, S32 CfgNeeded );
 // --
 
 extern const struct Cfg_Group ConfigGroups[];
+extern const struct GPRNODE ConfigGroups2[];
 extern const STR ConfigHeaderStr;
 
 // --

@@ -626,7 +626,7 @@ rVNCd v1.42 ( 15-Nov-2025 ) ## Beta version
    This should improve compatible with Clients.
 
 
-rVNCd v1.43 ( 15-Nov-2025 ) ## Beta version
+rVNCd v1.43 ( 15-Nov-2025 )  ## Beta version
 
 - Changed: When pressing Show Interface in Exchange, atleast one Window
   will now open.. the rest may stay iconifyed.
@@ -646,3 +646,21 @@ rVNCd v1.44 ( 14-Dec-2025 )
 - Updated rVNCd.doc
 
 - Fixed: a crash when starting/stopping using ARexx's restart cmd.
+
+
+rVNCd v1.45 ( 08-Feb-2026 )  ## Beta version
+
+- Refactored the loading and saving of Config files. VBCC was not
+  happy with old code that used offsetof().
+
+- First working alpha of the MUI gui. Still very limited features.
+  But the ground work is done now.
+
+- First working alpha version of vnc for m68k/p96/mui.
+
+- Fixed: The default setting for auto starting Server was off.
+  DOC's said othervice. Its now correctly set to True.
+
+- Changed: Small redesign of menus layout.
+
+- Improved the makefile for better control of build target.

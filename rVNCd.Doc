@@ -39,7 +39,7 @@ Options:
     Don't add Commodities Broker on startup.
 
 Default config file:
-  rVNCd.Config
+  rVNCd.config
 
 
 ------------------------------------------------------------

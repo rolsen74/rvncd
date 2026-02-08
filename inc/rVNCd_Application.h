@@ -11,6 +11,8 @@
 #ifndef __INC__RVNCD_APPLICATION_H__
 #define __INC__RVNCD_APPLICATION_H__
 
+#ifdef HAVE_APPLIB
+
 // --
 
 #include <proto/application.h>
@@ -28,4 +30,5 @@ extern U32 AppID;
 
 // --
 
+#endif // HAVE_APPLIB
 #endif // __INC__RVNCD_APPLICATION_H__

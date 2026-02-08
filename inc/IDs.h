@@ -15,7 +15,7 @@
 // ID's are just random 32bit numbers
 // From : https://numbergenerator.org/random-32-digit-hex-codes-generator#!numbers=8&length=8
 
-#define ID_CFG					0x1B3DE8ED
+#define ID_CFG						0x1B3DE8ED
 #define ID_VNCMPORT					0x82E386B6
 #define ID_VNCLIST					0x41E903A8
 

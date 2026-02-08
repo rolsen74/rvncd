@@ -28,19 +28,18 @@
 #
 
 VERSION		:= 1
-REVISION	:= 44
+REVISION	:= 45
 TARGET		:= rVNCd
-MCRT		?= newlib
 
 # Default
 SYS			?= AOS4
-GFX			?= P96
+GFX			?= GFX54
 GUI			?= RA
 
 # Options
-AREXX		?= 1
+AREXX		?= 0
 CX			?= 1
-ZLIB		?= 1
+ZLIB		?= 0
 
 # Object Dir
 OBJDIR		:= obj
@@ -53,11 +52,10 @@ CFLAGS		:= -O2
 CFLAGS		+= -Iinc
 #CFLAGS		+= -DDEBUG
 #CFLAGS		+= -gstabs
-CFLAGS		+= -mcrt=$(MCRT)
 #CFLAGS		+= -DSHOW_WORK_TILE
 
 # Linker Flags
-LDFLAGS		:= -mcrt=$(MCRT)
+LDFLAGS		:=
 
 # Link Libraries
 LIBS		:=
@@ -104,17 +102,21 @@ ifeq ($(SYS),AOS3)
 
   $(info Compiling for AmigaOS3)
 
-  CFLAGS	+= -Iaos3
   CFLAGS	+= -D_AOS3_
+  CFLAGS	+= -Isys_aos3
 
   LIBS		+= -lamiga
 
   TARGET	:= $(TARGET)_aos3
+
   OBJDIR	:= obj/aos3
-  OSDIR		:= aos3
+
+  SRCDIRS	+= sys_aos3
+
+  OSDIR		:= _aos3
 
   # Set Compiler
-  CC		:= vc
+  CC		:= vc -quiet
   LD		:= vlink
   AS		:= vasmm68k_mot
 
@@ -126,20 +128,24 @@ else ifeq ($(SYS),AOS4)
 
   $(info Compiling for AmigaOS4)
 
-  CFLAGS	+= -Iaos4
   CFLAGS	+= -D_AOS4_
+  CFLAGS	+= -Isys_aos4
   CFLAGS	+= -DHAVE_APPLIB
+  CFLAGS	+= -mcrt=newlib
 
   LDFLAGS	+= -mcrt=newlib
 
-  SRCS		+= aos4/rVNCd_Application.c
-  SRCS		+= aos4/rVNCd_ARexx.c
-  SRCS		+= aos4/rVNCd_CxBroker.c
-  SRCS		+= aos4/rVNCd_ZLib.c
+  SRCS		+= sys_aos4/rVNCd_Application.c
+  SRCS		+= sys_aos4/rVNCd_ARexx.c
+  SRCS		+= sys_aos4/rVNCd_ZLib.c
 
   TARGET	:= $(TARGET)_aos4
+
   OBJDIR	:= obj/aos4
-  OSDIR		:= aos4
+
+  SRCDIRS	+= sys_aos4
+
+  OSDIR		:= sys_aos4
 
   # Set Compiler
   ifeq ($(HOSTOS),AmigaOS)
@@ -177,10 +183,16 @@ endif
 ifeq ($(GFX),CGFX)
 
   $(info Using Cybergraphics)
-  SRCS		+= src/HAVE_CGFX.c
+
   CFLAGS	+= -DHAVE_CGFX
+  CFLAGS	+= -Igfx_cgfx
+
+
   TARGET	:= $(TARGET)_cgfx
+
   OBJDIR	:= $(OBJDIR)_cgfx
+
+  SRCDIRS	+= gfx_cgfx
 
 ###########################################################################
 # Set Graphic System
@@ -191,10 +203,15 @@ else ifeq ($(GFX),P96)
   $(info Using Picasso96)
 
   CFLAGS	+= -DHAVE_P96
-  CFLAGS	+= -Wno-deprecated-declarations
-  SRCS		+= src/HAVE_P96.c
+  CFLAGS	+= -Igfx_p96
+
+#  CFLAGS	+= -Wno-deprecated-declarations
+
   TARGET	:= $(TARGET)_p96
+
   OBJDIR	:= $(OBJDIR)_p96
+
+  SRCDIRS	+= gfx_p96
 
 ###########################################################################
 # Set Graphic System
@@ -203,10 +220,15 @@ else ifeq ($(GFX),P96)
 else ifeq ($(GFX),GFX54)
 
   $(info Using Graphics.lib v54)
-  SRCS		+= src/HAVE_GFX54.c
+
   CFLAGS	+= -DHAVE_GFX54
+  CFLAGS	+= -Igfx_gfx54
+
   TARGET	:= $(TARGET)_gfx54
+
   OBJDIR	:= $(OBJDIR)_gfx54
+
+  SRCDIRS	+= gfx_gfx54
 
 ###########################################################################
 # Set Graphic System
@@ -266,18 +288,21 @@ else ifeq ($(GUI), MUI)
   SRCS		+= gui_mui/GUI_Session.c
 
   SRCS		+= gui_mui/GUI_Main.c
-  SRCS		+= gui_mui/GUI_Main_Actions.c
-  SRCS		+= gui_mui/GUI_Main_Log.c
-  SRCS		+= gui_mui/GUI_Main_Main.c
-  SRCS		+= gui_mui/GUI_Main_Mouse.c
-  SRCS		+= gui_mui/GUI_Main_Program.c
-  SRCS		+= gui_mui/GUI_Main_Protocol.c
-  SRCS		+= gui_mui/GUI_Main_Screen.c
-  SRCS		+= gui_mui/GUI_Main_Server.c
-  SRCS		+= gui_mui/GUI_Main_ServerStat.c
+  SRCS		+= gui_mui/GUI_Main_01_Main.c
+  SRCS		+= gui_mui/GUI_Main_02_Program.c
+  SRCS		+= gui_mui/GUI_Main_03_Actions.c
+  SRCS		+= gui_mui/GUI_Main_04_Screen.c
+  SRCS		+= gui_mui/GUI_Main_05_Server.c
+  SRCS		+= gui_mui/GUI_Main_06_ServerStat.c
+  SRCS		+= gui_mui/GUI_Main_07_Log.c
+  SRCS		+= gui_mui/GUI_Main_08_Mouse.c
+  SRCS		+= gui_mui/GUI_Main_09_Protocols.c
+  SRCS		+= gui_mui/GUI_Main_10_IPs.c
 
   TARGET	:= $(TARGET)_mui
+
   OBJDIR	:= $(OBJDIR)_mui
+
   GUIDIR	:= gui_mui
 
 ###########################################################################
@@ -288,11 +313,16 @@ else ifeq ($(GUI), NONE)
 
   $(info GUI Disabled)
 
-  SRCS		+= gui_dummy/GUI.c
+  CFLAGS	+= -Igui_none
+  CFLAGS	+= -DGUI_NONE
+
+  SRCS		+= gui_none/GUI.c
 
   TARGET	:= $(TARGET)_nogui
+
   OBJDIR	:= $(OBJDIR)_nogui
-  GUIDIR	:= gui_dummy
+
+  GUIDIR	:= gui_none
 
 ###########################################################################
 # Set Program GUI
@@ -307,6 +337,9 @@ endif
 ###########################################################################
 # - Extra Options
 
+ifneq ($(GUI), MUI)
+# MUI have ARexx+Cx build in
+
 ifeq ($(AREXX),1)
   $(info Enabling ARexx Support)
   CFLAGS += -DHAVE_AREXX
@@ -314,7 +347,10 @@ endif
 
 ifeq ($(CX),1)
   $(info Enabling CxBroker Support)
-  CFLAGS += -DHAVE_CXBROKER
+  CFLAGS	+= -DHAVE_CXBROKER
+  SRCS		+= src/CxBroker.c
+endif
+
 endif
 
 ifeq ($(ZLIB),1)
@@ -337,7 +373,12 @@ SRCS		+= src/Beep.c
 SRCS		+= src/Config.c
 SRCS		+= src/Config_Args.c
 SRCS		+= src/Config_Read.c
+SRCS		+= src/Config_Read_IP.c
+SRCS		+= src/Config_Read_STR.c
+SRCS		+= src/Config_Read_VAL.c
 SRCS		+= src/Config_Save.c
+SRCS		+= src/Config_Save_STR.c
+SRCS		+= src/Config_Save_VAL.c
 SRCS		+= src/d3des.c
 SRCS		+= src/Encode_Init.c
 SRCS		+= src/Encode_Render.c
@@ -419,7 +460,8 @@ makedirs:
 	@$(MKDIR) $(OBJDIR) $(OBJDIR)/$(OSDIR) $(OBJDIR)/$(GUIDIR) $(OBJDIR)/src $(BINDIR)
 
 $(TARGET): $(OBJS)
-	$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
+	@echo "Linking '$@'"
+	@$(CC) $(LDFLAGS) -o $(TARGET) $(OBJS) $(LIBS)
 
 clean:
 	$(RMDIR) $(OBJDIR) $(TARGET)
@@ -433,7 +475,8 @@ strip:
 	@$(LS) $(TARGET)
 
 $(OBJDIR)/%.o: %.c
+	@echo "Compiling '$@'"
 	@$(MKDIR) $(dir $@)
-	$(CC) $(CFLAGS) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 
 ###########################################################################

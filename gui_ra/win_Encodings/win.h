@@ -8,11 +8,6 @@
 
 #include "rVNCd.h"
 
-#ifdef GUI_RA
-
-#ifndef WIN_H
-#define WIN_H
-
 // --
 
 enum
@@ -32,14 +27,5 @@ void VARARGS68K Encodings_SetTags( struct Config *cfg, PTR object, ... );
 
 extern Object *Encodings_GUIObjects[GID_LAST];
 #define GUIObjects Encodings_GUIObjects
-
-// --
-
-
-
-// --
-
-#endif // WIN_H
-#endif // GUI_RA
 
 // --

@@ -236,7 +236,7 @@ S32 stat;
 
 	if ( DoVerbose > 1 )
 	{
-		SHELLBUF_PRINTF( "NetRead: Set BreakMask returned %d\n", stat );
+		SHELLBUF_PRINTF1( "NetRead: Set BreakMask returned %d\n", stat );
 	}
 
 	error = FALSE;
@@ -314,10 +314,6 @@ S32 err;
 	#endif
 
 	// --
-
-	#ifdef DEBUG
-	DebugPrintF( "NetRead started\n" );
-	#endif
 
 	while( TRUE )
 	{
@@ -405,10 +401,6 @@ S32 err;
 		}
 	}
 
-	#ifdef DEBUG
-	DebugPrintF( "NetRead stopping 1/2\n" );
-	#endif
-
 	// --
 
 	// Shutdown NetSend process
@@ -431,10 +423,6 @@ S32 err;
 			Delay( 2 );
 		}
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "NetRead stopping 2/2\n" );
-	#endif
 }
 
 // --
@@ -538,10 +526,6 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
-	#ifdef DEBUG
-	DebugPrintF( "NetRead starting 1/2\n" );
-	#endif
-
 	//--------
 
 	Self = FindTask( NULL );
@@ -555,16 +539,8 @@ S32 stat;
 			break;
 		}
 
-		#ifdef DEBUG
-		DebugPrintF( "NetRead starting delay\n" );
-		#endif
-
 		Delay( 2 );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "NetRead starting 2/2\n" );
-	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -579,7 +555,6 @@ S32 stat;
 	if ( stat )
 	{
 		Config->NetRead_Task = Self;
-
 		Config->cfg_NetReadStatus = PROCESS_Running;
 
 		// Set signal after Status
@@ -587,17 +562,9 @@ S32 stat;
 
 		// --
 
-		#ifdef DEBUG
-		DebugPrintF( "NetRead entering main\n" );
-		#endif
-
 		SetTaskPri( Self, PRI_NETREAD );
 		myProcess_Main( Config );
 		SetTaskPri( Self, PRI_SHUTDOWN );
-
-		#ifdef DEBUG
-		DebugPrintF( "NetRead exited main\n" );
-		#endif
 
 		// --
 
@@ -613,10 +580,6 @@ S32 stat;
 	Config->cfg_NetReadStatus = PROCESS_Stopped;
 
 	//--------
-
-	#ifdef DEBUG
-	DebugPrintF( "NetRead stopped\n" );
-	#endif
 
 	if ( Parent )
 	{
@@ -636,10 +599,6 @@ U32 mask;
 U32 wait;
 
 	error = TRUE;
-
-	#ifdef DEBUG
-	DebugPrintF( "myStart_Net_Read\n" );
-	#endif
 
 	if ( DoVerbose > 2 )
 	{
@@ -723,13 +682,9 @@ void myStop_Net_Read( struct Config *cfg )
 U32 mask;
 S32 cnt;
 
-	#ifdef DEBUG
-	DebugPrintF( "myStop_Net_Read\n" );
-	#endif
-
 	if ( DoVerbose > 2 )
 	{
-		printf( "myStop_Net_Read\n" );
+		SHELLBUF_PRINTF( "myStop_Net_Read\n" );
 	}
 
 	// 0 = off, 1 = starting, 2 = running, 3 = shutting down
@@ -773,16 +728,14 @@ S32 cnt;
 					if ( ! ( ++cnt % 50 ))
 					{
 						Signal( cfg->NetRead_Task, NET_EXIT_SIGNAL );
-						printf( "myStop_Net_Read still waiting : %d\n", cnt );
-//						SHELLBUF_PRINTF( "\rmyStop_Net_Read still waiting : %d", cnt );
-//						fflush( stdout );
+						SHELLBUF_PRINTF1( "myStop_Net_Read still waiting : %" PRId32 "\n", cnt );
 					}
 				}
 			}
 
 			if ( cnt >= 50 )
 			{
-				printf( "\n" );
+				SHELLBUF_PRINTF( "\n" );
 			}
 		}
 	}

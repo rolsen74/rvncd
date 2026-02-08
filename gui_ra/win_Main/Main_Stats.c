@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_Stats( struct Config *cfg )
@@ -188,5 +186,3 @@ void Page_Refresh_Stats( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

@@ -13,8 +13,8 @@
 
 // --
 
-S32		System_Init(		struct Config *cfg );
-void	System_Free(		struct Config *cfg );
+S32		System_Startup(		struct Config *cfg );
+void	System_Shutdown(	struct Config *cfg );
 
 // --
 

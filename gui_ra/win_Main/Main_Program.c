@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_Program( struct Config *cfg UNUSED )
@@ -74,7 +72,7 @@ Object *o;
 			LAYOUT_AddChild,				GUIObjects[ GID_Program_Disable_ARexx ] = NewObject( CheckBoxClass, NULL,
 				GA_ID,						GID_Program_Disable_ARexx,
 				GA_RelVerify,				TRUE,
-				GA_Selected,				( cfg->cfg_ProgramDisableARexx ) ? 1 : 0,
+				GA_Selected,				( cfg->cfg_Program_DisableARexx ) ? 1 : 0,
 				#ifndef HAVE_AREXX
 				GA_Disabled,				TRUE,
 				#endif
@@ -86,7 +84,7 @@ Object *o;
 			LAYOUT_AddChild,				GUIObjects[ GID_Program_Disable_CxBroker ] = NewObject( CheckBoxClass, NULL,
 				GA_ID,						GID_Program_Disable_CxBroker,
 				GA_RelVerify,				TRUE,
-				GA_Selected,				( cfg->cfg_ProgramDisableCxBroker ) ? 1 : 0,
+				GA_Selected,				( cfg->cfg_Program_DisableCxBroker ) ? 1 : 0,
 				#ifndef HAVE_CXBROKER
 				GA_Disabled,				TRUE,
 				#endif
@@ -98,7 +96,7 @@ Object *o;
 			LAYOUT_AddChild,				GUIObjects[ GID_Program_Disable_GUI ] = NewObject( CheckBoxClass, NULL,
 				GA_ID,						GID_Program_Disable_GUI,
 				GA_RelVerify,				TRUE,
-				GA_Selected,				( cfg->cfg_ProgramDisableGUI ) ? 1 : 0,
+				GA_Selected,				( cfg->cfg_Program_DisableGUI ) ? 1 : 0,
 			End,
 			CHILD_Label,					NewObject( LabelClass, NULL,
 				LABEL_Text,					"Disable GUI",
@@ -183,7 +181,7 @@ U32 val;
 		TAG_END
 	);
 
-	cfg->cfg_ProgramDisableARexx = ( val ) ? 1 : 0 ;
+	cfg->cfg_Program_DisableARexx = ( val ) ? 1 : 0 ;
 }
 
 // --
@@ -199,7 +197,7 @@ U32 val;
 		TAG_END
 	);
 
-	cfg->cfg_ProgramDisableCxBroker = ( val ) ? 1 : 0 ;
+	cfg->cfg_Program_DisableCxBroker = ( val ) ? 1 : 0 ;
 }
 
 // --
@@ -215,7 +213,7 @@ U32 val;
 		TAG_END
 	);
 
-	cfg->cfg_ProgramDisableGUI = ( val ) ? 1 : 0 ;
+	cfg->cfg_Program_DisableGUI = ( val ) ? 1 : 0 ;
 }
 
 // --
@@ -235,5 +233,3 @@ U32 val;
 }
 
 // --
-
-#endif // GUI_RA

@@ -12,18 +12,24 @@
 
 void Send_Blanker_Enable( struct Config *cfg )
 {
+	#ifdef HAVE_APPLIB
+
 	Log_PrintF( cfg, LOGTYPE_Info, "Enabling Blanker" );
 
 	IApplication->SetApplicationAttrs( AppID,
 		APPATTR_AllowsBlanker, TRUE,
 		TAG_END
 	);
+
+	#endif
 }
 
 // --
 
 void Send_Blanker_Disable( struct Config *cfg )
 {
+	#ifdef HAVE_APPLIB
+
 	Log_PrintF( cfg, LOGTYPE_Info, "Disabling Blanker" );
 
 	IApplication->SendApplicationMsg( AppID, 0, NULL, APPLIBMT_BlankerUnBlank );
@@ -32,6 +38,8 @@ void Send_Blanker_Disable( struct Config *cfg )
 		APPATTR_AllowsBlanker, FALSE,
 		TAG_END
 	);
+
+	#endif
 }
 
 // --

@@ -81,6 +81,7 @@ void _ShellBuf_Free( void )
 void _ShellBuf_Flush( void )
 {
 char buf[256];
+int doflush;
 
 	if ( ! ShellBuf_Inited )
 	{
@@ -90,10 +91,18 @@ char buf[256];
 
 	SHELLBUF_LOCK();
 
+	doflush = 0;
+
 	// Flush buffer
 	while( SHELLBUF_GETBYTES( buf, 256 ))
 	{
+		doflush = TRUE;
 		printf( "%s", buf );
+	}
+
+	if ( doflush )
+	{
+		fflush( stdout );
 	}
 
 	SHELLBUF_UNLOCK();
@@ -243,13 +252,8 @@ va_list args;
 S32 size;
 STR buf;
 
-//	#ifdef DEBUG
-//	DebugPrintF( "_ShellBuf_PrintF : 11 : file '%s' : fmt '%s' :\n", file, fmt );
-//	#endif
-
 	if ( ! ShellBuf_Inited )
 	{
-//		DebugPrintF( "_ShellBuf_PrintF : 12\n" );
 		printf( "SHELLBUF_PRINTF : Not Inited :\n" );
 		goto bailout;
 	}
@@ -258,12 +262,14 @@ STR buf;
 	// Get buffer size
 
 	va_start( args, fmt );
+
 	size = vsnprintf( NULL, 0, fmt, args );
+
 	va_end( args );
 
 	if ( size <= 0 )
 	{
-//		DebugPrintF( "_ShellBuf_PrintF : 13\n" );
+		printf( "127 : error fmt %s\n", fmt );
 		goto bailout;
 	}
 
@@ -275,7 +281,7 @@ STR buf;
 
 	if ( ! buf )
 	{
-//		DebugPrintF( "_ShellBuf_PrintF : 14\n" );
+		printf( "128\n" );
 		goto bailout;
 	}
 
@@ -289,9 +295,7 @@ STR buf;
 	// ----
 	// Insert buffer
 
-//	DebugPrintF( "_ShellBuf_PrintF : 15 : Size %ld\n", size );
 	SHELLBUF_INSERT( buf, size-1 );
-//	DebugPrintF( "_ShellBuf_PrintF : 16\n" );
 
 	// ----
 	// Free buffer
@@ -299,8 +303,6 @@ STR buf;
 	mem_Free( buf );
 
 bailout:
-
-//	DebugPrintF( "_ShellBuf_PrintF : 99\n" );
 
 	return;
 }
@@ -311,8 +313,6 @@ U32 _ShellBuf_GetBytes( STR buf, U32 max )
 {
 U32 available;
 U32 len;
-
-//	DebugPrintF( "_ShellBuf_GetBytes : 11\n" );
 
 	if ( ! ShellBuf_Inited )
 	{
@@ -359,8 +359,6 @@ U32 len;
 	buf[len] = 0;
 
 bailout:
-
-//	DebugPrintF( "_ShellBuf_GetBytes : 99 : Len %ld\n", len );
 
 	return( len );
 }

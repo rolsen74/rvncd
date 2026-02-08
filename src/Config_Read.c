@@ -9,6 +9,7 @@
 #include "rVNCd.h"
 
 // -- Parse Type : pstr - Buffer Pointer - strdup
+#if 0
 
 static S32 myType_pstr( struct Config *cfg, STR buf, S32 line, S32 argpos, S32 arglen, const STR grpname, const struct Cfg_Label *Cmd )
 {
@@ -20,7 +21,7 @@ S32 error;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -29,7 +30,7 @@ S32 error;
 
 	if ( ! mem )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' error copying string (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' error copying string (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -42,7 +43,7 @@ S32 error;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( " %s %s = '%s'\n", grpname, Cmd->Name, *str );
+		SHELLBUF_PRINTF3( " %s %s = '%s'\n", grpname, Cmd->Name, *str );
 	}
 
 	error = FALSE;
@@ -65,7 +66,7 @@ STR str;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -75,7 +76,7 @@ STR str;
 
 	if ( ! mem )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' error copying string (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' error copying string (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -86,7 +87,7 @@ STR str;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( " %s %s = '%s'\n", grpname, Cmd->Name, str );
+		SHELLBUF_PRINTF3( " %s %s = '%s'\n", grpname, Cmd->Name, str );
 	}
 
 	error = FALSE;
@@ -109,7 +110,7 @@ STR str;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -119,7 +120,7 @@ STR str;
 
 	if ( ! mem )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' error copying string (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' error copying string (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -130,7 +131,7 @@ STR str;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( " %s %s = '%s'\n", grpname, Cmd->Name, str );
+		SHELLBUF_PRINTF3( " %s %s = '%s'\n", grpname, Cmd->Name, str );
 	}
 
 	error = FALSE;
@@ -156,7 +157,7 @@ S32 i;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -183,7 +184,7 @@ S32 i;
 
 			if (( a[i] < 0 ) || ( a[i] > 255 ))
 			{
-				SHELLBUF_PRINTF( "Config: %s '%s' invalid IP number (Line %d)\n", grpname, Cmd->Name, line );
+				SHELLBUF_PRINTF3( "Config: %s '%s' invalid IP number (Line %d)\n", grpname, Cmd->Name, line );
 				goto  bailout;
 			}
 
@@ -213,7 +214,7 @@ S32 i;
 
 	if ( ! node )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' Error allocating memory (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' Error allocating memory (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -254,7 +255,7 @@ S32 i;
 			}
 		}
 
-		SHELLBUF_PRINTF( " %s Adding : Allow IP %s\n", grpname, str );
+		SHELLBUF_PRINTF2( " %s Adding : Allow IP %s\n", grpname, str );
 	}
 
 	error = FALSE;
@@ -281,7 +282,7 @@ S32 i;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -308,7 +309,7 @@ S32 i;
 
 			if (( a[i] < 0 ) || ( a[i] > 255 ))
 			{
-				SHELLBUF_PRINTF( "Config: %s '%s' invalid IP number (Line %d)\n", grpname, Cmd->Name, line );
+				SHELLBUF_PRINTF3( "Config: %s '%s' invalid IP number (Line %d)\n", grpname, Cmd->Name, line );
 				goto  bailout;
 			}
 
@@ -338,7 +339,7 @@ S32 i;
 
 	if ( ! node )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' Error allocating memory (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' Error allocating memory (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -379,7 +380,7 @@ S32 i;
 			}
 		}
 
-		SHELLBUF_PRINTF( " %s Adding : Block IP %s\n", grpname, str );
+		SHELLBUF_PRINTF2( " %s Adding : Block IP %s\n", grpname, str );
 	}
 
 	error = FALSE;
@@ -400,7 +401,7 @@ S32 error;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -408,7 +409,7 @@ S32 error;
 
 	if (( val < Cmd->Arg1 ) || ( val > Cmd->Arg2 ))
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' Value %" PRId32 " out of range (Line %d)\n", grpname, Cmd->Name, val, line );
+		SHELLBUF_PRINTF4( "Config: %s '%s' Value %" PRId32 " out of range (Line %d)\n", grpname, Cmd->Name, val, line );
 		goto bailout;
 	}
 
@@ -418,14 +419,14 @@ S32 error;
 
 		if ( DoVerbose > 0 )
 		{
-			SHELLBUF_PRINTF( " %s %s = %" PRId32 "\n", grpname, Cmd->Name, val );
+			SHELLBUF_PRINTF3( " %s %s = %" PRId32 "\n", grpname, Cmd->Name, val );
 		}
 	}	
 	else
 	{
 		if ( DoVerbose > 0 )
 		{
-			SHELLBUF_PRINTF( " %s %s = %" PRId32 " (Locked at %ld, skipping)\n", grpname, Cmd->Name, val, DoVerbose );
+			SHELLBUF_PRINTF4( " %s %s = %" PRId32 " (Locked at %ld, skipping)\n", grpname, Cmd->Name, val, DoVerbose );
 		}
 	}
 
@@ -448,7 +449,7 @@ S32 error;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -456,7 +457,7 @@ S32 error;
 
 	if (( val < Cmd->Arg1 ) || ( val > Cmd->Arg2 ))
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' Value %" PRId32 " out of range (Line %d)\n", grpname, Cmd->Name, val, line );
+		SHELLBUF_PRINTF4( "Config: %s '%s' Value %" PRId32 " out of range (Line %d)\n", grpname, Cmd->Name, val, line );
 		goto bailout;
 	}
 
@@ -466,7 +467,7 @@ S32 error;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( " %s %s = %" PRId32 "\n", grpname, Cmd->Name, val );
+		SHELLBUF_PRINTF3( " %s %s = %" PRId32 "\n", grpname, Cmd->Name, val );
 	}
 
 	error = FALSE;
@@ -488,7 +489,7 @@ S32 error;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -496,7 +497,7 @@ S32 error;
 
 	if (( val < (U32)Cmd->Arg1 ) || ( val > (U32)Cmd->Arg2 ))
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' Value %" PRIu32 " out of range (Line %" PRId32 ")\n", grpname, Cmd->Name, val, line );
+		SHELLBUF_PRINTF4( "Config: %s '%s' Value %" PRIu32 " out of range (Line %" PRId32 ")\n", grpname, Cmd->Name, val, line );
 		goto bailout;
 	}
 
@@ -506,7 +507,7 @@ S32 error;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( " %s %s = %" PRIu32 "\n", grpname, Cmd->Name, val );
+		SHELLBUF_PRINTF3( " %s %s = %" PRIu32 "\n", grpname, Cmd->Name, val );
 	}
 
 	error = FALSE;
@@ -528,7 +529,7 @@ S32 error;
 
 	if ( arglen <= 0 )
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
+		SHELLBUF_PRINTF3( "Config: %s '%s' argument missing (Line %d)\n", grpname, Cmd->Name, line );
 		goto bailout;
 	}
 
@@ -536,7 +537,7 @@ S32 error;
 
 	if (( val < Cmd->Arg1 ) || ( val > Cmd->Arg2 ))
 	{
-		SHELLBUF_PRINTF( "Config: %s '%s' Value %" PRId32 " out of range (Line %d)\n", grpname, Cmd->Name, val, line );
+		SHELLBUF_PRINTF4( "Config: %s '%s' Value %" PRId32 " out of range (Line %d)\n", grpname, Cmd->Name, val, line );
 		goto bailout;
 	}
 
@@ -546,7 +547,7 @@ S32 error;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( " %s %s = %" PRId32 "\n", grpname, Cmd->Name, val );
+		SHELLBUF_PRINTF3( " %s %s = %" PRId32 "\n", grpname, Cmd->Name, val );
 	}
 
 	error = FALSE;
@@ -556,7 +557,9 @@ bailout:
 	return( error );
 }
 
+#endif
 // -- Parse Group Commands
+#if 0
 
 static S32 myParseCommands( struct Config *cfg, STR buf, S32 *p, S32 *l, const STR grpname, const struct Cfg_Label *Cmds )
 {
@@ -699,14 +702,14 @@ S32 i;
 
 					default:
 					{
-						SHELLBUF_PRINTF( "%s:%04d: Error unknown type (%d) for '%s'\n", __FILE__, __LINE__, Cmds[cnt].Type, Cmds[cnt].Name );
+						SHELLBUF_PRINTF4( "%s:%04d: Error unknown type (%d) for '%s'\n", __FILE__, __LINE__, Cmds[cnt].Type, Cmds[cnt].Name );
 						goto bailout;
 					}
 				}
 
 				if ( func( cfg, buf, line, argpos, arglen, grpname, & Cmds[cnt] ))
 				{
-					SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+					SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 					goto bailout;
 				}
 			}
@@ -730,11 +733,238 @@ S32 i;
 						}
 						else
 						{
-							SHELLBUF_PRINTF( "%c", c );
+							SHELLBUF_PRINTF1( "%c", c );
 						}
 					}
 					
-					SHELLBUF_PRINTF( "' (Line %d)\n", line );
+					SHELLBUF_PRINTF1( "' (Line %d)\n", line );
+				}
+			}
+		}
+
+		lastline = line;
+		lastpos = pos;
+
+		// Next Line
+
+		while(( buf[pos] ) && ( buf[pos] != 10 ))
+		{
+			pos++;
+		}
+
+		while( buf[pos] == 10 )
+		{
+			line++;
+			pos++;
+		}
+	}
+
+	// --
+
+	error = FALSE;
+
+bailout:
+
+	*p = pos;
+	*l = line;
+
+	return( error );
+}
+
+#endif
+// -- Parse Group Commands
+
+S32 Config_Read_IP( struct Config *cfg, const struct CFGNODE *Cmd, const STR grpname, STR mem, S32 line );
+S32 Config_Read_VAL( struct Config *cfg, const struct CFGNODE *Cmd, const STR grpname, STR mem, S32 line );
+S32 Config_Read_STR( struct Config *cfg, const struct CFGNODE *Cmd, const STR grpname, STR mem, S32 line );
+
+static S32 myParseCommands2( struct Config *cfg, STR buf, S32 *p, S32 *l, const STR grpname, const struct CFGNODE *Cmds )
+{
+S32 lastline;
+S32 lastpos;
+S32 cmdlen;
+S32 arglen;
+S32 argpos;
+S32 error;
+S32 line;
+S32 pos;
+S32 cnt;
+S32 c;
+S32 i;
+
+	error = TRUE;
+	line = *l;
+	pos = *p;
+
+	lastline = line;
+	lastpos = pos;
+
+	// Next Line
+	// Skip [] Command line
+
+	while(( buf[pos] ) && ( buf[pos] != 10 ))
+	{
+		pos++;
+	}
+
+	while( buf[pos] == 10 )
+	{
+		line++;
+		pos++;
+	}
+
+	// --
+
+	while( buf[pos] )
+	{
+		// Find Start of line, skip Tabs, Space
+
+		while(( buf[pos] == 9 ) || ( buf[pos] == 32 ))
+		{
+			pos++;
+		}
+
+ 		if ( buf[pos] == '[' )
+ 		{
+			line	= lastline;
+			pos		= lastpos;
+ 			break;
+ 		}
+
+		if ( buf[pos] != ';' )
+		{
+			cmdlen = pos;
+
+			while(	( buf[cmdlen] != 0 )
+			&&		( buf[cmdlen] != 9 )
+			&&		( buf[cmdlen] != 10 )
+			&&		( buf[cmdlen] != 13 )
+			&&		( buf[cmdlen] != 32 ))
+			{
+				cmdlen++;
+			}
+
+			cmdlen -= pos;
+
+			if (( cmdlen == 3 ) && ( Func_Strnicmp( & buf[pos], "end", 3 ) == 0 ))
+			{
+				break;
+			}
+
+			argpos = pos + cmdlen;
+
+			while(( buf[argpos] == 9 ) || ( buf[argpos] == 32 ))
+			{
+				argpos++;
+			}
+
+ 			if ( buf[argpos] == '=' )
+ 			{
+ 				argpos++;
+
+ 				while(( buf[argpos] == 9 ) || ( buf[argpos] == 32 ))
+ 				{
+ 					argpos++;
+ 				}
+
+ 				arglen = argpos;
+
+ 				while(	( buf[arglen] != 0 )
+ 				&&		( buf[arglen] != 9 )
+ 				&&		( buf[arglen] != 10 )
+ 				&&		( buf[arglen] != 13 )
+ 				&&		( buf[arglen] != 32 ))
+ 				{
+ 					arglen++;
+ 				}
+
+ 				arglen -= argpos;
+			}
+			else
+			{
+				arglen = 0;
+			}
+
+			// --
+
+			cnt = 0;
+
+ 			while( Cmds[cnt].Name )
+ 			{
+ 				if (( Cmds[cnt].NameLen == cmdlen )
+ 				&&	( Func_Strnicmp( Cmds[cnt].Name, & buf[pos], cmdlen ) == 0 ))
+ 				{
+ 					break;
+ 				}
+ 				else
+ 				{
+ 					cnt++;
+ 				}
+ 			}
+
+			if ( Cmds[cnt].Name )
+			{
+				switch( Cmds[cnt].Type )
+				{
+					case CFGTYPE_IP:
+					{
+						if ( ! Config_Read_IP( cfg, & Cmds[cnt], grpname, & buf[argpos], line ))
+						{
+							goto bailout;
+						}
+						break;
+					}
+
+					case CFGTYPE_VAL:
+					{
+						if ( ! Config_Read_VAL( cfg, & Cmds[cnt], grpname, & buf[argpos], line ))
+						{
+							goto bailout;
+						}
+						break;
+					}
+
+					case CFGTYPE_STR:
+					{
+						if ( ! Config_Read_STR( cfg, & Cmds[cnt], grpname, & buf[argpos], line ))
+						{
+							goto bailout;
+						}
+						break;
+					}
+
+					default:
+					{
+						SHELLBUF_PRINTF1( "UNK : '%s'\n", Cmds[cnt].Name );
+						break;
+					}
+				}
+			}
+			else
+			{
+				if ( DoVerbose > 0 )
+				{
+					SHELLBUF_PRINTF( "Unknown Command skipping '" );
+
+					for( i=0 ; i < 32 ; i++ )
+					{
+						c = buf[pos+i];
+
+						if (( c == 0 )
+						||	( c == 9 )
+						||	( c == 10 )
+						||	( c == 13 )
+						||	( c == 32 ))
+						{
+							break;
+						}
+						else
+						{
+							SHELLBUF_PRINTF1( "%c", c );
+						}
+					}
+					
+					SHELLBUF_PRINTF1( "' (Line %d)\n", line );
 				}
 			}
 		}
@@ -807,7 +1037,7 @@ S32 i;
 	{
 		if ( CfgNeeded )
 		{
-			SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+			SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 
 			Log_PrintF( cfg, LOGTYPE_Error, "Error opening file '%s'", Filename );
 		}
@@ -825,7 +1055,7 @@ S32 i;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( "Loading '%s' Config file\n", Filename );
+		SHELLBUF_PRINTF1( "Loading '%s' Config file\n", Filename );
 	}
 
 	if ( cfg->cfg_Config_Filename )
@@ -839,14 +1069,14 @@ S32 i;
 
 	if ( realsize < 0 )
 	{
-		SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+		SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 		Log_PrintF( cfg, LOGTYPE_Error, "Error obtaining file size for '%s'", Filename );
 		goto bailout;
 	}
 
 	if ( ! realsize )
 	{
-		SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+		SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 		Log_PrintF( cfg, LOGTYPE_Error, "Error file size is Zero for '%s'", Filename );
 		goto bailout;
 	}
@@ -857,7 +1087,7 @@ S32 i;
 
 	if ( ! buf )
 	{
-		SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+		SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 		Log_PrintF( cfg, LOGTYPE_Error, "Error allocating memory" );
 		goto bailout;
 	}
@@ -866,7 +1096,7 @@ S32 i;
 
 	if ( len != filesize )
 	{
-		SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+		SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 		Log_PrintF( cfg, LOGTYPE_Error, "Error reading file '%s'", Filename );
 		goto bailout;
 	}
@@ -888,7 +1118,7 @@ S32 i;
 
 	if ( Func_Strnicmp( buf, ConfigHeaderStr, len ))
 	{
-		SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+		SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 		Log_PrintF( cfg, LOGTYPE_Error, "Not a valid Config file" );
 		goto bailout;
 	}
@@ -945,10 +1175,10 @@ S32 i;
 
 			cnt = 0;
 
-			while( ConfigGroups[cnt].Name )
+			while( ConfigGroups2[cnt].Name )
 			{
-				if (( ConfigGroups[cnt].Len == len ) 
-				&&	( Func_Strnicmp( ConfigGroups[cnt].Name, & buf[pos], ConfigGroups[cnt].Len ) == 0 ))
+				if (( ConfigGroups2[cnt].NameLen == len ) 
+				&&	( Func_Strnicmp( ConfigGroups2[cnt].Name, & buf[pos], ConfigGroups2[cnt].NameLen ) == 0 ))
 				{
 					break;
 				}
@@ -958,11 +1188,11 @@ S32 i;
 				}
 			}
 
-			if ( ConfigGroups[cnt].Cmds )
+			if ( ConfigGroups2[cnt].Cmds )
 			{
-				if ( myParseCommands( cfg, buf, & pos, & line, ConfigGroups[cnt].Name, ConfigGroups[cnt].Cmds ))
+				if ( myParseCommands2( cfg, buf, & pos, & line, ConfigGroups2[cnt].Name, ConfigGroups2[cnt].Cmds ))
 				{
-					SHELLBUF_PRINTF( "%s:%04d: Error\n", __FILE__, __LINE__ );
+					SHELLBUF_PRINTF2( "%s:%04d: Error\n", __FILE__, __LINE__ );
 					goto bailout;
 				}
 			}
@@ -985,17 +1215,17 @@ S32 i;
 						{
 							if ( c == ']' )
 							{
-								SHELLBUF_PRINTF( "%c", c );
+								SHELLBUF_PRINTF1( "%c", c );
 							}
 							break;
 						}
 						else
 						{
-							SHELLBUF_PRINTF( "%c", c );
+							SHELLBUF_PRINTF1( "%c", c );
 						}
 					}
 					
-					SHELLBUF_PRINTF( "' (Line %d)\n", line );
+					SHELLBUF_PRINTF1( "' (Line %d)\n", line );
 				}
 			}
 		}
@@ -1018,7 +1248,7 @@ S32 i;
 
 	if ( DoVerbose > 0 )
 	{
-		SHELLBUF_PRINTF( "Loaded '%s' config\n", FilePart( Filename ));
+		SHELLBUF_PRINTF1( "Loaded '%s' config\n", FilePart( Filename ));
 	}
 
 	error = FALSE;

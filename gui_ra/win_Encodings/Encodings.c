@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 static struct VNCList		EncodingsListHeader;
@@ -142,7 +140,7 @@ S32 error;
 
 	error = FALSE;
 
-	if ( cfg->cfg_ProgramDisableGUI )
+	if ( cfg->cfg_Program_DisableGUI )
 	{
 		Log_PrintF( cfg, LOGTYPE_Warning, "Program: GUI Disabled can't open" );
 		goto bailout;
@@ -498,5 +496,3 @@ static void RAGUI_CloseFont( struct Config *cfg UNUSED )
 }
 
 // --
-
-#endif // GUI_RA

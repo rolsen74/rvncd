@@ -23,10 +23,6 @@ S32 len;
 
 	wait = NET_EXIT_SIGNAL;
 
-	#ifdef DEBUG
-	DebugPrintF( "Shell started\n" );
-	#endif
-
 	while( TRUE )
 	{
 		mask = CheckSignal( wait );
@@ -47,10 +43,6 @@ S32 len;
 			Delay( 15 );
 		}
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "Shell stopping\n" );
-	#endif
 
 	ShellBuf_Enable = FALSE;
 }
@@ -88,10 +80,6 @@ struct Task *Parent;
 struct Task *Self;
 S32 stat;
 
-	#ifdef DEBUG
-	DebugPrintF( "Shell starting 1/2\n" );
-	#endif
-
 	//--------
 
 	Self = FindTask( NULL );
@@ -105,16 +93,8 @@ S32 stat;
 			break;
 		}
 
-		#ifdef DEBUG
-		DebugPrintF( "Shell starting delay\n" );
-		#endif
-
 		Delay( 2 );
 	}
-
-	#ifdef DEBUG
-	DebugPrintF( "Shell starting 2/2\n" );
-	#endif
 
 	Parent = sm->Parent;
 	Config = sm->Config;
@@ -128,7 +108,6 @@ S32 stat;
 	if ( stat )
 	{
 		Config->ShellBuf_Task = Self;
-
 		Config->cfg_ShellBufStatus = PROCESS_Running;
 
 		// Set signal after Status
@@ -136,17 +115,9 @@ S32 stat;
 
 		// --
 
-		#ifdef DEBUG
-		DebugPrintF( "Shell entering main\n" );
-		#endif
-
 		SetTaskPri( Self, PRI_SHELL );
 		myProcess_Main( Config );
 		SetTaskPri( Self, PRI_SHUTDOWN );
-
-		#ifdef DEBUG
-		DebugPrintF( "Shell exited main\n" );
-		#endif
 
 		// --
 
@@ -162,10 +133,6 @@ S32 stat;
 	Config->cfg_ShellBufStatus = PROCESS_Stopped;
 
 	//--------
-
-	#ifdef DEBUG
-	DebugPrintF( "Shell stopped\n" );
-	#endif
 
 	if ( Parent )
 	{
@@ -185,10 +152,6 @@ U32 mask;
 U32 wait;
 
 	error = TRUE;
-
-	#ifdef DEBUG
-	DebugPrintF( "myStart_ShellBuf\n" );
-	#endif
 
 	if ( DoVerbose > 2 )
 	{
@@ -271,10 +234,6 @@ void myStop_ShellBuf( struct Config *cfg )
 {
 U32 mask;
 S32 cnt;
-
-	#ifdef DEBUG
-	DebugPrintF( "myStop_ShellBuf\n" );
-	#endif
 
 	if ( DoVerbose > 2 )
 	{

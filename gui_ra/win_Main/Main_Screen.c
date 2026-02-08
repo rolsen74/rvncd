@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *Page_Screen( struct Config *cfg UNUSED )
@@ -130,5 +128,3 @@ void Page_Refresh_Screen( struct Config *cfg )
 }
 
 // --
-
-#endif // GUI_RA

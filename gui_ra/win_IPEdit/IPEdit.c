@@ -8,8 +8,6 @@
 
 #include "win.h"
 
-#ifdef GUI_RA
-
 // --
 
 Object *IPEdit_GUIObjects[GID_LAST];
@@ -110,7 +108,7 @@ S32 error;
 
 	error = FALSE;
 
-	if ( cfg->cfg_ProgramDisableGUI )
+	if ( cfg->cfg_Program_DisableGUI )
 	{
 		Log_PrintF( cfg, LOGTYPE_Warning, "Program: GUI Disabled can't open" );
 		goto bailout;
@@ -806,5 +804,3 @@ bailout:
 }
 
 // --
-
-#endif // GUI_RA

@@ -40,8 +40,6 @@ S32 r;
 S32 g;
 S32 b;
 
-//	DebugPrintF( "NewBuffer_Cursor_Update\n" );
-
 	// --
 	// 
 
@@ -50,14 +48,6 @@ S32 b;
 		err = FALSE;
 		goto bailout;
 	}
-
-//	DebugPrintF( "Pointer ID %ld, Gfx ID %ld\n", cfg->cfg_PointerFormatID, cfg->GfxRead_Encode_ActivePixelID );
-
-//	if ( ! memcmp( & cfg->GfxRead_Encode_ActivePixel, & cfg->cfg_PointerFormat, sizeof( struct PixelMessage )))
-//	{
-//		err = FALSE;
-//		goto bailout;
-//	}
 
 	err = TRUE;
 

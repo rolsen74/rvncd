@@ -14,6 +14,7 @@
 // --
 
 #include <proto/commodities.h>
+#include <libraries/commodities.h>
 
 // --
 

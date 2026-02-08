@@ -8,11 +8,6 @@
 
 #include "rVNCd.h"
 
-#ifdef GUI_RA
-
-#ifndef WIN_H
-#define WIN_H
-
 // --
 
 enum GUI_ID
@@ -173,6 +168,8 @@ void Page_Refresh_Protocol_37( struct Config *cfg );
 void Page_Refresh_IP( struct Config *cfg );
 void Page_Refresh_Mouse( struct Config *cfg );
 
+void GUIFunc_StartServer( struct Config *cfg );
+void GUIFunc_StopServer( struct Config *cfg );
 void GUIFunc_Support_Support_RichCursor( struct Config *cfg );
 void GUIFunc_Support_Support_RRE( struct Config *cfg );
 void GUIFunc_Support_Support_ZLib( struct Config *cfg );
@@ -230,10 +227,5 @@ void GUIFunc_Actions_User_Disconnect_Enable( struct Config *cfg );
 S32 myGUI_CreateMenus( struct Config *cfg );
 void myGUI_DeleteMenus( struct Config *cfg );
 S32 myGUI_MenuPick( struct Config *cfg );
-
-// --
-
-#endif // WIN_H
-#endif // GUI_RA
 
 // --
